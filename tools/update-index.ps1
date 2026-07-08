@@ -67,6 +67,9 @@ $html = @"
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>&#48120;&#45768;&#44172;&#51076; &#54532;&#47196;&#53664;&#53440;&#51077;</title>
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <style>
     :root {
       color-scheme: light;
