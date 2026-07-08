@@ -420,9 +420,36 @@
     }
 
     @media (max-width: 520px) {
+      body {
+        padding: 6px;
+      }
+
+      .app {
+        gap: 8px;
+      }
+
+      .topbar,
+      .panel {
+        padding: 10px;
+      }
+
+      .title p {
+        font-size: 12px;
+      }
+
+      .stat {
+        min-width: 76px;
+        padding: 7px 8px;
+      }
+
+      .stat strong {
+        font-size: 15px;
+      }
+
       .toast {
         position: static;
-        margin: 10px;
+        margin: 8px;
+        font-size: 12px;
       }
 
       .actions {
@@ -725,7 +752,7 @@
         state.trail = [];
         ui.wingText.textContent = level.wing;
         ui.briefText.textContent = level.brief;
-        showToast(startRunning ? "목표 스티커를 모두 수집한 뒤 출구로 이동하십시오." : level.brief, 3);
+        showToast(startRunning ? "<b>목표</b> 금색 스티커를 모두 떼고 EXIT로 이동하십시오. 빨간/노란 시야는 오래 머물면 위험합니다." : level.brief, 3.8);
         updateHud();
         draw();
       }
@@ -745,9 +772,15 @@
         ui.heatBar.style.width = `${clamp(state.heat, 0, 100)}%`;
         ui.hintBtn.textContent = `힌트 드론 ${state.hintCharges}`;
         ui.cloakBtn.textContent = state.cloakTime > 0 ? `변장 ${Math.ceil(state.cloakTime)}초` : `보상 변장 ${state.cloakCharges}`;
+        ui.startBtn.textContent = state.running ? "작전 재시작" : "잠입 시작";
         ui.cloakText.textContent = state.cloakTime > 0 ? `변장 ${Math.ceil(state.cloakTime)}초` : "변장 대기";
         ui.hintBtn.disabled = state.hintCharges <= 0 || !state.running;
         ui.cloakBtn.disabled = (state.cloakCharges <= 0 && state.cloakTime <= 0) || !state.running;
+      }
+
+      function visualScale() {
+        const rect = canvas.getBoundingClientRect();
+        return rect.width < 520 ? 1.32 : 1;
       }
 
       function startGame() {
@@ -1067,20 +1100,21 @@
 
       function drawExit(level) {
         const [x, y] = level.exit;
+        const s = visualScale();
         ctx.save();
         ctx.translate(x, y);
         ctx.fillStyle = "rgba(104, 223, 196, 0.16)";
         ctx.beginPath();
-        ctx.arc(0, 0, 46 + Math.sin(state.t * 4) * 3, 0, Math.PI * 2);
+        ctx.arc(0, 0, (46 + Math.sin(state.t * 4) * 3) * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = level.theme.accent;
-        ctx.lineWidth = 4;
-        roundedRect(-34, -22, 68, 44, 7);
+        ctx.lineWidth = 4 * s;
+        roundedRect(-34 * s, -22 * s, 68 * s, 44 * s, 7 * s);
         ctx.stroke();
         ctx.fillStyle = "#f4f1e8";
-        ctx.font = "900 15px Malgun Gothic, sans-serif";
+        ctx.font = `900 ${15 * s}px Malgun Gothic, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText("EXIT", 0, 5);
+        ctx.fillText("EXIT", 0, 5 * s);
         ctx.restore();
       }
 
@@ -1112,23 +1146,24 @@
 
       function drawSticker(x, y, color, label, taken, pulse) {
         if (taken) return;
+        const s = visualScale();
         const bob = Math.sin(state.t * 4 + pulse) * 2;
         ctx.save();
         ctx.translate(x, y + bob);
         ctx.rotate(Math.sin(state.t + pulse) * 0.08);
         ctx.shadowColor = color;
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 16 * s;
         ctx.fillStyle = color;
-        roundedRect(-18, -22, 36, 44, 7);
+        roundedRect(-18 * s, -22 * s, 36 * s, 44 * s, 7 * s);
         ctx.fill();
         ctx.shadowBlur = 0;
         ctx.strokeStyle = "rgba(21, 23, 24, 0.45)";
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3 * s;
         ctx.stroke();
         ctx.fillStyle = "#1a1714";
-        ctx.font = "900 16px Malgun Gothic, sans-serif";
+        ctx.font = `900 ${16 * s}px Malgun Gothic, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(label, 0, 5);
+        ctx.fillText(label, 0, 5 * s);
         ctx.restore();
       }
 
@@ -1197,28 +1232,29 @@
       function drawPlayer() {
         const p = state.player;
         const skin = skins[state.skin];
+        const s = visualScale();
         ctx.save();
         ctx.translate(p.x, p.y);
         if (state.cloakTime > 0) {
           ctx.globalAlpha = 0.55 + Math.sin(state.t * 12) * 0.15;
           ctx.shadowColor = "#68dfc4";
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 18 * s;
         }
         ctx.fillStyle = "rgba(0,0,0,0.32)";
         ctx.beginPath();
-        ctx.ellipse(0, 19, 18, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 19 * s, 18 * s, 8 * s, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = skin.body;
         ctx.beginPath();
-        ctx.arc(0, -3, 15, 0, Math.PI * 2);
+        ctx.arc(0, -3 * s, 15 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = skin.trim;
         ctx.beginPath();
-        ctx.arc(5, -7, 4, 0, Math.PI * 2);
-        ctx.arc(-5, -7, 4, 0, Math.PI * 2);
+        ctx.arc(5 * s, -7 * s, 4 * s, 0, Math.PI * 2);
+        ctx.arc(-5 * s, -7 * s, 4 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#ff7d8c";
-        ctx.fillRect(-9, 10, 18, 6);
+        ctx.fillRect(-9 * s, 10 * s, 18 * s, 6 * s);
         ctx.restore();
       }
 
