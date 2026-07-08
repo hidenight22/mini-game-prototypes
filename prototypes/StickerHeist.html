@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>스티커 도둑</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #151718;
+      --panel: #222625;
+      --panel-2: #2d3230;
+      --ink: #f4f1e8;
+      --muted: #b9b0a3;
+      --line: rgba(244, 241, 232, 0.16);
+      --gold: #f3c969;
+      --mint: #68dfc4;
+      --rose: #ff7d8c;
+      --blue: #78a8ff;
+      --shadow: rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at 22% 10%, rgba(104, 223, 196, 0.13), transparent 30%),
+        radial-gradient(circle at 82% 8%, rgba(243, 201, 105, 0.15), transparent 24%),
+        linear-gradient(160deg, #101111 0%, #1d2020 54%, #121716 100%);
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 14px;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 324px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .topbar,
+    .panel,
+    .stage-wrap {
+      border: 1px solid var(--line);
+      background: rgba(34, 38, 37, 0.88);
+      box-shadow: 0 18px 48px var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 8px;
+      align-items: center;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .stat {
+      min-width: 86px;
+      padding: 9px 11px;
+      border: 1px solid rgba(244, 241, 232, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .stage-wrap {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      height: auto;
+      background: #171918;
+      cursor: crosshair;
+    }
+
+    .toast {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(244, 241, 232, 0.16);
+      border-radius: 8px;
+      background: rgba(14, 15, 15, 0.76);
+      color: var(--ink);
+      font-size: 13px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+      pointer-events: none;
+    }
+
+    .toast b {
+      color: var(--gold);
+    }
+
+    .panel {
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .level-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .level-btn {
+      width: 100%;
+      min-height: 70px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid rgba(244, 241, 232, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .level-btn:not(:disabled) {
+      cursor: pointer;
+    }
+
+    .level-btn:not(:disabled):hover,
+    .level-btn.active {
+      border-color: var(--mint);
+      background: rgba(104, 223, 196, 0.11);
+    }
+
+    .level-btn:disabled {
+      color: rgba(244, 241, 232, 0.45);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .level-btn strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .level-btn span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .pill {
+      min-width: 54px;
+      padding: 7px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(244, 241, 232, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action {
+      min-height: 46px;
+      border: 1px solid rgba(244, 241, 232, 0.16);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ink);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .action.primary {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #f3c969, #f08374);
+      color: #251b12;
+      border-color: transparent;
+    }
+
+    .action:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+    }
+
+    .action:not(:disabled):hover {
+      transform: translateY(-1px);
+    }
+
+    .meter {
+      display: grid;
+      gap: 7px;
+    }
+
+    .meter-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(244, 241, 232, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--mint), var(--gold), var(--rose));
+      transition: width 0.12s linear;
+    }
+
+    .brief {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .card {
+      min-height: 76px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(244, 241, 232, 0.13);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .card strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(5, 6, 6, 0.72);
+      z-index: 10;
+    }
+
+    .modal.show {
+      display: grid;
+    }
+
+    .dialog {
+      width: min(500px, 100%);
+      border: 1px solid rgba(244, 241, 232, 0.16);
+      border-radius: 8px;
+      background: #232827;
+      padding: 18px;
+      box-shadow: 0 26px 74px rgba(0, 0, 0, 0.58);
+    }
+
+    .dialog h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .dialog p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .dialog .actions {
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        justify-content: stretch;
+      }
+
+      .stat {
+        flex: 1 1 88px;
+      }
+
+      .panel {
+        order: 3;
+      }
+
+      .stage-wrap {
+        order: 2;
+      }
+
+      .panel h2 {
+        order: -4;
+      }
+
+      .actions {
+        order: -3;
+      }
+
+      .meter {
+        order: -2;
+      }
+
+      .brief {
+        order: -1;
+      }
+
+      .level-list {
+        order: 1;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+        order: 2;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .toast {
+        position: static;
+        margin: 10px;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .action.primary {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title">
+        <h1>스티커 도둑</h1>
+        <p>전시장 시야를 피해 목표 스티커를 떼어내고 출구로 빠져나가십시오.</p>
+      </div>
+      <div class="stats" aria-label="플레이 상태">
+        <div class="stat"><span>전시장</span><strong id="wingText">본관</strong></div>
+        <div class="stat"><span>시간</span><strong id="timeText">45</strong></div>
+        <div class="stat"><span>별</span><strong id="starText">0</strong></div>
+        <div class="stat"><span>수집</span><strong id="lootText">0/0</strong></div>
+      </div>
+    </header>
+
+    <section class="stage-wrap" aria-label="게임 화면">
+      <canvas id="game" width="900" height="600"></canvas>
+      <div class="toast" id="toast">
+        <span id="toastText"><b>조작</b> 캔버스를 누른 채 움직이면 도둑이 손가락을 따라갑니다.</span>
+        <span id="cloakText">변장 0초</span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h2>오늘의 전시장</h2>
+      <div class="level-list" id="levelList"></div>
+      <div class="actions">
+        <button class="action primary" id="startBtn">잠입 시작</button>
+        <button class="action" id="hintBtn">힌트 드론</button>
+        <button class="action" id="cloakBtn">보상 변장</button>
+        <button class="action" id="skinBtn">스킨 체험</button>
+        <button class="action" id="resetBtn">다시 배치</button>
+      </div>
+      <div class="meter">
+        <div class="meter-row"><span>경계도</span><span id="heatText">0%</span></div>
+        <div class="bar"><i id="heatBar"></i></div>
+      </div>
+      <p class="brief" id="briefText">목표 스티커만 수집하십시오. 빨간 시야에 오래 머물면 붙잡힙니다.</p>
+      <div class="cards">
+        <div class="card"><strong>실제 확장 예시</strong><span>별 2개를 모으면 장난감 매장 확장 전시장이 해금됩니다.</span></div>
+        <div class="card"><strong>수익화 샘플</strong><span>힌트 드론, 보상 변장, 스킨 체험이 실제 플레이에 영향을 줍니다.</span></div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="modal show" id="modal">
+    <div class="dialog">
+      <h2 id="modalTitle">스티커 도둑</h2>
+      <p id="modalBody">목표 스티커를 모두 훔친 뒤 출구로 이동하십시오. 경비원과 CCTV 시야에 오래 노출되면 실패합니다.</p>
+      <div class="actions">
+        <button class="action primary" id="modalPrimary">잠입 시작</button>
+        <button class="action" id="modalSecondary">전시장 보기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const ui = {
+        wingText: document.getElementById("wingText"),
+        timeText: document.getElementById("timeText"),
+        starText: document.getElementById("starText"),
+        lootText: document.getElementById("lootText"),
+        levelList: document.getElementById("levelList"),
+        startBtn: document.getElementById("startBtn"),
+        hintBtn: document.getElementById("hintBtn"),
+        cloakBtn: document.getElementById("cloakBtn"),
+        skinBtn: document.getElementById("skinBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        heatText: document.getElementById("heatText"),
+        heatBar: document.getElementById("heatBar"),
+        briefText: document.getElementById("briefText"),
+        toastText: document.getElementById("toastText"),
+        cloakText: document.getElementById("cloakText"),
+        modal: document.getElementById("modal"),
+        modalTitle: document.getElementById("modalTitle"),
+        modalBody: document.getElementById("modalBody"),
+        modalPrimary: document.getElementById("modalPrimary"),
+        modalSecondary: document.getElementById("modalSecondary")
+      };
+
+      const levels = [
+        {
+          id: "lobby",
+          title: "본관 로비",
+          wing: "본관",
+          stars: 0,
+          time: 46,
+          start: [88, 500],
+          exit: [820, 92],
+          theme: { floor: "#2c312e", wall: "#4d5048", accent: "#f3c969", case: "#775a37" },
+          brief: "첫 잠입입니다. 금색 목표 스티커 3개를 떼고 오른쪽 위 출구로 이동하십시오.",
+          targets: [[235, 142], [580, 118], [690, 420]],
+          decoys: [[330, 458], [446, 260]],
+          guards: [
+            { x: 410, y: 160, r: 122, angle: 1.4, speed: 0.9, sweep: 0.7 },
+            { x: 600, y: 385, r: 118, angle: 3.7, speed: -0.72, sweep: 0.62 }
+          ],
+          cams: [{ x: 760, y: 230, r: 150, angle: 2.35, speed: 0.85 }],
+          walls: [[155, 230, 250, 38], [470, 300, 44, 170], [640, 178, 42, 112]]
+        },
+        {
+          id: "ceramic",
+          title: "도자기 복도",
+          wing: "본관",
+          stars: 0,
+          time: 50,
+          start: [78, 90],
+          exit: [810, 506],
+          theme: { floor: "#293037", wall: "#42566a", accent: "#78a8ff", case: "#435d77" },
+          brief: "복도식 전시장입니다. CCTV 회전 타이밍을 보고 지나가십시오.",
+          targets: [[252, 472], [430, 118], [690, 270], [754, 466]],
+          decoys: [[152, 290], [548, 470]],
+          guards: [
+            { x: 230, y: 290, r: 136, angle: 0.1, speed: 0.82, sweep: 0.75 },
+            { x: 650, y: 130, r: 128, angle: 2.2, speed: -0.9, sweep: 0.68 }
+          ],
+          cams: [{ x: 450, y: 332, r: 160, angle: -1.1, speed: 1.12 }, { x: 800, y: 145, r: 125, angle: 2.8, speed: -0.65 }],
+          walls: [[160, 160, 520, 34], [160, 395, 520, 34], [372, 236, 34, 116], [590, 236, 34, 116]]
+        },
+        {
+          id: "night",
+          title: "야간 특별전",
+          wing: "본관",
+          stars: 1,
+          time: 54,
+          start: [104, 515],
+          exit: [818, 315],
+          theme: { floor: "#242428", wall: "#49424f", accent: "#ff7d8c", case: "#654251" },
+          brief: "경계가 빠르게 오릅니다. 힌트 드론이나 보상 변장을 적극적으로 써 보십시오.",
+          targets: [[158, 160], [332, 342], [535, 132], [732, 488]],
+          decoys: [[298, 520], [654, 280], [760, 168]],
+          guards: [
+            { x: 310, y: 174, r: 135, angle: 0.6, speed: 1.25, sweep: 0.72 },
+            { x: 520, y: 412, r: 145, angle: 4.0, speed: -1.05, sweep: 0.78 },
+            { x: 745, y: 300, r: 118, angle: 2.8, speed: 1.12, sweep: 0.66 }
+          ],
+          cams: [{ x: 470, y: 85, r: 168, angle: 1.5, speed: 1.1 }],
+          walls: [[220, 235, 58, 205], [412, 180, 44, 210], [590, 250, 54, 184]]
+        },
+        {
+          id: "toy",
+          title: "장난감 매장",
+          wing: "확장",
+          stars: 2,
+          expansion: true,
+          time: 52,
+          start: [90, 302],
+          exit: [815, 302],
+          theme: { floor: "#263034", wall: "#365f60", accent: "#68dfc4", case: "#3e7c78" },
+          brief: "확장 전시장입니다. 장난감 진열대가 시야를 끊어 주지만 통로도 좁습니다.",
+          targets: [[190, 130], [390, 472], [568, 128], [720, 410]],
+          decoys: [[262, 318], [515, 318], [710, 160]],
+          guards: [
+            { x: 310, y: 300, r: 132, angle: 0.0, speed: 1.0, sweep: 0.7 },
+            { x: 615, y: 300, r: 132, angle: 3.1, speed: -1.0, sweep: 0.7 }
+          ],
+          cams: [{ x: 454, y: 88, r: 160, angle: 1.55, speed: 1.35 }, { x: 454, y: 512, r: 160, angle: -1.55, speed: -1.35 }],
+          walls: [[242, 212, 72, 176], [418, 212, 72, 176], [594, 212, 72, 176]]
+        },
+        {
+          id: "arcade",
+          title: "오락기 창고",
+          wing: "확장",
+          stars: 4,
+          expansion: true,
+          time: 58,
+          start: [80, 520],
+          exit: [812, 80],
+          theme: { floor: "#272638", wall: "#4c4a70", accent: "#d78dff", case: "#5a4071" },
+          brief: "확장 전시장의 고난도 샘플입니다. 변장 타이밍과 벽 뒤 엄폐가 중요합니다.",
+          targets: [[168, 144], [332, 502], [494, 220], [694, 146], [738, 468]],
+          decoys: [[260, 326], [566, 498], [646, 302]],
+          guards: [
+            { x: 278, y: 222, r: 140, angle: 0.5, speed: 1.18, sweep: 0.78 },
+            { x: 484, y: 430, r: 134, angle: 3.7, speed: -1.28, sweep: 0.72 },
+            { x: 720, y: 300, r: 128, angle: 2.7, speed: 1.05, sweep: 0.64 }
+          ],
+          cams: [{ x: 450, y: 90, r: 176, angle: 1.2, speed: 1.5 }, { x: 822, y: 520, r: 150, angle: -2.3, speed: -1.0 }],
+          walls: [[205, 235, 132, 46], [205, 382, 132, 46], [468, 154, 54, 220], [628, 274, 54, 190]]
+        }
+      ];
+
+      const state = {
+        selected: 0,
+        running: false,
+        over: false,
+        t: 0,
+        timeLeft: 0,
+        heat: 0,
+        totalStars: Number(localStorage.getItem("stickerHeistStars") || "0"),
+        best: JSON.parse(localStorage.getItem("stickerHeistBest") || "{}"),
+        hintCharges: 2,
+        cloakCharges: 1,
+        skin: 0,
+        hintTime: 0,
+        cloakTime: 0,
+        messageTime: 0,
+        pointer: { active: false, x: 0, y: 0 },
+        player: { x: 80, y: 500, tx: 80, ty: 500, r: 15, speed: 190 },
+        targets: [],
+        decoys: [],
+        sparkles: [],
+        trail: []
+      };
+
+      const skins = [
+        { body: "#f4f1e8", trim: "#151718", name: "검은 장갑" },
+        { body: "#68dfc4", trim: "#12302a", name: "민트 후드" },
+        { body: "#f3c969", trim: "#3d2b12", name: "골드 코트" }
+      ];
+
+      let last = performance.now();
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function dist(a, b, c, d) {
+        return Math.hypot(a - c, b - d);
+      }
+
+      function angleDiff(a, b) {
+        let d = (a - b + Math.PI) % (Math.PI * 2) - Math.PI;
+        if (d < -Math.PI) d += Math.PI * 2;
+        return Math.abs(d);
+      }
+
+      function currentLevel() {
+        return levels[state.selected];
+      }
+
+      function isUnlocked(level) {
+        return state.totalStars >= level.stars;
+      }
+
+      function saveProgress() {
+        localStorage.setItem("stickerHeistStars", String(state.totalStars));
+        localStorage.setItem("stickerHeistBest", JSON.stringify(state.best));
+      }
+
+      function buildLevelList() {
+        ui.levelList.innerHTML = "";
+        levels.forEach((level, index) => {
+          const button = document.createElement("button");
+          const locked = !isUnlocked(level);
+          button.className = "level-btn" + (index === state.selected ? " active" : "");
+          button.disabled = locked;
+          const best = state.best[level.id] || 0;
+          button.innerHTML = `
+            <span>
+              <strong>${level.title}${level.expansion ? " · 확장" : ""}</strong>
+              <span>${locked ? `별 ${level.stars}개 필요` : level.brief}</span>
+            </span>
+            <span class="pill">${locked ? "잠김" : (best ? "★".repeat(best) : "미도전")}</span>
+          `;
+          button.addEventListener("click", () => {
+            state.selected = index;
+            state.running = false;
+            setupLevel(false);
+            buildLevelList();
+          });
+          ui.levelList.appendChild(button);
+        });
+      }
+
+      function setupLevel(startRunning) {
+        const level = currentLevel();
+        state.running = !!startRunning;
+        state.over = false;
+        state.t = 0;
+        state.timeLeft = level.time;
+        state.heat = 0;
+        state.hintTime = 0;
+        state.cloakTime = 0;
+        state.messageTime = 2.2;
+        state.player.x = level.start[0];
+        state.player.y = level.start[1];
+        state.player.tx = level.start[0];
+        state.player.ty = level.start[1];
+        state.targets = level.targets.map((p, i) => ({ x: p[0], y: p[1], taken: false, pulse: i * 0.7 }));
+        state.decoys = level.decoys.map((p, i) => ({ x: p[0], y: p[1], wobble: i * 0.9 }));
+        state.sparkles = [];
+        state.trail = [];
+        ui.wingText.textContent = level.wing;
+        ui.briefText.textContent = level.brief;
+        showToast(startRunning ? "목표 스티커를 모두 수집한 뒤 출구로 이동하십시오." : level.brief, 3);
+        updateHud();
+        draw();
+      }
+
+      function showToast(message, time) {
+        ui.toastText.innerHTML = message;
+        state.messageTime = time || 2.4;
+      }
+
+      function updateHud() {
+        const level = currentLevel();
+        const taken = state.targets.filter(t => t.taken).length;
+        ui.timeText.textContent = Math.ceil(state.timeLeft);
+        ui.starText.textContent = state.totalStars;
+        ui.lootText.textContent = `${taken}/${level.targets.length}`;
+        ui.heatText.textContent = `${Math.round(state.heat)}%`;
+        ui.heatBar.style.width = `${clamp(state.heat, 0, 100)}%`;
+        ui.hintBtn.textContent = `힌트 드론 ${state.hintCharges}`;
+        ui.cloakBtn.textContent = state.cloakTime > 0 ? `변장 ${Math.ceil(state.cloakTime)}초` : `보상 변장 ${state.cloakCharges}`;
+        ui.cloakText.textContent = state.cloakTime > 0 ? `변장 ${Math.ceil(state.cloakTime)}초` : "변장 대기";
+        ui.hintBtn.disabled = state.hintCharges <= 0 || !state.running;
+        ui.cloakBtn.disabled = (state.cloakCharges <= 0 && state.cloakTime <= 0) || !state.running;
+      }
+
+      function startGame() {
+        if (!isUnlocked(currentLevel())) {
+          showModal("잠긴 전시장", `별 ${currentLevel().stars}개를 모으면 열립니다. 본관 전시장을 먼저 클리어하십시오.`, "확인", hideModal);
+          return;
+        }
+        hideModal();
+        setupLevel(true);
+      }
+
+      function showModal(title, body, primary, onPrimary, secondary, onSecondary) {
+        ui.modalTitle.textContent = title;
+        ui.modalBody.textContent = body;
+        ui.modalPrimary.textContent = primary || "확인";
+        ui.modalPrimary.onclick = onPrimary || hideModal;
+        ui.modalSecondary.textContent = secondary || "닫기";
+        ui.modalSecondary.onclick = onSecondary || hideModal;
+        ui.modal.classList.add("show");
+      }
+
+      function hideModal() {
+        ui.modal.classList.remove("show");
+      }
+
+      function pointerPos(event) {
+        const rect = canvas.getBoundingClientRect();
+        const point = event.touches ? event.touches[0] : event;
+        return {
+          x: ((point.clientX - rect.left) / rect.width) * canvas.width,
+          y: ((point.clientY - rect.top) / rect.height) * canvas.height
+        };
+      }
+
+      function beginPointer(event) {
+        event.preventDefault();
+        const p = pointerPos(event);
+        state.pointer.active = true;
+        state.pointer.x = p.x;
+        state.pointer.y = p.y;
+        state.player.tx = p.x;
+        state.player.ty = p.y;
+      }
+
+      function movePointer(event) {
+        if (!state.pointer.active) return;
+        event.preventDefault();
+        const p = pointerPos(event);
+        state.pointer.x = p.x;
+        state.pointer.y = p.y;
+        state.player.tx = p.x;
+        state.player.ty = p.y;
+      }
+
+      function endPointer() {
+        state.pointer.active = false;
+      }
+
+      function collideWall(x, y, r, wall) {
+        const [wx, wy, ww, wh] = wall;
+        const cx = clamp(x, wx, wx + ww);
+        const cy = clamp(y, wy, wy + wh);
+        return dist(x, y, cx, cy) < r;
+      }
+
+      function movePlayer(dt) {
+        const p = state.player;
+        const dx = p.tx - p.x;
+        const dy = p.ty - p.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 3) return;
+        const step = Math.min(len, p.speed * dt * (state.cloakTime > 0 ? 1.08 : 1));
+        const nx = clamp(p.x + (dx / len) * step, p.r + 8, canvas.width - p.r - 8);
+        const ny = clamp(p.y + (dy / len) * step, p.r + 8, canvas.height - p.r - 8);
+        const blocked = currentLevel().walls.some(wall => collideWall(nx, ny, p.r + 1, wall));
+        if (!blocked) {
+          p.x = nx;
+          p.y = ny;
+        } else {
+          p.tx = p.x;
+          p.ty = p.y;
+          showToast("<b>엄폐물</b> 진열대 뒤로 돌아가십시오.", 1.3);
+        }
+      }
+
+      function visionSources(level) {
+        return [
+          ...level.guards.map(g => ({ ...g, type: "guard" })),
+          ...level.cams.map(c => ({ ...c, type: "cam", sweep: 0.55 }))
+        ];
+      }
+
+      function inVision(source, px, py) {
+        const d = dist(px, py, source.x, source.y);
+        if (d > source.r) return false;
+        const dir = Math.atan2(py - source.y, px - source.x);
+        const angle = source.angle + Math.sin(state.t * source.speed) * (source.sweep || 0.7);
+        if (angleDiff(dir, angle) > 0.42) return false;
+        const level = currentLevel();
+        return !level.walls.some(wall => lineIntersectsRect(source.x, source.y, px, py, wall));
+      }
+
+      function lineIntersectsRect(x1, y1, x2, y2, wall) {
+        const [x, y, w, h] = wall;
+        const edges = [
+          [x, y, x + w, y],
+          [x + w, y, x + w, y + h],
+          [x + w, y + h, x, y + h],
+          [x, y + h, x, y]
+        ];
+        return edges.some(e => lineHit(x1, y1, x2, y2, e[0], e[1], e[2], e[3]));
+      }
+
+      function lineHit(x1, y1, x2, y2, x3, y3, x4, y4) {
+        const den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (Math.abs(den) < 0.0001) return false;
+        const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den;
+        const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den;
+        return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+      }
+
+      function collectItems() {
+        const p = state.player;
+        state.targets.forEach(target => {
+          if (!target.taken && dist(p.x, p.y, target.x, target.y) < 30) {
+            target.taken = true;
+            burst(target.x, target.y, currentLevel().theme.accent, 18);
+            showToast("<b>수집 완료</b> 목표 스티커를 조용히 떼어냈습니다.", 1.7);
+          }
+        });
+        state.decoys.forEach(decoy => {
+          if (!decoy.taken && dist(p.x, p.y, decoy.x, decoy.y) < 28) {
+            decoy.taken = true;
+            state.heat = clamp(state.heat + 18, 0, 100);
+            burst(decoy.x, decoy.y, "#ff7d8c", 12);
+            showToast("<b>가짜 스티커</b> 경계도가 크게 올랐습니다.", 1.8);
+          }
+        });
+      }
+
+      function burst(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+          state.sparkles.push({
+            x,
+            y,
+            vx: (Math.random() - 0.5) * 160,
+            vy: (Math.random() - 0.5) * 160,
+            life: 0.7 + Math.random() * 0.5,
+            color
+          });
+        }
+      }
+
+      function checkWinLose(dt) {
+        const level = currentLevel();
+        const p = state.player;
+        const seen = state.cloakTime <= 0 && visionSources(level).some(source => inVision(source, p.x, p.y));
+        state.heat = clamp(state.heat + (seen ? 42 : -18) * dt, 0, 100);
+        if (seen && state.messageTime <= 0) showToast("<b>발각 중</b> 시야에서 벗어나거나 변장을 사용하십시오.", 0.8);
+        const allTaken = state.targets.every(target => target.taken);
+        const atExit = dist(p.x, p.y, level.exit[0], level.exit[1]) < 42;
+        if (allTaken && atExit) {
+          finish(true);
+          return;
+        }
+        if (state.heat >= 100) {
+          finish(false, "경비원이 당신을 붙잡았습니다.");
+          return;
+        }
+        if (state.timeLeft <= 0) {
+          finish(false, "폐장 시간이 지나 출구가 잠겼습니다.");
+        }
+      }
+
+      function finish(success, reason) {
+        if (state.over) return;
+        state.running = false;
+        state.over = true;
+        const level = currentLevel();
+        if (success) {
+          const timeBonus = state.timeLeft > level.time * 0.42 ? 1 : 0;
+          const stealthBonus = state.heat < 35 ? 1 : 0;
+          const earned = clamp(1 + timeBonus + stealthBonus, 1, 3);
+          const previous = state.best[level.id] || 0;
+          if (earned > previous) {
+            state.totalStars += earned - previous;
+            state.best[level.id] = earned;
+            saveProgress();
+          }
+          const unlocked = state.totalStars >= 2 && levels.some(l => l.expansion && state.best[l.id] === undefined);
+          burst(level.exit[0], level.exit[1], level.theme.accent, 34);
+          buildLevelList();
+          showModal(
+            "잠입 성공",
+            `${level.title} 클리어. 등급 ${"★".repeat(earned)}입니다.${unlocked ? " 장난감 매장 확장 전시장이 열렸습니다." : ""}`,
+            "다음 전시장",
+            () => {
+              hideModal();
+              const next = levels.findIndex((l, i) => i > state.selected && isUnlocked(l));
+              state.selected = next >= 0 ? next : state.selected;
+              setupLevel(true);
+              buildLevelList();
+            },
+            "다시 플레이",
+            () => {
+              hideModal();
+              setupLevel(true);
+            }
+          );
+        } else {
+          showModal(
+            "잠입 실패",
+            reason || "작전이 들켰습니다.",
+            state.cloakCharges > 0 ? "변장으로 이어하기" : "재도전",
+            () => {
+              hideModal();
+              if (state.cloakCharges > 0) {
+                state.cloakCharges--;
+                state.cloakTime = 6;
+                state.heat = 28;
+                state.timeLeft = Math.max(14, state.timeLeft + 8);
+                state.running = true;
+                state.over = false;
+                showToast("<b>보상 변장</b> 6초 동안 시야를 무시합니다.", 2);
+              } else {
+                setupLevel(true);
+              }
+            },
+            "전시장 선택",
+            hideModal
+          );
+        }
+        updateHud();
+      }
+
+      function update(dt) {
+        if (!state.running) return;
+        state.t += dt;
+        state.timeLeft -= dt;
+        state.messageTime -= dt;
+        state.hintTime = Math.max(0, state.hintTime - dt);
+        state.cloakTime = Math.max(0, state.cloakTime - dt);
+        movePlayer(dt);
+        collectItems();
+        checkWinLose(dt);
+        state.trail.push({ x: state.player.x, y: state.player.y, life: 0.7 });
+        if (state.trail.length > 28) state.trail.shift();
+        state.trail.forEach(p => { p.life -= dt; });
+        state.trail = state.trail.filter(p => p.life > 0);
+        state.sparkles.forEach(s => {
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          s.vx *= 0.94;
+          s.vy *= 0.94;
+          s.life -= dt;
+        });
+        state.sparkles = state.sparkles.filter(s => s.life > 0);
+        updateHud();
+      }
+
+      function roundedRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+      }
+
+      function draw() {
+        const level = currentLevel();
+        const theme = level.theme;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, theme.floor);
+        grad.addColorStop(1, "#151817");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawFloor(theme);
+        drawExit(level);
+        drawWalls(level);
+        drawItems(level);
+        drawVision(level);
+        drawTrail();
+        drawPlayer();
+        drawSparkles();
+        drawOverlayHints(level);
+      }
+
+      function drawFloor(theme) {
+        ctx.save();
+        ctx.globalAlpha = 0.16;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 60) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + 80, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 60) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y + 34);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = theme.accent;
+        ctx.fillRect(0, 0, canvas.width, 8);
+        ctx.fillRect(0, canvas.height - 8, canvas.width, 8);
+        ctx.restore();
+      }
+
+      function drawExit(level) {
+        const [x, y] = level.exit;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "rgba(104, 223, 196, 0.16)";
+        ctx.beginPath();
+        ctx.arc(0, 0, 46 + Math.sin(state.t * 4) * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = level.theme.accent;
+        ctx.lineWidth = 4;
+        roundedRect(-34, -22, 68, 44, 7);
+        ctx.stroke();
+        ctx.fillStyle = "#f4f1e8";
+        ctx.font = "900 15px Malgun Gothic, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("EXIT", 0, 5);
+        ctx.restore();
+      }
+
+      function drawWalls(level) {
+        ctx.save();
+        level.walls.forEach((wall, i) => {
+          const [x, y, w, h] = wall;
+          ctx.fillStyle = level.theme.case;
+          roundedRect(x, y, w, h, 8);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(244, 241, 232, 0.24)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+          for (let k = 0; k < Math.max(1, Math.floor(w / 42)); k++) {
+            ctx.fillRect(x + 12 + k * 42, y + 10, 24, Math.max(10, h - 20));
+          }
+          ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+          ctx.fillRect(x + 8, y + h - 7, w - 16, 4);
+          if (i % 2 === 0) {
+            ctx.fillStyle = level.theme.accent;
+            ctx.globalAlpha = 0.4;
+            ctx.fillRect(x + 8, y + 7, w - 16, 3);
+            ctx.globalAlpha = 1;
+          }
+        });
+        ctx.restore();
+      }
+
+      function drawSticker(x, y, color, label, taken, pulse) {
+        if (taken) return;
+        const bob = Math.sin(state.t * 4 + pulse) * 2;
+        ctx.save();
+        ctx.translate(x, y + bob);
+        ctx.rotate(Math.sin(state.t + pulse) * 0.08);
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = color;
+        roundedRect(-18, -22, 36, 44, 7);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(21, 23, 24, 0.45)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = "#1a1714";
+        ctx.font = "900 16px Malgun Gothic, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, 0, 5);
+        ctx.restore();
+      }
+
+      function drawItems(level) {
+        state.targets.forEach((target, i) => {
+          drawSticker(target.x, target.y, level.theme.accent, String(i + 1), target.taken, target.pulse);
+          if (state.hintTime > 0 && !target.taken) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(104, 223, 196, 0.8)";
+            ctx.lineWidth = 3;
+            ctx.setLineDash([7, 7]);
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, 34 + Math.sin(state.t * 6) * 5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        });
+        state.decoys.forEach((decoy, i) => {
+          drawSticker(decoy.x, decoy.y, "#938b80", "?", decoy.taken, decoy.wobble);
+        });
+      }
+
+      function drawVision(level) {
+        visionSources(level).forEach(source => {
+          const angle = source.angle + Math.sin(state.t * source.speed) * (source.sweep || 0.7);
+          ctx.save();
+          ctx.translate(source.x, source.y);
+          ctx.rotate(angle);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, source.r, -0.42, 0.42);
+          ctx.closePath();
+          ctx.fillStyle = source.type === "cam" ? "rgba(255, 125, 140, 0.17)" : "rgba(243, 201, 105, 0.18)";
+          ctx.fill();
+          ctx.strokeStyle = source.type === "cam" ? "rgba(255, 125, 140, 0.5)" : "rgba(243, 201, 105, 0.42)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.translate(source.x, source.y);
+          ctx.fillStyle = source.type === "cam" ? "#ff7d8c" : "#f3c969";
+          ctx.beginPath();
+          ctx.arc(0, 0, source.type === "cam" ? 12 : 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#161716";
+          ctx.beginPath();
+          ctx.arc(0, 0, source.type === "cam" ? 5 : 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      function drawTrail() {
+        ctx.save();
+        state.trail.forEach((p, i) => {
+          ctx.globalAlpha = p.life * 0.35;
+          ctx.fillStyle = skins[state.skin].body;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 9 + i * 0.06, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      function drawPlayer() {
+        const p = state.player;
+        const skin = skins[state.skin];
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        if (state.cloakTime > 0) {
+          ctx.globalAlpha = 0.55 + Math.sin(state.t * 12) * 0.15;
+          ctx.shadowColor = "#68dfc4";
+          ctx.shadowBlur = 18;
+        }
+        ctx.fillStyle = "rgba(0,0,0,0.32)";
+        ctx.beginPath();
+        ctx.ellipse(0, 19, 18, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = skin.body;
+        ctx.beginPath();
+        ctx.arc(0, -3, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = skin.trim;
+        ctx.beginPath();
+        ctx.arc(5, -7, 4, 0, Math.PI * 2);
+        ctx.arc(-5, -7, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ff7d8c";
+        ctx.fillRect(-9, 10, 18, 6);
+        ctx.restore();
+      }
+
+      function drawSparkles() {
+        ctx.save();
+        state.sparkles.forEach(s => {
+          ctx.globalAlpha = clamp(s.life, 0, 1);
+          ctx.fillStyle = s.color;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 3 + s.life * 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      function drawOverlayHints(level) {
+        const allTaken = state.targets.every(t => t.taken);
+        if (!state.running && !state.over) {
+          ctx.save();
+          ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#f4f1e8";
+          ctx.font = "900 28px Malgun Gothic, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(level.title, canvas.width / 2, canvas.height / 2 - 12);
+          ctx.font = "700 16px Malgun Gothic, sans-serif";
+          ctx.fillStyle = "#b9b0a3";
+          ctx.fillText("잠입 시작을 누르면 경비 순찰이 시작됩니다.", canvas.width / 2, canvas.height / 2 + 22);
+          ctx.restore();
+        } else if (allTaken) {
+          ctx.save();
+          ctx.fillStyle = "rgba(104, 223, 196, 0.85)";
+          ctx.font = "900 18px Malgun Gothic, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("출구로 이동", level.exit[0], level.exit[1] - 54);
+          ctx.restore();
+        }
+      }
+
+      function loop(now) {
+        const dt = Math.min(0.033, (now - last) / 1000);
+        last = now;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      ui.startBtn.addEventListener("click", startGame);
+      ui.resetBtn.addEventListener("click", () => setupLevel(state.running));
+      ui.hintBtn.addEventListener("click", () => {
+        if (state.hintCharges <= 0 || !state.running) return;
+        state.hintCharges--;
+        state.hintTime = 6;
+        showToast("<b>힌트 드론</b> 목표 스티커와 안전 방향을 6초 동안 표시합니다.", 2.2);
+        updateHud();
+      });
+      ui.cloakBtn.addEventListener("click", () => {
+        if (state.cloakCharges <= 0 || !state.running) return;
+        state.cloakCharges--;
+        state.cloakTime = 6;
+        showToast("<b>보상 변장</b> 6초 동안 경비 시야를 무시합니다.", 2.2);
+        updateHud();
+      });
+      ui.skinBtn.addEventListener("click", () => {
+        state.skin = (state.skin + 1) % skins.length;
+        showToast(`<b>스킨 체험</b> ${skins[state.skin].name} 적용 중입니다.`, 1.8);
+      });
+      ui.modalPrimary.onclick = startGame;
+      ui.modalSecondary.onclick = hideModal;
+
+      canvas.addEventListener("mousedown", beginPointer);
+      canvas.addEventListener("mousemove", movePointer);
+      window.addEventListener("mouseup", endPointer);
+      canvas.addEventListener("touchstart", beginPointer, { passive: false });
+      canvas.addEventListener("touchmove", movePointer, { passive: false });
+      canvas.addEventListener("touchend", endPointer);
+      canvas.addEventListener("touchcancel", endPointer);
+
+      buildLevelList();
+      setupLevel(false);
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
