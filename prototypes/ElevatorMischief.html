@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>엘리베이터 장난 배송</title>
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <style>
+    :root {
+      --ink: #14212b;
+      --muted: #64717a;
+      --paper: #f4f0e8;
+      --panel: #fffdf8;
+      --line: #d5c9b4;
+      --shaft: #263746;
+      --cab: #f5c256;
+      --teal: #16827b;
+      --red: #c74848;
+      --blue: #356ac3;
+      --green: #3d8a53;
+      --violet: #744ea1;
+      --shadow: rgba(28, 33, 38, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #1d2a32;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .game {
+      position: relative;
+      width: min(1120px, 100%);
+      min-height: min(760px, calc(100vh - 20px));
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      background: var(--paper);
+      border: 1px solid #bda885;
+      border-radius: 8px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 12px 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .tag {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: #172834;
+      color: #fff7df;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 0 12px;
+    }
+
+    .stat {
+      min-height: 54px;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .stat strong {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .playfield {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr minmax(128px, 170px);
+      gap: 10px;
+      min-height: 0;
+      padding: 0 12px;
+    }
+
+    .building {
+      position: relative;
+      min-height: 460px;
+      border: 1px solid #9d8b6d;
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.26) 0 1px, transparent 1px 100%),
+        linear-gradient(#d6c39d, #eee0c1);
+      background-size: 62px 100%, 100% 100%;
+    }
+
+    .floor {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: calc(100% / 6);
+      border-top: 1px solid rgba(72, 61, 45, 0.24);
+      display: grid;
+      grid-template-columns: 58px 1fr 122px;
+      align-items: center;
+      padding: 0 10px;
+    }
+
+    .floor-label {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #fff7df;
+      border: 1px solid #c8b085;
+      font-weight: 900;
+    }
+
+    .queue {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .rider {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 2px solid rgba(0, 0, 0, 0.14);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .rider.low {
+      animation: pulse 0.7s infinite alternate;
+    }
+
+    .parcel {
+      border-radius: 5px;
+      background: #a7602b;
+    }
+
+    .patient {
+      background: #df617c;
+    }
+
+    .floor-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .small-action {
+      min-width: 46px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 8px;
+      background: #213848;
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .small-action:disabled {
+      cursor: default;
+      background: #c6b89d;
+      color: #6f6250;
+    }
+
+    .shaft {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: min(34%, 230px);
+      transform: translateX(-50%);
+      background: rgba(38, 55, 70, 0.88);
+      border-left: 2px solid rgba(255, 255, 255, 0.18);
+      border-right: 2px solid rgba(255, 255, 255, 0.18);
+      pointer-events: none;
+    }
+
+    .cab {
+      position: absolute;
+      left: 50%;
+      width: min(29%, 198px);
+      height: calc((100% / 6) - 13px);
+      transform: translateX(-50%);
+      border: 3px solid #7a561b;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ffe190, var(--cab));
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+      transition: top 0.34s ease;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 6px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .cab-floor {
+      color: #5b3b08;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .cab-load {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .broken-mark {
+      justify-self: end;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #522f35;
+      color: #ffe9d6;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .controls {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .floor-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .floor-btn,
+    .primary,
+    .mode-btn {
+      min-height: 44px;
+      border-radius: 8px;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 900;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .floor-btn.active {
+      background: #1f4c61;
+      color: #fff;
+      border-color: #1f4c61;
+    }
+
+    .floor-btn.blocked {
+      background: #e2d7c5;
+      color: #8b7762;
+      text-decoration: line-through;
+    }
+
+    .primary {
+      background: var(--teal);
+      border-color: #0f625d;
+      color: white;
+    }
+
+    .primary.alt {
+      background: #6e4b99;
+      border-color: #553876;
+    }
+
+    .primary.warn {
+      background: #be553f;
+      border-color: #93402f;
+    }
+
+    .mode-panel {
+      display: grid;
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .mode-btn.selected {
+      background: #172834;
+      color: #fff7df;
+      border-color: #172834;
+    }
+
+    .log {
+      min-height: 42px;
+      padding: 9px 11px;
+      border-top: 1px solid var(--line);
+      background: #fff7df;
+      color: #5e4e37;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 14px;
+      background: rgba(20, 28, 35, 0.66);
+    }
+
+    .overlay.show {
+      display: grid;
+    }
+
+    .dialog {
+      width: min(520px, 100%);
+      max-height: min(680px, calc(100vh - 34px));
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    .dialog h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .dialog p,
+    .dialog li {
+      color: #4e5b62;
+      line-height: 1.52;
+      font-size: 14px;
+    }
+
+    .dialog ul {
+      padding-left: 18px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .reward {
+      display: none;
+    }
+
+    .reward.show {
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      from {
+        transform: translateY(0);
+        filter: brightness(1);
+      }
+      to {
+        transform: translateY(-3px);
+        filter: brightness(1.28);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        display: block;
+        padding: 0;
+        background: var(--paper);
+      }
+
+      .game {
+        width: 100%;
+        min-height: 100svh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr auto;
+        padding: 10px 10px 0;
+      }
+
+      .tag {
+        display: none;
+      }
+
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+        padding: 0 10px;
+      }
+
+      .stat {
+        min-height: 48px;
+        padding: 6px;
+      }
+
+      .stat strong {
+        font-size: 17px;
+      }
+
+      .playfield {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        padding: 0 10px;
+      }
+
+      .building {
+        min-height: min(62svh, 560px);
+      }
+
+      .floor {
+        grid-template-columns: 42px 1fr 92px;
+        padding: 0 6px;
+      }
+
+      .floor-label {
+        width: 31px;
+        height: 31px;
+        font-size: 13px;
+      }
+
+      .rider {
+        width: 29px;
+        height: 29px;
+        font-size: 11px;
+      }
+
+      .floor-actions {
+        gap: 4px;
+      }
+
+      .small-action {
+        min-width: 38px;
+        height: 30px;
+        padding: 0 5px;
+        font-size: 11px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr auto;
+        align-items: stretch;
+      }
+
+      .floor-buttons {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .floor-btn {
+        min-height: 48px;
+      }
+
+      .mode-panel {
+        display: none;
+      }
+
+      .primary {
+        min-width: 94px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      h1 {
+        font-size: 21px;
+      }
+
+      .stats {
+        gap: 4px;
+      }
+
+      .stat span {
+        font-size: 10px;
+      }
+
+      .floor-buttons {
+        gap: 4px;
+      }
+
+      .cab {
+        width: 34%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" aria-label="엘리베이터 장난 배송 게임">
+    <section class="topbar">
+      <div>
+        <h1>엘리베이터 장난 배송</h1>
+        <div class="tag">층 호출을 고르고, 탑승과 하차를 직접 눌러 제한 시간 안에 사람과 소포를 배달하세요.</div>
+      </div>
+      <button class="icon-btn" id="helpBtn" type="button" aria-label="도움말">?</button>
+    </section>
+
+    <section class="stats" aria-label="진행 상황">
+      <div class="stat"><span>점수</span><strong id="score">0</strong></div>
+      <div class="stat"><span>시간</span><strong id="time">60</strong></div>
+      <div class="stat"><span>배송</span><strong id="done">0/10</strong></div>
+      <div class="stat"><span>탑승</span><strong id="load">0/3</strong></div>
+    </section>
+
+    <section class="playfield">
+      <div class="building" id="building" aria-label="6층 건물">
+        <div class="shaft"></div>
+        <div class="cab" id="cab">
+          <div class="cab-floor" id="cabFloor">1F</div>
+          <div class="cab-load" id="cabLoad"></div>
+        </div>
+      </div>
+
+      <aside class="controls">
+        <div class="floor-buttons" id="floorButtons" aria-label="층 이동 버튼"></div>
+        <button class="primary" id="startBtn" type="button">시작</button>
+        <button class="primary alt" id="boostBtn" type="button">보상 급행</button>
+        <div class="mode-panel" aria-label="테마 선택">
+          <button class="mode-btn selected" id="officeMode" type="button">장난 배송</button>
+          <button class="mode-btn" id="clinicMode" type="button">야간 병원</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="log" id="log">시작을 누르면 첫 호출이 들어옵니다.</section>
+
+    <section class="overlay show" id="startOverlay">
+      <div class="dialog">
+        <h2>정차 버튼만으로는 부족합니다</h2>
+        <p>층을 이동한 뒤 같은 층의 `탑승`과 `하차`를 눌러야 점수가 오릅니다. 정원, 고장층, 급행 제한을 보며 60초 안에 배송을 끝내세요.</p>
+        <ul>
+          <li>승객은 목적층에 내리면 점수와 시간을 줍니다.</li>
+          <li>소포는 틀린 층에 내리면 감점됩니다.</li>
+          <li>보상 급행은 광고 보상 샘플로, 한 번만 대기 시간을 회복합니다.</li>
+          <li>야간 병원은 실제 확장 예시 테마입니다. 환자 우선 배송 규칙이 추가됩니다.</li>
+        </ul>
+        <div class="dialog-actions">
+          <button class="primary" id="overlayStart" type="button">바로 시작</button>
+          <button class="primary alt" id="overlayClinic" type="button">야간 병원으로 시작</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="resultOverlay">
+      <div class="dialog">
+        <h2 id="resultTitle">결과</h2>
+        <p id="resultText"></p>
+        <div class="dialog-actions">
+          <button class="primary" id="restartBtn" type="button">다시 시작</button>
+          <button class="primary alt reward" id="clinicUnlock" type="button">야간 병원 도전</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="overlay" id="helpOverlay">
+      <div class="dialog">
+        <h2>도움말</h2>
+        <p>층 버튼으로 이동하고, 현재 층의 탑승/하차 버튼을 눌러 처리합니다. 목적층 숫자가 아이콘 안에 표시됩니다.</p>
+        <ul>
+          <li>정원 3명을 넘기면 이동이 느려집니다.</li>
+          <li>고장 표시가 있는 층은 정차할 수 없습니다.</li>
+          <li>급행 웨이브에서는 짝수층 또는 홀수층만 정차합니다.</li>
+        </ul>
+        <div class="dialog-actions">
+          <button class="primary" id="closeHelp" type="button">닫기</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const floors = 6;
+    const maxLoad = 3;
+    const colors = ["#356ac3", "#16827b", "#c74848", "#744ea1", "#3d8a53", "#b96b2b"];
+    const themes = {
+      office: {
+        name: "장난 배송",
+        quota: 10,
+        time: 60,
+        broken: [4],
+        expressParity: null,
+        patientBonus: false
+      },
+      clinic: {
+        name: "야간 병원",
+        quota: 12,
+        time: 65,
+        broken: [2],
+        expressParity: "odd",
+        patientBonus: true
+      }
+    };
+
+    const state = {
+      running: false,
+      themeKey: "office",
+      floor: 1,
+      targetFloor: 1,
+      score: 0,
+      time: 60,
+      delivered: 0,
+      wave: 1,
+      nextId: 1,
+      boostUsed: false,
+      queue: [],
+      cab: [],
+      tickTimer: null,
+      spawnTimer: null,
+      moving: false,
+      boostPending: false
+    };
+
+    const building = document.getElementById("building");
+    const cabEl = document.getElementById("cab");
+    const cabFloorEl = document.getElementById("cabFloor");
+    const cabLoadEl = document.getElementById("cabLoad");
+    const floorButtons = document.getElementById("floorButtons");
+    const logEl = document.getElementById("log");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const doneEl = document.getElementById("done");
+    const loadEl = document.getElementById("load");
+    const startBtn = document.getElementById("startBtn");
+    const boostBtn = document.getElementById("boostBtn");
+    const officeMode = document.getElementById("officeMode");
+    const clinicMode = document.getElementById("clinicMode");
+    const startOverlay = document.getElementById("startOverlay");
+    const resultOverlay = document.getElementById("resultOverlay");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultText = document.getElementById("resultText");
+    const clinicUnlock = document.getElementById("clinicUnlock");
+    const helpOverlay = document.getElementById("helpOverlay");
+
+    function currentTheme() {
+      return themes[state.themeKey];
+    }
+
+    function floorTop(floor) {
+      return ((floors - floor) / floors) * 100;
+    }
+
+    function riderText(rider) {
+      return rider.type === "parcel" ? `P${rider.to}` : rider.type === "patient" ? `환${rider.to}` : `${rider.to}`;
+    }
+
+    function riderClass(rider) {
+      const low = rider.patience <= 8 ? " low" : "";
+      return `rider ${rider.type}${low}`;
+    }
+
+    function makeRider(type, from, to) {
+      return {
+        id: state.nextId++,
+        type,
+        from,
+        to,
+        patience: type === "parcel" ? 30 : type === "patient" ? 18 : 22,
+        color: colors[state.nextId % colors.length]
+      };
+    }
+
+    function randomFloor(except) {
+      let value = except;
+      while (value === except) {
+        value = Math.floor(Math.random() * floors) + 1;
+      }
+      return value;
+    }
+
+    function randomAllowedFloor(except) {
+      const candidates = [];
+      for (let floor = 1; floor <= floors; floor++) {
+        if (floor !== except && canScheduleFloor(floor)) candidates.push(floor);
+      }
+      if (!candidates.length) return randomFloor(except);
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function hasServiceNeed(floor) {
+      return state.cab.some((rider) => rider.to === floor) || state.queue.some((rider) => rider.from === floor);
+    }
+
+    function canScheduleFloor(floor) {
+      const theme = currentTheme();
+      if (theme.broken.includes(floor)) return false;
+      if (theme.expressParity === "odd" && floor % 2 === 0) return false;
+      if (theme.expressParity === "even" && floor % 2 === 1) return false;
+      return true;
+    }
+
+    function allowedFloor(floor) {
+      const theme = currentTheme();
+      if (theme.broken.includes(floor)) return false;
+      if (theme.expressParity && !canScheduleFloor(floor) && !hasServiceNeed(floor)) return false;
+      return true;
+    }
+
+    function spawnRider(forceType) {
+      const theme = currentTheme();
+      let from = Math.floor(Math.random() * floors) + 1;
+      if (!canScheduleFloor(from)) from = state.floor;
+      let type = forceType;
+      if (!type) {
+        const roll = Math.random();
+        type = theme.patientBonus && roll < 0.32 ? "patient" : roll < 0.58 ? "parcel" : "person";
+      }
+      const rider = makeRider(type, from, randomAllowedFloor(from));
+      state.queue.push(rider);
+      writeLog(type === "parcel" ? `${from}층 소포가 ${rider.to}층 배송을 기다립니다.` : `${from}층 승객이 ${rider.to}층으로 가려 합니다.`);
+      render();
+    }
+
+    function buildFloors() {
+      building.querySelectorAll(".floor").forEach((node) => node.remove());
+      for (let floor = floors; floor >= 1; floor--) {
+        const row = document.createElement("div");
+        row.className = "floor";
+        row.style.top = `${floorTop(floor)}%`;
+        row.dataset.floor = floor;
+        row.innerHTML = `
+          <div class="floor-label">${floor}F</div>
+          <div class="queue" data-queue="${floor}"></div>
+          <div class="floor-actions">
+            <button class="small-action" type="button" data-board="${floor}">탑승</button>
+            <button class="small-action" type="button" data-exit="${floor}">하차</button>
+          </div>
+        `;
+        building.appendChild(row);
+      }
+    }
+
+    function buildButtons() {
+      floorButtons.innerHTML = "";
+      for (let floor = 1; floor <= floors; floor++) {
+        const btn = document.createElement("button");
+        btn.className = "floor-btn";
+        btn.type = "button";
+        btn.dataset.floor = floor;
+        btn.textContent = `${floor}F`;
+        btn.addEventListener("click", () => moveTo(floor));
+        floorButtons.appendChild(btn);
+      }
+    }
+
+    function resetGame(themeKey = state.themeKey) {
+      clearInterval(state.tickTimer);
+      clearInterval(state.spawnTimer);
+      themes.office.expressParity = null;
+      Object.assign(state, {
+        running: false,
+        themeKey,
+        floor: 1,
+        targetFloor: 1,
+        score: 0,
+        time: themes[themeKey].time,
+        delivered: 0,
+        wave: 1,
+        nextId: 1,
+        boostUsed: false,
+        queue: [],
+        cab: [],
+        tickTimer: null,
+        spawnTimer: null,
+        moving: false,
+        boostPending: false
+      });
+      setModeButtons();
+      buildFloors();
+      buildButtons();
+      updateCabPosition();
+      render();
+      writeLog(`${currentTheme().name} 대기 중입니다.`);
+    }
+
+    function startGame(themeKey = state.themeKey) {
+      resetGame(themeKey);
+      state.running = true;
+      startOverlay.classList.remove("show");
+      resultOverlay.classList.remove("show");
+      for (let i = 0; i < 4; i++) spawnRider(i === 1 ? "parcel" : undefined);
+      state.tickTimer = setInterval(tick, 1000);
+      state.spawnTimer = setInterval(() => {
+        if (state.running && state.queue.length + state.cab.length < 8) spawnRider();
+      }, 4200);
+      writeLog("운행 시작. 정차 후 탑승과 하차를 직접 처리하세요.");
+      render();
+    }
+
+    function tick() {
+      if (!state.running) return;
+      state.time -= 1;
+      state.queue.forEach((rider) => {
+        rider.patience -= 1;
+        if (rider.patience === 7) state.score -= rider.type === "patient" ? 6 : 3;
+      });
+      const angry = state.queue.filter((rider) => rider.patience <= 0);
+      if (angry.length) {
+        state.queue = state.queue.filter((rider) => rider.patience > 0);
+        state.score -= angry.length * 10;
+        writeLog(`${angry.length}명이 기다리다 떠났습니다. 감점입니다.`);
+      }
+      if (state.delivered >= currentTheme().quota) return finish(true);
+      if (state.time <= 0) return finish(false);
+      render();
+    }
+
+    function moveTo(floor) {
+      if (!state.running || state.moving || floor === state.floor) return;
+      if (!allowedFloor(floor)) {
+        writeLog(`${floor}층은 현재 정차할 수 없습니다.`);
+        return;
+      }
+      state.moving = true;
+      state.targetFloor = floor;
+      const distance = Math.abs(state.floor - floor);
+      const overloaded = Math.max(0, state.cab.length - maxLoad);
+      const delay = 260 + distance * 130 + overloaded * 260;
+      state.time = Math.max(0, state.time - Math.max(0, distance - 1));
+      updateCabPosition(floor);
+      setTimeout(() => {
+        state.floor = floor;
+        state.moving = false;
+        writeLog(`${floor}층 도착. 필요한 승객을 태우거나 내려주세요.`);
+        render();
+      }, delay);
+    }
+
+    function boardAt(floor) {
+      if (!state.running || state.floor !== floor) return;
+      const seats = maxLoad - state.cab.length;
+      if (seats <= 0) {
+        writeLog("정원이 찼습니다. 먼저 내려야 합니다.");
+        return;
+      }
+      const waiting = state.queue.filter((rider) => rider.from === floor);
+      if (!waiting.length) {
+        writeLog(`${floor}층에는 기다리는 대상이 없습니다.`);
+        return;
+      }
+      const picked = waiting
+        .sort((a, b) => (a.type === "patient" ? -1 : 0) - (b.type === "patient" ? -1 : 0) || a.patience - b.patience)
+        .slice(0, seats);
+      state.queue = state.queue.filter((rider) => !picked.includes(rider));
+      state.cab.push(...picked);
+      writeLog(`${picked.length}명 탑승. 목적층을 보고 이동하세요.`);
+      render();
+    }
+
+    function exitAt(floor) {
+      if (!state.running || state.floor !== floor) return;
+      const correct = state.cab.filter((rider) => rider.to === floor);
+      const wrongParcel = state.cab.find((rider) => rider.type === "parcel" && rider.to !== floor);
+      if (!correct.length) {
+        if (wrongParcel) {
+          state.cab = state.cab.filter((rider) => rider !== wrongParcel);
+          state.score -= 12;
+          writeLog("소포를 잘못 내렸습니다. 감점 처리됩니다.");
+          render();
+          return;
+        }
+        writeLog("내릴 대상이 없습니다.");
+        return;
+      }
+      state.cab = state.cab.filter((rider) => !correct.includes(rider));
+      correct.forEach((rider) => {
+        const base = rider.type === "patient" ? 22 : rider.type === "parcel" ? 18 : 15;
+        state.score += base + Math.max(0, rider.patience);
+        state.time += rider.type === "patient" ? 2 : 1;
+        state.delivered += 1;
+      });
+      if (state.delivered === 4) {
+        themes.office.expressParity = "even";
+        writeLog("급행 장난 발동. 장난 배송은 이제 짝수층만 추가 정차 가능합니다.");
+      } else if (state.delivered === 7 && state.themeKey === "office") {
+        themes.office.expressParity = null;
+        writeLog("급행 제한 해제. 남은 배송을 마무리하세요.");
+      } else {
+        writeLog(`${correct.length}건 배송 완료.`);
+      }
+      if (state.delivered >= currentTheme().quota) finish(true);
+      render();
+    }
+
+    function useBoost() {
+      if (!state.running || state.boostUsed || state.boostPending) {
+        writeLog("보상 급행은 한 판에 한 번만 사용할 수 있습니다.");
+        return;
+      }
+      state.boostPending = true;
+      writeLog("광고 보상 확인 중입니다. 잠시 뒤 급행 보상이 지급됩니다.");
+      render();
+      setTimeout(() => {
+        if (!state.running || state.boostUsed) return;
+        state.boostPending = false;
+        state.boostUsed = true;
+        state.time += 12;
+        state.score += 8;
+        state.queue.forEach((rider) => {
+          rider.patience += 8;
+        });
+        writeLog("보상 급행 샘플 적용. 시간과 대기 인내도가 회복됩니다.");
+        render();
+      }, 900);
+    }
+
+    function finish(success) {
+      if (!state.running) return;
+      state.running = false;
+      clearInterval(state.tickTimer);
+      clearInterval(state.spawnTimer);
+      const grade = state.score >= 260 ? "S" : state.score >= 190 ? "A" : state.score >= 120 ? "B" : "C";
+      resultTitle.textContent = success ? `배송 성공: ${grade}등급` : `운행 종료: ${grade}등급`;
+      resultText.textContent = `${currentTheme().name}에서 ${state.delivered}/${currentTheme().quota}건을 처리했고 점수는 ${state.score}점입니다. ${success ? "야간 병원 테마로 확장 규칙을 바로 시험할 수 있습니다." : "탑승보다 하차 타이밍을 먼저 정리하면 안정적으로 성공할 수 있습니다."}`;
+      clinicUnlock.classList.toggle("show", state.themeKey === "office");
+      resultOverlay.classList.add("show");
+      render();
+    }
+
+    function render() {
+      const theme = currentTheme();
+      scoreEl.textContent = state.score;
+      timeEl.textContent = Math.max(0, state.time);
+      doneEl.textContent = `${state.delivered}/${theme.quota}`;
+      loadEl.textContent = `${state.cab.length}/${maxLoad}`;
+      cabFloorEl.textContent = `${state.moving ? state.targetFloor : state.floor}F`;
+      cabLoadEl.innerHTML = state.cab.map((rider) => `<span class="${riderClass(rider)}" style="background:${rider.color}">${riderText(rider)}</span>`).join("");
+
+      document.querySelectorAll("[data-queue]").forEach((queue) => {
+        const floor = Number(queue.dataset.queue);
+        const riders = state.queue.filter((rider) => rider.from === floor);
+        const broken = !allowedFloor(floor);
+        queue.innerHTML = `${riders.map((rider) => `<span class="${riderClass(rider)}" style="background:${rider.color}">${riderText(rider)}</span>`).join("")}${broken ? '<span class="broken-mark">정차 불가</span>' : ""}`;
+      });
+
+      document.querySelectorAll("[data-board]").forEach((btn) => {
+        const floor = Number(btn.dataset.board);
+        btn.disabled = !state.running || state.floor !== floor || !state.queue.some((rider) => rider.from === floor);
+      });
+      document.querySelectorAll("[data-exit]").forEach((btn) => {
+        const floor = Number(btn.dataset.exit);
+        btn.disabled = !state.running || state.floor !== floor || !state.cab.length;
+      });
+      document.querySelectorAll(".floor-btn").forEach((btn) => {
+        const floor = Number(btn.dataset.floor);
+        btn.classList.toggle("active", floor === state.floor);
+        btn.classList.toggle("blocked", !allowedFloor(floor));
+      });
+      boostBtn.textContent = state.boostPending ? "광고 확인중" : state.boostUsed ? "급행 사용됨" : "보상 급행";
+      boostBtn.disabled = state.boostUsed || state.boostPending;
+      officeMode.disabled = state.running;
+      clinicMode.disabled = state.running;
+    }
+
+    function updateCabPosition(tempFloor = state.floor) {
+      cabEl.style.top = `calc(${floorTop(tempFloor)}% + 6px)`;
+    }
+
+    function setModeButtons() {
+      officeMode.classList.toggle("selected", state.themeKey === "office");
+      clinicMode.classList.toggle("selected", state.themeKey === "clinic");
+    }
+
+    function writeLog(message) {
+      logEl.textContent = message;
+    }
+
+    building.addEventListener("click", (event) => {
+      const board = event.target.closest("[data-board]");
+      const exit = event.target.closest("[data-exit]");
+      if (board) boardAt(Number(board.dataset.board));
+      if (exit) exitAt(Number(exit.dataset.exit));
+    });
+
+    startBtn.addEventListener("click", () => startGame());
+    boostBtn.addEventListener("click", useBoost);
+    officeMode.addEventListener("click", () => resetGame("office"));
+    clinicMode.addEventListener("click", () => resetGame("clinic"));
+    document.getElementById("overlayStart").addEventListener("click", () => startGame("office"));
+    document.getElementById("overlayClinic").addEventListener("click", () => startGame("clinic"));
+    document.getElementById("restartBtn").addEventListener("click", () => startGame(state.themeKey));
+    clinicUnlock.addEventListener("click", () => startGame("clinic"));
+    document.getElementById("helpBtn").addEventListener("click", () => helpOverlay.classList.add("show"));
+    document.getElementById("closeHelp").addEventListener("click", () => helpOverlay.classList.remove("show"));
+
+    resetGame("office");
+  </script>
+</body>
+</html>
