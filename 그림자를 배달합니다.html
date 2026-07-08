@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>그림자를 배달합니다</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --paper: #eef3f2;
+      --panel: #f8fbfb;
+      --line: #c8d6d2;
+      --blue: #1f6f8b;
+      --green: #237a57;
+      --red: #b6403c;
+      --gold: #c57b25;
+      --shadow: rgba(23, 32, 42, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #1f2b33;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      min-height: min(760px, calc(100vh - 36px));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 14px;
+      background: #dbe7e4;
+      border: 1px solid #b8cbc6;
+      border-radius: 8px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.32);
+      padding: 14px;
+    }
+
+    .stage-wrap {
+      position: relative;
+      min-height: 620px;
+      overflow: hidden;
+      border: 1px solid #9fb6b0;
+      border-radius: 8px;
+      background: #dfe9e5;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      min-height: 620px;
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .title-card,
+    .stat-card,
+    .control-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.04);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #596766;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 58px;
+      border: 1px solid #d5e0dd;
+      border-radius: 7px;
+      padding: 9px 10px;
+      background: #ffffff;
+    }
+
+    .stat span {
+      display: block;
+      color: #63716f;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      font-size: 21px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter {
+      height: 13px;
+      border-radius: 999px;
+      background: #dae5e2;
+      overflow: hidden;
+      border: 1px solid #b9cbc6;
+      margin-top: 8px;
+    }
+
+    .meter > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #b6403c, #c9842d 45%, #287a4a);
+      transition: width 120ms linear;
+    }
+
+    .control-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: #566664;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid #8aa39d;
+      border-radius: 7px;
+      background: #f5faf8;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #eaf4f1;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      background: var(--blue);
+      border-color: #195973;
+      color: white;
+    }
+
+    button.primary:hover {
+      background: #1b6079;
+    }
+
+    button.success {
+      background: var(--green);
+      border-color: #1d6346;
+      color: white;
+    }
+
+    button.warn {
+      background: var(--gold);
+      border-color: #a56a20;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .notice {
+      min-height: 116px;
+      padding: 13px;
+      border-radius: 8px;
+      border: 1px solid #c8d6d2;
+      background: #ffffff;
+      color: #4f5d5b;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .notice b {
+      color: var(--ink);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(32, 37, 43, 0.58);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      background: #f8fbfb;
+      border: 1px solid #c0d0cc;
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: clamp(27px, 5vw, 42px);
+      letter-spacing: 0;
+    }
+
+    .modal p {
+      margin: 0 0 14px;
+      color: #53615f;
+      line-height: 1.55;
+    }
+
+    .modal .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        align-items: stretch;
+        padding: 0;
+        background: #dbe7e4;
+      }
+
+      .shell {
+        min-height: 100vh;
+        grid-template-columns: 1fr;
+        border: 0;
+        border-radius: 0;
+        padding: 10px;
+      }
+
+      .stage-wrap {
+        min-height: 42vh;
+      }
+
+      canvas {
+        min-height: 42vh;
+      }
+
+      .panel {
+        grid-row: 2;
+        gap: 8px;
+      }
+
+      .title-card {
+        display: none;
+      }
+
+      .control-card {
+        order: -1;
+        gap: 7px;
+        padding: 10px;
+      }
+
+      .stat-card {
+        padding: 10px;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .stat {
+        min-height: 48px;
+        padding: 7px 8px;
+      }
+
+      .stat strong {
+        font-size: 18px;
+      }
+
+      button {
+        min-height: 38px;
+      }
+
+      .notice {
+        min-height: 0;
+        max-height: 82px;
+        overflow: auto;
+        padding: 10px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="stage-wrap" aria-label="게임 화면">
+      <canvas id="game" width="960" height="620"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="modal">
+          <h2>그림자를 배달합니다</h2>
+          <p>물건이 아니라 바닥에 떨어진 그림자를 주문 실루엣에 맞춰 배달하는 퍼즐입니다.</p>
+          <p>첫 라운드는 튜토리얼입니다. 물건을 움직이고 회전시켜 검은 그림자를 점선 안에 넣은 뒤 제출하세요.</p>
+          <div class="actions">
+            <button id="startBtn" class="primary">배달 시작</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <section class="title-card">
+        <h1>그림자를 배달합니다</h1>
+        <p class="sub">빛 아래 물건을 조정해 그림자만 정확히 보내세요.</p>
+      </section>
+
+      <section class="stat-card">
+        <div class="stat-grid">
+          <div class="stat"><span>라운드</span><strong id="roundText">-</strong></div>
+          <div class="stat"><span>남은 시간</span><strong id="timeText">-</strong></div>
+          <div class="stat"><span>점수</span><strong id="scoreText">0</strong></div>
+          <div class="stat"><span>성공</span><strong id="successText">0</strong></div>
+        </div>
+        <div class="label-row" style="margin-top:12px;">
+          <span>배송 안정도</span>
+          <span id="matchText">0%</span>
+        </div>
+        <div class="meter" aria-hidden="true"><i id="matchBar"></i></div>
+      </section>
+
+      <section class="control-card">
+        <div class="label-row">
+          <span>회전</span>
+          <span id="angleText">0도</span>
+        </div>
+        <div class="button-row">
+          <button id="rotLeft">왼쪽 회전</button>
+          <button id="rotRight">오른쪽 회전</button>
+        </div>
+        <div class="label-row">
+          <span>높이</span>
+          <span id="heightText">50</span>
+        </div>
+        <input id="heightRange" type="range" min="15" max="95" value="50">
+        <button id="submitBtn" class="success">그림자 제출</button>
+        <div class="button-row">
+          <button id="resetRoundBtn">현재 라운드 재시작</button>
+          <button id="restartBtn" class="warn">처음부터</button>
+        </div>
+      </section>
+
+      <section id="notice" class="notice">
+        <b>대기 중</b><br>배달 시작을 누르면 첫 주문이 들어옵니다.
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const overlay = document.getElementById("overlay");
+      const startBtn = document.getElementById("startBtn");
+      const submitBtn = document.getElementById("submitBtn");
+      const resetRoundBtn = document.getElementById("resetRoundBtn");
+      const restartBtn = document.getElementById("restartBtn");
+      const rotLeft = document.getElementById("rotLeft");
+      const rotRight = document.getElementById("rotRight");
+      const heightRange = document.getElementById("heightRange");
+      const roundText = document.getElementById("roundText");
+      const timeText = document.getElementById("timeText");
+      const scoreText = document.getElementById("scoreText");
+      const successText = document.getElementById("successText");
+      const matchText = document.getElementById("matchText");
+      const matchBar = document.getElementById("matchBar");
+      const angleText = document.getElementById("angleText");
+      const heightText = document.getElementById("heightText");
+      const notice = document.getElementById("notice");
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const TAU = Math.PI * 2;
+
+      const shapes = {
+        parcel: [[-46,-30],[42,-30],[52,-4],[38,30],[-44,28],[-54,2]],
+        teapot: [[-50,-20],[-18,-34],[28,-30],[48,-8],[36,24],[-22,30],[-52,10],[-72,16],[-66,-8]],
+        boot: [[-42,-34],[0,-32],[8,0],[54,8],[62,28],[-50,28],[-56,6]],
+        key: [[-62,-10],[-18,-10],[-8,-26],[24,-26],[40,-10],[26,10],[-8,10],[-16,26],[-30,26],[-30,10],[-62,10]],
+        arrow: [[-58,-16],[8,-16],[8,-34],[62,0],[8,34],[8,16],[-58,16]]
+      };
+
+      const rounds = [
+        {
+          name: "첫 주문",
+          shape: "parcel",
+          time: 45,
+          threshold: 0.84,
+          start: { x: 360, y: 210, rot: -0.08, height: 42 },
+          target: { x: 590, y: 375, rot: 0.04, scale: 1.10 },
+          hint: "<b>튜토리얼 주문</b><br>물건을 끌어 그림자가 점선 실루엣에 들어가게 하세요. 높이를 올리면 그림자가 커지고 멀어집니다."
+        },
+        {
+          name: "찻주전자 그림자",
+          shape: "teapot",
+          time: 38,
+          threshold: 0.72,
+          start: { x: 315, y: 185, rot: 0.38, height: 48 },
+          target: { x: 642, y: 360, rot: -0.42, scale: 1.20 },
+          hint: "<b>두 번째 주문</b><br>손잡이 방향이 맞아야 합니다. 위치가 맞아도 회전이 틀리면 낮은 점수가 납니다."
+        },
+        {
+          name: "장화 그림자",
+          shape: "boot",
+          time: 34,
+          threshold: 0.76,
+          start: { x: 330, y: 240, rot: -0.92, height: 36 },
+          target: { x: 620, y: 400, rot: 0.68, scale: 1.05 },
+          hint: "<b>세 번째 주문</b><br>그림자의 앞코를 목표 실루엣의 튀어나온 쪽에 맞추세요."
+        },
+        {
+          name: "열쇠 그림자",
+          shape: "key",
+          time: 32,
+          threshold: 0.79,
+          start: { x: 405, y: 205, rot: 0.1, height: 62 },
+          target: { x: 660, y: 342, rot: -1.06, scale: 1.28 },
+          hint: "<b>네 번째 주문</b><br>높이 조정이 중요합니다. 목표보다 그림자가 작으면 높이를 올리세요."
+        },
+        {
+          name: "화살표 그림자",
+          shape: "arrow",
+          time: 30,
+          threshold: 0.82,
+          start: { x: 300, y: 250, rot: 1.05, height: 50 },
+          target: { x: 625, y: 365, rot: 2.28, scale: 1.16 },
+          hint: "<b>마지막 주문</b><br>방향과 중심을 함께 맞추면 높은 보너스를 받습니다."
+        }
+      ];
+
+      const state = {
+        mode: "intro",
+        round: 0,
+        score: 0,
+        success: 0,
+        streak: 0,
+        timeLeft: 0,
+        player: { x: 340, y: 210, rot: 0, height: 50 },
+        dragging: false,
+        dragLast: { x: 0, y: 0 },
+        lastTick: 0,
+        latestAccuracy: 0,
+        message: ""
+      };
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function angleDiff(a, b) {
+        let d = Math.abs(((a - b + Math.PI) % TAU) - Math.PI);
+        if (d > Math.PI) d = TAU - d;
+        return d;
+      }
+
+      function currentRound() {
+        return rounds[state.round];
+      }
+
+      function shadowTransform() {
+        const h = state.player.height;
+        return {
+          x: state.player.x + 138 + h * 1.2,
+          y: state.player.y + 82 + h * 0.74,
+          rot: state.player.rot,
+          scale: 0.82 + h * 0.006
+        };
+      }
+
+      function accuracy() {
+        if (state.mode === "intro" || state.mode === "gameover") return 0;
+        const round = currentRound();
+        const shadow = shadowTransform();
+        const target = round.target;
+        const dist = Math.hypot(shadow.x - target.x, shadow.y - target.y);
+        const posPenalty = clamp(dist / 170, 0, 1);
+        const rotPenalty = clamp(angleDiff(shadow.rot, target.rot) / Math.PI, 0, 1);
+        const scalePenalty = clamp(Math.abs(shadow.scale - target.scale) / 0.55, 0, 1);
+        return clamp(1 - (posPenalty * 0.55 + rotPenalty * 0.31 + scalePenalty * 0.14), 0, 1);
+      }
+
+      function updateStats() {
+        const pct = Math.round(state.latestAccuracy * 100);
+        roundText.textContent = state.mode === "intro" ? "-" : `${Math.min(state.round + 1, rounds.length)} / ${rounds.length}`;
+        timeText.textContent = state.mode === "playing" ? Math.ceil(state.timeLeft).toString() : "-";
+        scoreText.textContent = state.score.toString();
+        successText.textContent = state.success.toString();
+        matchText.textContent = `${pct}%`;
+        matchBar.style.width = `${pct}%`;
+        angleText.textContent = `${Math.round(state.player.rot * 180 / Math.PI)}도`;
+        heightText.textContent = Math.round(state.player.height).toString();
+        heightRange.value = Math.round(state.player.height);
+
+        const playing = state.mode === "playing";
+        submitBtn.disabled = !playing;
+        resetRoundBtn.disabled = !playing;
+        rotLeft.disabled = !playing;
+        rotRight.disabled = !playing;
+        heightRange.disabled = !playing;
+      }
+
+      function setNotice(html) {
+        notice.innerHTML = html;
+      }
+
+      function resetPlayerFromRound() {
+        const start = currentRound().start;
+        state.player.x = start.x;
+        state.player.y = start.y;
+        state.player.rot = start.rot;
+        state.player.height = start.height;
+      }
+
+      function beginRound(index) {
+        state.round = index;
+        state.mode = "playing";
+        state.timeLeft = currentRound().time;
+        state.latestAccuracy = 0;
+        resetPlayerFromRound();
+        overlay.classList.add("hidden");
+        setNotice(currentRound().hint);
+        updateStats();
+      }
+
+      function startGame() {
+        state.score = 0;
+        state.success = 0;
+        state.streak = 0;
+        beginRound(0);
+      }
+
+      function showModal(title, body, buttons) {
+        overlay.classList.remove("hidden");
+        overlay.innerHTML = "";
+        const modal = document.createElement("div");
+        modal.className = "modal";
+        const h2 = document.createElement("h2");
+        h2.textContent = title;
+        const p = document.createElement("p");
+        p.innerHTML = body;
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        buttons.forEach((button) => actions.appendChild(button));
+        modal.append(h2, p, actions);
+        overlay.appendChild(modal);
+      }
+
+      function makeButton(label, className, onClick) {
+        const button = document.createElement("button");
+        button.textContent = label;
+        button.className = className || "";
+        button.addEventListener("click", onClick);
+        return button;
+      }
+
+      function submitShadow(reason) {
+        if (state.mode !== "playing") return;
+        state.mode = "roundResult";
+        const round = currentRound();
+        const acc = accuracy();
+        state.latestAccuracy = acc;
+        const success = acc >= round.threshold && reason !== "timeout";
+        let earned = 0;
+
+        if (success) {
+          state.streak += 1;
+          state.success += 1;
+          earned = Math.round(acc * 120 + state.timeLeft * 2 + state.streak * 12);
+          state.score += earned;
+        } else {
+          state.streak = 0;
+        }
+
+        const percent = Math.round(acc * 100);
+        const title = success ? "배송 성공" : (reason === "timeout" ? "시간 초과" : "배송 실패");
+        const body = success
+          ? `${round.name} 완료. 일치율 ${percent}%, 획득 점수 ${earned}점입니다.`
+          : `${round.name}의 일치율은 ${percent}%입니다. 목표 기준 ${Math.round(round.threshold * 100)}%에 부족해 점수를 얻지 못했습니다.`;
+
+        const nextIndex = state.round + 1;
+        const buttons = [];
+        if (success && nextIndex < rounds.length) {
+          buttons.push(makeButton("다음 배달", "primary", () => beginRound(nextIndex)));
+        } else if (success) {
+          buttons.push(makeButton("결과 보기", "primary", showResults));
+        } else {
+          buttons.push(makeButton("같은 주문 재도전", "primary", () => beginRound(state.round)));
+          buttons.push(makeButton("처음부터", "", startGame));
+        }
+        showModal(title, body, buttons);
+        setNotice(success ? "<b>판정</b><br>목표 실루엣 안에 그림자가 안정적으로 들어갔습니다." : "<b>판정</b><br>위치, 회전, 높이 중 하나 이상이 목표와 어긋났습니다.");
+        updateStats();
+      }
+
+      function showResults() {
+        state.mode = "gameover";
+        const grade = state.success === rounds.length ? "완전 배송" : state.success >= 3 ? "부분 배송" : "재배송 필요";
+        showModal(
+          "결과",
+          `${grade}<br>최종 점수 ${state.score}점, 성공 ${state.success}/${rounds.length}건입니다.`,
+          [makeButton("다시 시작", "primary", startGame)]
+        );
+        setNotice("<b>결과</b><br>처음부터 다시 시작해 더 높은 안정도를 노릴 수 있습니다.");
+        updateStats();
+      }
+
+      function resetCurrentRound() {
+        if (state.mode === "playing") beginRound(state.round);
+      }
+
+      function rotatePlayer(amount) {
+        if (state.mode !== "playing") return;
+        state.player.rot += amount;
+      }
+
+      function movePlayer(dx, dy) {
+        if (state.mode !== "playing") return;
+        state.player.x = clamp(state.player.x + dx, 105, 650);
+        state.player.y = clamp(state.player.y + dy, 85, 410);
+      }
+
+      function drawShape(points, x, y, rot, scale, fill, stroke, width, dashed) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.scale(scale, scale);
+        ctx.beginPath();
+        points.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point[0], point[1]);
+          else ctx.lineTo(point[0], point[1]);
+        });
+        ctx.closePath();
+        if (dashed) ctx.setLineDash([9 / scale, 7 / scale]);
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = width / scale;
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawFloor() {
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, "#dfe9e5");
+        grad.addColorStop(0.54, "#cddfda");
+        grad.addColorStop(1, "#a9c1ba");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(57, 80, 82, 0.20)";
+        ctx.lineWidth = 1;
+        for (let x = -80; x < W + 160; x += 64) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x - 260, H);
+          ctx.stroke();
+        }
+        for (let y = 120; y < H; y += 72) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y + 28);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.32)";
+        ctx.fillRect(0, 0, W, 86);
+        ctx.fillStyle = "#37404a";
+        ctx.fillRect(0, 0, W, 8);
+      }
+
+      function drawLamp() {
+        ctx.save();
+        ctx.translate(86, 78);
+        ctx.strokeStyle = "#303841";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(-36, -20);
+        ctx.lineTo(20, 18);
+        ctx.stroke();
+        ctx.fillStyle = "#2f3842";
+        ctx.beginPath();
+        ctx.arc(-44, -28, 18, 0, TAU);
+        ctx.fill();
+        const ray = ctx.createRadialGradient(-42, -28, 8, 250, 230, 520);
+        ray.addColorStop(0, "rgba(255, 213, 105, 0.42)");
+        ray.addColorStop(1, "rgba(255, 213, 105, 0)");
+        ctx.fillStyle = ray;
+        ctx.beginPath();
+        ctx.moveTo(-38, -16);
+        ctx.lineTo(880, 310);
+        ctx.lineTo(710, 620);
+        ctx.lineTo(0, 470);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawGuideText() {
+        const round = currentRound();
+        ctx.save();
+        ctx.fillStyle = "rgba(248, 251, 251, 0.88)";
+        ctx.strokeStyle = "rgba(77, 101, 99, 0.42)";
+        ctx.lineWidth = 1;
+        roundRect(24, 24, 338, 72, 8, true, true);
+        ctx.fillStyle = "#2c3540";
+        ctx.font = "800 20px Malgun Gothic, sans-serif";
+        ctx.fillText(round.name, 44, 55);
+        ctx.font = "14px Malgun Gothic, sans-serif";
+        ctx.fillText("점선 실루엣은 목표, 검은 면은 현재 그림자입니다.", 44, 80);
+        ctx.restore();
+      }
+
+      function roundRect(x, y, w, h, r, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      function drawScene() {
+        drawFloor();
+        drawLamp();
+
+        if (state.mode === "intro") {
+          drawIntroPreview();
+          return;
+        }
+
+        const round = currentRound();
+        const points = shapes[round.shape];
+        const target = round.target;
+        const shadow = shadowTransform();
+
+        ctx.save();
+        ctx.globalAlpha = 0.48;
+        drawShape(points, target.x + 10, target.y + 12, target.rot, target.scale, "rgba(34, 111, 135, 0.12)", "rgba(34, 111, 135, 0.96)", 4, true);
+        ctx.restore();
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.30)";
+        ctx.shadowBlur = 18;
+        drawShape(points, shadow.x, shadow.y, shadow.rot, shadow.scale, "rgba(14, 20, 27, 0.68)", "rgba(7, 10, 14, 0.70)", 2, false);
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(63, 84, 83, 0.28)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 8]);
+        ctx.beginPath();
+        ctx.moveTo(state.player.x, state.player.y);
+        ctx.lineTo(shadow.x, shadow.y);
+        ctx.stroke();
+        ctx.restore();
+
+        const objectScale = 0.72;
+        drawShape(points, state.player.x, state.player.y, state.player.rot, objectScale, "#f0a13a", "#61431f", 3, false);
+        drawObjectHandle();
+        drawGuideText();
+      }
+
+      function drawObjectHandle() {
+        ctx.save();
+        ctx.translate(state.player.x, state.player.y);
+        ctx.rotate(state.player.rot);
+        ctx.strokeStyle = "#f8fbfb";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(68, 0);
+        ctx.stroke();
+        ctx.fillStyle = "#1f6f8b";
+        ctx.beginPath();
+        ctx.arc(72, 0, 7, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawIntroPreview() {
+        const points = shapes.parcel;
+        drawShape(points, 360, 210, -0.2, 0.75, "#f0a13a", "#61431f", 3, false);
+        drawShape(points, 620, 380, 0.02, 1.12, "rgba(14, 20, 27, 0.62)", "rgba(7, 10, 14, 0.68)", 2, false);
+        drawShape(points, 635, 392, 0.04, 1.14, "rgba(34, 111, 135, 0.08)", "rgba(34, 111, 135, 0.9)", 4, true);
+      }
+
+      function screenToCanvas(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * (canvas.width / rect.width),
+          y: (event.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (state.mode !== "playing") return;
+        const pos = screenToCanvas(event);
+        const shadow = shadowTransform();
+        const nearObject = Math.hypot(pos.x - state.player.x, pos.y - state.player.y) < 115;
+        const nearShadow = Math.hypot(pos.x - shadow.x, pos.y - shadow.y) < 135;
+        if (!nearObject && !nearShadow) return;
+        state.dragging = true;
+        state.dragLast = pos;
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!state.dragging || state.mode !== "playing") return;
+        const pos = screenToCanvas(event);
+        movePlayer(pos.x - state.dragLast.x, pos.y - state.dragLast.y);
+        state.dragLast = pos;
+      });
+
+      function stopDrag(event) {
+        state.dragging = false;
+        if (event && canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      canvas.addEventListener("pointerup", stopDrag);
+      canvas.addEventListener("pointercancel", stopDrag);
+
+      window.addEventListener("keydown", (event) => {
+        if (state.mode !== "playing") return;
+        const step = event.shiftKey ? 12 : 5;
+        let handled = true;
+        if (event.key === "ArrowLeft") movePlayer(-step, 0);
+        else if (event.key === "ArrowRight") movePlayer(step, 0);
+        else if (event.key === "ArrowUp") movePlayer(0, -step);
+        else if (event.key === "ArrowDown") movePlayer(0, step);
+        else if (event.key === "q" || event.key === "Q") rotatePlayer(-0.08);
+        else if (event.key === "e" || event.key === "E") rotatePlayer(0.08);
+        else if (event.key === "w" || event.key === "W") state.player.height = clamp(state.player.height + 2, 15, 95);
+        else if (event.key === "s" || event.key === "S") state.player.height = clamp(state.player.height - 2, 15, 95);
+        else if (event.key === "Enter" || event.key === " ") {
+          submitShadow("manual");
+        } else {
+          handled = false;
+        }
+        if (handled) event.preventDefault();
+      });
+
+      startBtn.addEventListener("click", startGame);
+      submitBtn.addEventListener("click", () => submitShadow("manual"));
+      resetRoundBtn.addEventListener("click", resetCurrentRound);
+      restartBtn.addEventListener("click", startGame);
+      rotLeft.addEventListener("click", () => rotatePlayer(-0.12));
+      rotRight.addEventListener("click", () => rotatePlayer(0.12));
+      heightRange.addEventListener("input", () => {
+        if (state.mode === "playing") {
+          state.player.height = Number(heightRange.value);
+        }
+      });
+
+      function tick(now) {
+        const dt = Math.min((now - state.lastTick) / 1000 || 0, 0.08);
+        state.lastTick = now;
+
+        if (state.mode === "playing") {
+          state.timeLeft -= dt;
+          state.latestAccuracy = accuracy();
+          if (state.timeLeft <= 0) {
+            state.timeLeft = 0;
+            submitShadow("timeout");
+          }
+        }
+
+        drawScene();
+        updateStats();
+        requestAnimationFrame(tick);
+      }
+
+      updateStats();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
