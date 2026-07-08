@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>시바는 고기에 뚱땅뚱땅</title>
+  <style>
+:root {
+  --bg: #fff4d7;
+  --panel: #fffaf0;
+  --ink: #3b251b;
+  --accent: #e85d3f;
+  --meat: #b54132;
+  --good: #ffd85a;
+  --bad: #96b66c;
+  --wood: #b56a36;
+  --wood-dark: #734224;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--ink); background: #151515; }
+button { font: inherit; border: 0; cursor: pointer; }
+.app { position: relative; width: min(100vw, 520px); height: 100dvh; margin: 0 auto; overflow: hidden; background: linear-gradient(#ffe9aa, #fff7dc 45%, #eec58c); }
+.screen { position: absolute; inset: 0; display: none; padding: 24px; }
+.screen.active { display: flex; }
+.title-screen, .result-screen { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 18px; }
+h1 { font-size: clamp(38px, 10vw, 58px); line-height: 1.05; margin: 0; letter-spacing: -0.06em; text-shadow: 0 4px 0 rgba(255,255,255,.75); }
+h2 { font-size: 30px; line-height: 1.15; margin: 0; }
+p { margin: 0; font-size: 17px; opacity: .82; }
+.primary-btn, .secondary-btn { width: min(320px, 80vw); padding: 16px 22px; border-radius: 999px; font-weight: 900; font-size: 20px; box-shadow: 0 8px 0 rgba(60,35,20,.22); }
+.primary-btn { background: var(--accent); color: white; }
+.secondary-btn { background: white; color: var(--ink); box-shadow: 0 6px 0 rgba(60,35,20,.12); }
+.sky-dots::before, .sky-dots::after { content: ''; position: absolute; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,.32); filter: blur(1px); }
+.sky-dots::before { top: 12%; left: -30px; } .sky-dots::after { right: -45px; bottom: 20%; }
+.play-screen { padding: 0; display: none; }
+.play-screen.active { display: block; }
+.stage { position: absolute; inset: 0; transition: transform .7s ease, background .7s ease; transform-origin: 72% 66%; }
+.stage.zoom-mode { transform: scale(1.65) translate(-15%, -11%); background: rgba(255,255,255,.12); }
+.hud { position: absolute; z-index: 10; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+.hud.hidden { opacity: 0; }
+.hud-title, .timer { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.9); font-weight: 900; box-shadow: 0 4px 0 rgba(60,35,20,.13); }
+.timer { min-width: 70px; color: var(--accent); }
+.caption { position: absolute; left: 50%; bottom: 28%; transform: translateX(-50%); z-index: 8; padding: 10px 16px; border-radius: 999px; background: rgba(255,255,255,.9); font-size: 22px; font-weight: 900; box-shadow: 0 4px 0 rgba(60,35,20,.12); }
+.dog { position: absolute; left: -42%; bottom: 20%; width: 150px; height: 112px; animation: dogWalk 2.2s ease-out forwards; z-index: 3; }
+.dog-body { position: absolute; left: 28px; top: 38px; width: 86px; height: 58px; border-radius: 45% 45% 38% 38%; background: #d98a42; box-shadow: inset -10px -8px 0 rgba(117,57,22,.16); }
+.dog-head { position: absolute; left: 84px; top: 15px; width: 61px; height: 60px; border-radius: 46% 48% 42% 42%; background: #e49a4d; box-shadow: inset -5px -7px 0 rgba(117,57,22,.13); }
+.dog-head::before { content:''; position:absolute; right:6px; top:27px; width:25px; height:18px; border-radius:50%; background:#fff2d5; }
+.dog-head::after { content:''; position:absolute; right:9px; top:22px; width:6px; height:6px; border-radius:50%; background:#2f2018; box-shadow: 16px 6px 0 -1px #2f2018; }
+.dog-head span { position:absolute; right:2px; top:34px; width:9px; height:7px; border-radius:50%; background:#2f2018; }
+.dog-ear { position:absolute; top:4px; width:24px; height:34px; background:#d77d34; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.dog-ear.left { left:91px; transform: rotate(-20deg); } .dog-ear.right { left:121px; transform: rotate(18deg); }
+.dog-tail { position:absolute; left:8px; top:27px; width:42px; height:42px; border:12px solid #d98a42; border-left-color: transparent; border-bottom-color: transparent; border-radius:50%; transform: rotate(-20deg); animation: wag .28s infinite alternate ease-in-out; }
+.dog-leg { position:absolute; bottom:5px; width:16px; height:33px; border-radius:12px; background:#b9652c; animation: leg .26s infinite alternate ease-in-out; transform-origin: top; }
+.l1 { left:42px; } .l2 { left:68px; animation-delay: .13s; } .l3 { left:92px; } .l4 { left:113px; animation-delay: .13s; }
+.dog-shadow { position:absolute; left:25px; bottom:0; width:120px; height:18px; border-radius:50%; background:rgba(60,35,20,.18); }
+@keyframes dogWalk { 0% { transform: translateX(0) rotate(0deg); } 65% { transform: translateX(calc(50vw + 10px)) rotate(0deg); } 82% { transform: translateX(calc(50vw + 18px)) rotate(-4deg); } 100% { transform: translateX(calc(50vw + 18px)) rotate(0deg); } }
+@keyframes wag { to { transform: rotate(25deg); } }
+@keyframes leg { to { transform: rotate(18deg) translateY(3px); } }
+.table-scene { position: absolute; right: -3%; bottom: 5%; width: 72%; height: 42%; z-index: 2; }
+.table { position: absolute; inset: 18% 3% 0 0; border-radius: 50% / 42%; background: radial-gradient(circle at 50% 42%, #cf874d 0 54%, #955126 55% 100%); box-shadow: 0 14px 0 var(--wood-dark), 0 22px 24px rgba(48,28,17,.28); transform: rotate(-2deg); }
+.table::after { content:''; position:absolute; inset:8%; border-radius:50%; border:4px dashed rgba(255,237,189,.6); pointer-events:none; }
+.table-cover { position: absolute; z-index: 5; left: 4%; right: 0; top: 0; height: 78%; border-radius: 50% 50% 44% 44%; background: linear-gradient(135deg, #f9f1de, #d7c2a6); box-shadow: 0 14px 0 rgba(82,52,34,.18); display:flex; align-items:center; justify-content:center; font-weight:900; color:rgba(80,55,35,.5); transform-origin: 75% 24%; transition: transform .55s ease, opacity .4s ease; }
+.table-cover.open { transform: rotate(28deg) translate(28%, -44%); opacity: 0; pointer-events:none; }
+.dish { position:absolute; width:17%; aspect-ratio:1; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 0 rgba(70,35,20,.12); transform: translate(-50%, -50%); user-select:none; touch-action: manipulation; transition: transform .12s ease, opacity .2s ease; }
+.dish::before { content:''; position:absolute; inset:10%; border-radius:50%; background: var(--food); box-shadow: inset -4px -5px 0 rgba(70,30,20,.13); }
+.dish::after { content: attr(data-icon); position:relative; z-index:1; font-size: clamp(14px, 5vw, 26px); filter: drop-shadow(0 1px 0 rgba(255,255,255,.45)); }
+.dish.hit { transform: translate(-50%, -50%) scale(.88); opacity: .38; outline: 4px solid var(--good); }
+.dish.wrong { animation: wrong .22s 2; outline: 4px solid #ff4040; }
+@keyframes wrong { 50% { transform: translate(-50%, -50%) rotate(9deg) scale(1.04); } }
+.pop { position:absolute; z-index:9; transform: translate(-50%, -50%); padding: 4px 8px; border-radius:999px; background:white; font-size:16px; font-weight:900; animation: popUp .5s ease forwards; pointer-events:none; }
+@keyframes popUp { to { transform: translate(-50%, -95%); opacity:0; } }
+.star-line { font-size: 46px; letter-spacing: 3px; color: #ffbd21; text-shadow: 0 3px 0 rgba(90,55,20,.17); }
+.result-dog { position: relative; width: 170px; height: 138px; }
+.title-dog { position: relative; width: 170px; height: 138px; margin-bottom: -8px; }
+.big.dog-body { left: 28px; top: 52px; width: 98px; height: 67px; }
+.big.dog-head { left: 94px; top: 23px; width: 72px; height: 70px; }
+.big.dog-tail { left: 0; top: 37px; width: 50px; height: 50px; }
+.result-dog.happy { animation: bounce .45s infinite alternate ease-in-out; }
+@keyframes bounce { to { transform: translateY(-8px) rotate(-2deg); } }
+@media (max-height: 620px) { h1 { font-size: 36px; } .table-scene { height: 39%; } .caption { bottom: 31%; } }
+
+  </style>
+</head>
+<body>
+  <main id="app" class="app">
+    <section id="titleScreen" class="screen title-screen active">
+      <div class="sky-dots"></div>
+      <div class="title-dog" aria-hidden="true">
+        <div class="dog-body big"></div>
+        <div class="dog-head big"><span></span></div>
+        <div class="dog-tail big"></div>
+      </div>
+      <h1>시바는 고기에<br/>뚱땅뚱땅</h1>
+      <p>밥상 위에서 고기반찬만 골라 주세요.</p>
+      <button id="startBtn" class="primary-btn">시작</button>
+    </section>
+
+    <section id="playScreen" class="screen play-screen">
+      <div id="hud" class="hud hidden">
+        <div class="hud-title">고기만 골라!</div>
+        <div id="timer" class="timer">10.0</div>
+      </div>
+
+      <div id="stage" class="stage intro-mode">
+        <div id="dog" class="dog">
+          <div class="dog-shadow"></div>
+          <div class="dog-body"></div>
+          <div class="dog-head"><span></span></div>
+          <div class="dog-ear left"></div>
+          <div class="dog-ear right"></div>
+          <div class="dog-tail"></div>
+          <div class="dog-leg l1"></div>
+          <div class="dog-leg l2"></div>
+          <div class="dog-leg l3"></div>
+          <div class="dog-leg l4"></div>
+        </div>
+
+        <div id="tableScene" class="table-scene">
+          <div class="table-cover">상덮개</div>
+          <div id="table" class="table" aria-label="밥상"></div>
+        </div>
+
+        <div id="caption" class="caption">뚱땅뚱땅...</div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen result-screen">
+      <div id="resultDog" class="result-dog happy">
+        <div class="dog-body big"></div>
+        <div class="dog-head big"><span></span></div>
+        <div class="dog-tail big"></div>
+      </div>
+      <div id="starLine" class="star-line">★★★</div>
+      <h2 id="resultTitle">고기 냄새는 못 속이지!</h2>
+      <p id="resultText">모든 고기반찬을 찾았습니다.</p>
+      <button id="retryBtn" class="primary-btn">다시 하기</button>
+      <button id="homeBtn" class="secondary-btn">처음으로</button>
+    </section>
+  </main>
+
+  <script>
+window.GAME_TEXT = {
+  title: '시바는 고기에 뚱땅뚱땅',
+  subtitle: '밥상 위에서 고기반찬만 골라 주세요.',
+  start: '시작',
+  guide: '고기만 골라!',
+  introCaptions: ['뚱땅뚱땅...', '킁...', '고기 냄새다!'],
+  result: {
+    failWrong: ['고기가 아니었다!', '먹으면 안 되는 반찬을 골랐습니다.'],
+    failLow: ['고기 감별 실패!', '찾은 고기반찬이 너무 적습니다.'],
+    star1: ['조금은 찾았다!', '고기반찬을 일부 찾았습니다.'],
+    star2: ['거의 다 찾았다!', '고기반찬을 대부분 찾았습니다.'],
+    star3: ['고기 냄새는 못 속이지!', '모든 고기반찬을 찾았습니다.']
+  }
+};
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const titleScreen = $('titleScreen');
+  const playScreen = $('playScreen');
+  const resultScreen = $('resultScreen');
+  const startBtn = $('startBtn');
+  const retryBtn = $('retryBtn');
+  const homeBtn = $('homeBtn');
+  const stage = $('stage');
+  const table = $('table');
+  const cover = document.querySelector('.table-cover');
+  const hud = $('hud');
+  const timerEl = $('timer');
+  const caption = $('caption');
+  const starLine = $('starLine');
+  const resultTitle = $('resultTitle');
+  const resultText = $('resultText');
+
+  const CFG = {
+    timeLimit: 10,
+    minMeatForClear: 3,
+    introMs: 2400,
+    zoomMs: 700,
+    revealMs: 500
+  };
+
+  const dishes = [
+    { name: '제육볶음', meat: true, icon: '🥩', color: '#c54a3c', x: 28, y: 37 },
+    { name: '불고기', meat: true, icon: '🍖', color: '#9f4d30', x: 49, y: 31 },
+    { name: '닭강정', meat: true, icon: '🍗', color: '#d87832', x: 69, y: 42 },
+    { name: '떡갈비', meat: true, icon: '🥓', color: '#a53d32', x: 40, y: 61 },
+    { name: '장조림', meat: true, icon: '🥘', color: '#7b3c25', x: 63, y: 66 },
+    { name: '김치', meat: false, icon: '🌶️', color: '#d83228', x: 22, y: 61 },
+    { name: '나물', meat: false, icon: '🌿', color: '#62a650', x: 75, y: 61 },
+    { name: '계란말이', meat: false, icon: '🥚', color: '#f5d45d', x: 34, y: 78 },
+    { name: '두부조림', meat: false, icon: '◻️', color: '#f1e3bc', x: 53, y: 81 },
+    { name: '오이무침', meat: false, icon: '🥒', color: '#67aa5a', x: 72, y: 78 },
+    { name: '버섯볶음', meat: false, icon: '🍄', color: '#b89062', x: 20, y: 44 },
+    { name: '멸치볶음', meat: false, icon: '〰️', color: '#bca872', x: 84, y: 49 }
+  ];
+
+  let state = null;
+  let timerId = null;
+  let introTimers = [];
+
+  function show(screen) {
+    [titleScreen, playScreen, resultScreen].forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+  }
+
+  function clearTimers() {
+    if (timerId) clearInterval(timerId);
+    timerId = null;
+    introTimers.forEach(clearTimeout);
+    introTimers = [];
+  }
+
+  function resetPlayVisuals() {
+    clearTimers();
+    table.innerHTML = '';
+    stage.className = 'stage intro-mode';
+    cover.classList.remove('open');
+    hud.classList.add('hidden');
+    caption.textContent = GAME_TEXT.introCaptions[0];
+    const oldDog = $('dog');
+    oldDog.style.animation = 'none';
+    void oldDog.offsetWidth;
+    oldDog.style.animation = '';
+  }
+
+  function startGame() {
+    resetPlayVisuals();
+    show(playScreen);
+    state = {
+      active: false,
+      found: 0,
+      wrong: false,
+      startedAt: 0,
+      meatTotal: dishes.filter(d => d.meat).length
+    };
+
+    introTimers.push(setTimeout(() => caption.textContent = GAME_TEXT.introCaptions[1], 1200));
+    introTimers.push(setTimeout(() => caption.textContent = GAME_TEXT.introCaptions[2], 2000));
+    introTimers.push(setTimeout(() => {
+      stage.classList.add('zoom-mode');
+      caption.textContent = '상을 열어라!';
+    }, CFG.introMs));
+    introTimers.push(setTimeout(() => {
+      cover.classList.add('open');
+      renderDishes();
+    }, CFG.introMs + CFG.zoomMs));
+    introTimers.push(setTimeout(() => {
+      caption.textContent = GAME_TEXT.guide;
+      hud.classList.remove('hidden');
+      beginTimer();
+    }, CFG.introMs + CFG.zoomMs + CFG.revealMs));
+  }
+
+  function renderDishes() {
+    const shuffled = [...dishes].sort(() => Math.random() - 0.5);
+    shuffled.forEach(d => {
+      const el = document.createElement('button');
+      el.className = 'dish';
+      el.type = 'button';
+      el.dataset.icon = d.icon;
+      el.dataset.meat = String(d.meat);
+      el.dataset.name = d.name;
+      el.style.left = d.x + '%';
+      el.style.top = d.y + '%';
+      el.style.setProperty('--food', d.color);
+      el.setAttribute('aria-label', d.name);
+      el.addEventListener('pointerdown', onDishTap, { passive: true });
+      table.appendChild(el);
+    });
+  }
+
+  function beginTimer() {
+    state.active = true;
+    state.startedAt = performance.now();
+    updateTimer();
+    timerId = setInterval(updateTimer, 80);
+  }
+
+  function updateTimer() {
+    if (!state?.active) return;
+    const elapsed = (performance.now() - state.startedAt) / 1000;
+    const remain = Math.max(0, CFG.timeLimit - elapsed);
+    timerEl.textContent = remain.toFixed(1);
+    if (remain <= 0) finishByCount();
+  }
+
+  function onDishTap(ev) {
+    if (!state?.active) return;
+    const el = ev.currentTarget;
+    if (el.classList.contains('hit')) return;
+
+    if (el.dataset.meat !== 'true') {
+      el.classList.add('wrong');
+      pop(el, '아님!');
+      finish('failWrong');
+      return;
+    }
+
+    el.classList.add('hit');
+    state.found += 1;
+    pop(el, '고기!');
+
+    if (state.found >= state.meatTotal) {
+      finish('star3');
+    }
+  }
+
+  function pop(target, text) {
+    const p = document.createElement('div');
+    const rect = target.getBoundingClientRect();
+    const appRect = document.querySelector('.app').getBoundingClientRect();
+    p.className = 'pop';
+    p.textContent = text;
+    p.style.left = (rect.left - appRect.left + rect.width / 2) + 'px';
+    p.style.top = (rect.top - appRect.top + rect.height / 2) + 'px';
+    document.querySelector('.app').appendChild(p);
+    setTimeout(() => p.remove(), 520);
+  }
+
+  function finishByCount() {
+    if (state.found < CFG.minMeatForClear) return finish('failLow');
+    if (state.found === state.meatTotal) return finish('star3');
+    if (state.found >= state.meatTotal - 1) return finish('star2');
+    return finish('star1');
+  }
+
+  function finish(type) {
+    if (!state?.active) return;
+    state.active = false;
+    clearTimers();
+    setTimeout(() => showResult(type), type.startsWith('fail') ? 350 : 500);
+  }
+
+  function showResult(type) {
+    const map = {
+      failWrong: { stars: 0, text: GAME_TEXT.result.failWrong },
+      failLow: { stars: 0, text: GAME_TEXT.result.failLow },
+      star1: { stars: 1, text: GAME_TEXT.result.star1 },
+      star2: { stars: 2, text: GAME_TEXT.result.star2 },
+      star3: { stars: 3, text: GAME_TEXT.result.star3 }
+    };
+    const r = map[type];
+    starLine.textContent = r.stars > 0 ? '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars) : '실패';
+    resultTitle.textContent = r.text[0];
+    resultText.textContent = r.text[1];
+    show(resultScreen);
+  }
+
+  startBtn.addEventListener('click', startGame);
+  retryBtn.addEventListener('click', startGame);
+  homeBtn.addEventListener('click', () => { clearTimers(); show(titleScreen); });
+})();
+
+  </script>
+</body>
+</html>

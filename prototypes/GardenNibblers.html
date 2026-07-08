@@ -1,0 +1,2247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>정원의 갉작이들</title>
+  <style>
+    :root {
+      --bg: #f5f8ed;
+      --panel: #fffef8;
+      --ink: #263323;
+      --muted: #687461;
+      --line: #cad8bc;
+      --garden: #dfeecd;
+      --garden-deep: #cfe2b9;
+      --accent: #4e8f3d;
+      --danger: #c94d4d;
+      --warn: #d08b22;
+      --shadow: 0 12px 30px rgba(39, 54, 33, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 34rem),
+        linear-gradient(180deg, #f8fbf1 0%, var(--bg) 100%);
+      display: flex;
+      justify-content: center;
+      padding: 6px;
+      overflow: hidden;
+    }
+
+    .app {
+      width: min(100%, 560px);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    header {
+      display: none;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .garden-hud {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 7px;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(255, 254, 248, 0.78);
+      border: 1px solid rgba(202, 216, 188, 0.72);
+      color: rgba(38, 51, 35, 0.88);
+      font-size: 13px;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 14px rgba(39, 54, 33, 0.07);
+    }
+
+    .garden-hud b {
+      font-weight: 1000;
+    }
+
+    .hud-title {
+      font-weight: 1000;
+      color: #405236;
+      margin-right: 1px;
+    }
+
+    .hud-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .garden-stat.danger {
+      color: var(--danger);
+    }
+
+    .garden-shell {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 5px;
+      box-shadow: 0 8px 18px rgba(39, 54, 33, 0.09);
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .garden {
+      position: relative;
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 0;
+      border-radius: 13px;
+      overflow: hidden;
+      cursor: crosshair;
+      user-select: none;
+      background:
+        radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.55) 0 9%, transparent 10%),
+        radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.4) 0 8%, transparent 9%),
+        radial-gradient(circle at 24% 72%, rgba(255, 255, 255, 0.3) 0 12%, transparent 13%),
+        linear-gradient(160deg, var(--garden) 0%, var(--garden-deep) 100%);
+      border: 1px solid rgba(112, 135, 92, 0.28);
+    }
+
+    .garden::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(96, 137, 69, 0.05));
+      pointer-events: none;
+    }
+
+
+    .core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      --core-size: 178px;
+      width: var(--core-size) !important;
+      height: var(--core-size) !important;
+      min-width: var(--core-size) !important;
+      max-width: var(--core-size) !important;
+      min-height: var(--core-size) !important;
+      max-height: var(--core-size) !important;
+      inline-size: var(--core-size) !important;
+      block-size: var(--core-size) !important;
+      aspect-ratio: 1 / 1;
+      box-sizing: border-box;
+      padding: 0 10px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2px dashed rgba(137, 93, 61, 0.58);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 247, 232, 0.9) 0 48%, rgba(224, 240, 201, 0.78) 49% 100%);
+      color: #6d4a2d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 900;
+      font-size: 11px;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(70, 91, 52, 0.12);
+      contain: layout paint;
+    }
+
+    .core-plants {
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .core-title {
+      font-size: 14px;
+      line-height: 1.05;
+    }
+
+    .core-sub {
+      margin-top: 3px;
+      font-size: 10px;
+      color: rgba(109, 74, 45, 0.78);
+      line-height: 1.15;
+    }
+
+    .core.warning {
+      width: var(--core-size) !important;
+      height: var(--core-size) !important;
+      inline-size: var(--core-size) !important;
+      block-size: var(--core-size) !important;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border-color: rgba(208, 139, 34, 0.95);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 248, 221, 0.98) 0 43%, rgba(230, 232, 180, 0.92) 44% 100%);
+      color: #8a5b13;
+      animation: coreWarningPulse 0.8s infinite alternate;
+    }
+
+    .core.danger {
+      width: var(--core-size) !important;
+      height: var(--core-size) !important;
+      inline-size: var(--core-size) !important;
+      block-size: var(--core-size) !important;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border-color: rgba(201, 77, 77, 1);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 232, 232, 0.98) 0 43%, rgba(226, 199, 177, 0.92) 44% 100%);
+      color: #8c2d2d;
+      animation: coreDangerShake 0.24s infinite alternate;
+    }
+
+    .garden.warning {
+      box-shadow: none;
+    }
+
+    .garden.danger {
+      box-shadow: none;
+    }
+
+    .garden.warning::before,
+    .garden.danger::before {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(96, 137, 69, 0.05));
+    }
+
+    .garden-stat.warning {
+      border-color: rgba(208, 139, 34, 0.85);
+      background: #fff8df;
+    }
+
+    .garden-stat.danger {
+      border-color: rgba(201, 77, 77, 0.95);
+      background: #ffe9e9;
+      animation: gardenStatDangerPulse 0.35s infinite alternate;
+    }
+
+    @keyframes coreWarningPulse {
+      from { transform: translate(-50%, -50%) scale(1); }
+      to { transform: translate(-50%, -50%) scale(1.045); }
+    }
+
+    @keyframes coreDangerShake {
+      from { transform: translate(calc(-50% - 2px), -50%) rotate(-1deg); }
+      to { transform: translate(calc(-50% + 2px), -50%) rotate(1deg); }
+    }
+
+    @keyframes gardenStatDangerPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.025); }
+    }
+
+
+    .hint {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 33px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: rgba(255, 254, 248, 0.62);
+      border: 1px solid rgba(202, 216, 188, 0.48);
+      color: rgba(104, 116, 97, 0.9);
+      font-size: 9px;
+      line-height: 1.22;
+      z-index: 5;
+      pointer-events: none;
+      text-align: center;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    .bush {
+      position: absolute;
+      z-index: 1;
+      font-size: 34px;
+      opacity: 0.72;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.10));
+      pointer-events: none;
+    }
+
+    .bush-left {
+      left: 8px;
+      top: 47%;
+      transform: translateY(-50%) rotate(-18deg);
+    }
+
+    .bush-right {
+      right: 8px;
+      top: 45%;
+      transform: translateY(-50%) rotate(18deg);
+    }
+
+    .bush-top {
+      left: 50%;
+      top: 58px;
+      transform: translateX(-50%) rotate(5deg);
+    }
+
+
+    .food {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .food .aroma {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--radius);
+      height: var(--radius);
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: rgba(255, 186, 82, 0.045);
+      border: 1px dashed rgba(208, 139, 34, 0.18);
+      opacity: 0.86;
+      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .food.fresh .aroma {
+      background: rgba(255, 186, 82, 0.16);
+      border-color: rgba(208, 139, 34, 0.56);
+      opacity: 1;
+      animation: aromaFresh 0.7s infinite alternate;
+    }
+
+    .food.active .aroma {
+      background: rgba(255, 186, 82, 0.12);
+      border-color: rgba(208, 139, 34, 0.50);
+      opacity: 1;
+      animation: aromaActive 0.8s infinite alternate;
+    }
+
+    .food.active .food-face {
+      animation: foodNotice 0.42s infinite alternate;
+    }
+
+    .food-face {
+      position: relative;
+      font-size: 28px;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.18));
+    }
+
+    .food-amount {
+      position: absolute;
+      left: 50%;
+      bottom: -10px;
+      transform: translateX(-50%);
+      min-width: 34px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255, 254, 248, 0.9);
+      border: 1px solid rgba(112, 135, 92, 0.25);
+      color: var(--warn);
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .animal {
+      position: absolute;
+      width: 58px;
+      height: 66px;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      z-index: 5;
+      pointer-events: none;
+      transform-origin: 50% 80%;
+    }
+
+    .animal.eating {
+      animation: eatingBodyBounce 0.32s infinite alternate ease-in-out;
+      will-change: transform;
+    }
+
+    .animal-face {
+      font-size: 33px;
+      line-height: 1;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.18));
+    }
+
+    .animal.moving-left:not(.eating):not(.gnawing) .animal-face {
+      animation: walkLeft 0.38s infinite alternate;
+    }
+
+    .animal.moving-right:not(.eating):not(.gnawing) .animal-face {
+      animation: walkRight 0.38s infinite alternate;
+    }
+
+    .animal.moving-up:not(.eating):not(.gnawing) .animal-face,
+    .animal.moving-down:not(.eating):not(.gnawing) .animal-face {
+      animation: walkCenter 0.42s infinite alternate;
+    }
+
+    .animal.leaving .animal-face {
+      animation: leaveBounce 0.28s infinite alternate;
+    }
+
+
+    .animal.eating .animal-face {
+      animation: munchFace 0.20s infinite alternate ease-in-out;
+      transform-origin: 50% 75%;
+      will-change: transform;
+    }
+
+    .animal.eating-favorite .animal-face {
+      animation: happyMunchFace 0.24s infinite alternate ease-in-out;
+    }
+
+    .animal.eating-favorite .state-tag {
+      animation: happyTag 0.35s infinite alternate ease-in-out;
+    }
+
+    .animal.sleeping .animal-face {
+      animation: sleep 0.9s infinite alternate;
+    }
+
+    .animal.gnawing .animal-face {
+      animation: gnaw 0.30s infinite alternate;
+    }
+
+    @keyframes eatingBodyBounce {
+      from { transform: translate(-50%, -50%) translateY(0) scale(1); }
+      to { transform: translate(-50%, -50%) translateY(-5px) scale(1.045); }
+    }
+
+    @keyframes munchFace {
+      from { transform: scale(0.96) rotate(-5deg); }
+      to { transform: scale(1.22) rotate(5deg); }
+    }
+
+    @keyframes happyMunchFace {
+      from { transform: translateY(0) scale(1.02) rotate(-4deg); }
+      to { transform: translateY(-3px) scale(1.24) rotate(4deg); }
+    }
+
+    @keyframes happyTag {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-4px) scale(1.18); }
+    }
+
+    @keyframes sleep {
+      from { transform: translateY(0); }
+      to { transform: translateY(2px); }
+    }
+
+    @keyframes gnaw {
+      from { transform: translateX(-1px) rotate(-4deg); }
+      to { transform: translateX(1px) rotate(4deg); }
+    }
+
+    @keyframes walkLeft {
+      from { transform: translateY(0) rotate(-5deg); }
+      to { transform: translateY(-2px) rotate(-12deg); }
+    }
+
+    @keyframes walkRight {
+      from { transform: translateY(0) rotate(5deg); }
+      to { transform: translateY(-2px) rotate(12deg); }
+    }
+
+    @keyframes walkCenter {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-2px) scale(1.04); }
+    }
+
+    @keyframes leaveBounce {
+      from { transform: translateY(0) scale(1); opacity: 1; }
+      to { transform: translateY(-4px) scale(1.07); opacity: 0.88; }
+    }
+
+    @keyframes aromaFresh {
+      from { transform: translate(-50%, -50%) scale(0.96); }
+      to { transform: translate(-50%, -50%) scale(1.04); }
+    }
+
+    @keyframes aromaActive {
+      from { transform: translate(-50%, -50%) scale(0.99); }
+      to { transform: translate(-50%, -50%) scale(1.025); }
+    }
+
+    @keyframes foodNotice {
+      from { transform: rotate(-3deg) scale(1); }
+      to { transform: rotate(3deg) scale(1.08); }
+    }
+
+
+    .belly {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255, 254, 248, 0.88);
+      border: 1px solid rgba(0, 0, 0, 0.09);
+      overflow: hidden;
+    }
+
+    .belly-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+    }
+
+    .belly-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #21311d;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .gnaw-meter {
+      position: absolute;
+      left: 7px;
+      right: 7px;
+      bottom: 23px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 254, 248, 0.86);
+      border: 1px solid rgba(116, 78, 47, 0.18);
+      overflow: hidden;
+      display: none;
+    }
+
+    .animal.gnawing .gnaw-meter {
+      display: block;
+    }
+
+    .gnaw-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--danger);
+      transition: width 0.08s linear;
+    }
+
+
+
+    .state-tag {
+      position: absolute;
+      top: 0;
+      right: 2px;
+      font-size: 13px;
+    }
+
+    .speech-bubble {
+      position: absolute;
+      left: 50%;
+      top: -34px;
+      transform: translateX(-50%);
+      max-width: 86px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255, 254, 248, 0.94);
+      border: 1px solid rgba(112, 135, 92, 0.28);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.10);
+      color: #3b4935;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.2;
+      white-space: nowrap;
+      z-index: 3;
+      pointer-events: none;
+      animation: speechFloat 0.35s infinite alternate ease-in-out;
+    }
+
+    .speech-bubble.happy {
+      color: #8d3b4d;
+      background: rgba(255, 244, 248, 0.96);
+      border-color: rgba(214, 111, 138, 0.42);
+    }
+
+    .speech-bubble.hungry {
+      color: #7c5a18;
+      background: rgba(255, 248, 224, 0.96);
+      border-color: rgba(208, 139, 34, 0.42);
+    }
+
+    .speech-bubble.leaving {
+      color: #386a32;
+      background: rgba(239, 252, 232, 0.96);
+      border-color: rgba(78, 143, 61, 0.42);
+    }
+
+    @keyframes speechFloat {
+      from { transform: translateX(-50%) translateY(0); }
+      to { transform: translateX(-50%) translateY(-3px); }
+    }
+
+
+    .log {
+      flex: 0 0 30px;
+      margin-top: 5px;
+      background: #263323;
+      color: #f4ffe8;
+      border-radius: 10px;
+      padding: 5px 7px;
+      min-height: 0;
+      max-height: 30px;
+      overflow: auto;
+      font-size: 8px;
+      line-height: 1.15;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .log div {
+      opacity: 0.95;
+      margin-bottom: 3px;
+    }
+
+    .tool-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 8px;
+      margin-top: 5px;
+      box-shadow: 0 8px 18px rgba(39, 54, 33, 0.09);
+      flex: 0 0 auto;
+      z-index: 10;
+    }
+
+    .tool-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .tool-title {
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .selected-text {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .tool-card {
+      border: 1px solid rgba(78, 143, 61, 0.35);
+      background: #f3faed;
+      border-radius: 10px;
+      padding: 7px 5px;
+      text-align: left;
+      color: var(--ink);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 72px;
+    }
+
+    .tool-card.selected {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 2px rgba(78, 143, 61, 0.18);
+      background: #edf8e5;
+    }
+
+    .tool-card.unaffordable {
+      opacity: 0.68;
+      border-color: #d8c7a1;
+      background: #fffaf0;
+    }
+
+    .tool-main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .tool-emoji {
+      font-size: 25px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .tool-name {
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.05;
+    }
+
+    .tool-desc {
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+
+
+    .tool-cost {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      line-height: 1.05;
+      font-weight: 800;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .tool-card.unaffordable {
+      opacity: 0.46;
+      filter: grayscale(0.35);
+    }
+
+    .tool-cost.waiting {
+      color: var(--danger);
+      font-weight: 900;
+    }
+
+
+    .toast {
+      min-height: 12px;
+      margin-top: 3px;
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+
+    @media (max-width: 380px) {
+      .garden-hud {
+        font-size: 11px;
+        gap: 5px;
+      }
+
+      .hud-title {
+        display: none;
+      }
+    }
+
+    @media (max-height: 720px) {
+      body {
+        padding: 4px;
+      }
+
+      .garden-shell {
+        padding: 4px;
+      }
+
+      .garden-hud {
+        top: 5px;
+        left: 6px;
+        right: 6px;
+        gap: 6px;
+        padding: 4px 7px;
+        font-size: 12px;
+      }
+
+      .hint {
+        top: 26px;
+        font-size: 8px;
+        padding: 2px 6px;
+      }
+
+      .core {
+        --core-size: 178px;
+      }
+
+      .log {
+        flex-basis: 24px;
+        max-height: 24px;
+        font-size: 7px;
+      }
+
+      .tool-panel {
+        padding: 7px;
+        margin-top: 4px;
+      }
+
+      .tool-title-row {
+        display: none;
+      }
+
+      .tool-card {
+        min-height: 60px;
+        padding: 6px 4px;
+      }
+
+      .tool-emoji {
+        font-size: 22px;
+      }
+
+      .tool-name {
+        font-size: 13px;
+      }
+
+      .tool-cost {
+        font-size: 9px;
+      }
+
+      .tool-desc {
+        display: none;
+      }
+
+      .toast {
+        min-height: 0;
+        margin-top: 2px;
+      }
+    }
+
+    @media (max-height: 590px) {
+      .log {
+        display: none;
+      }
+    }
+
+    @media (max-height: 640px) {
+      .hint {
+        top: 28px;
+        font-size: 8px;
+        line-height: 1.15;
+        padding: 3px 6px;
+      }
+
+      .log {
+        flex-basis: 20px;
+        max-height: 20px;
+      }
+
+      .core {
+        --core-size: 142px;
+      }
+
+      .hud-title {
+        display: none;
+      }
+
+      .tool-card {
+        min-height: 54px;
+      }
+    }
+
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(25, 35, 23, 0.45);
+      padding: 18px;
+      z-index: 30;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .result-card {
+      width: min(100%, 360px);
+      background: #fffef8;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .result-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .result-summary {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .restart {
+      border: 0;
+      background: var(--accent);
+      color: white;
+      font-weight: 900;
+      border-radius: 14px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-size: 15px;
+      width: 100%;
+    }
+
+    @media (max-width: 470px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+
+      .garden {
+        height: 520px;
+      }
+
+      .status {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stat {
+        padding: 8px;
+      }
+
+      .stat-value {
+        font-size: 16px;
+      }
+
+      .core {
+        width: 190px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>정원의 갉작이들</h1>
+      <div class="subtitle">먹이로 갉작이들을 달래서 정원을 지키는 유도형 MVP</div>
+    </header>
+
+    <section class="garden-shell">
+      <div class="garden" id="garden">
+        <div class="garden-hud" aria-label="game status">
+          <span class="hud-title">정원의 갉작이들</span>
+          <span class="hud-item garden-stat" id="gardenStat">정원 <b><span id="gardenText">10</span>/<span id="gardenMaxText">10</span></b></span>
+          <span class="hud-item">용돈 <b><span id="moneyText">0</span></b></span>
+          <span class="hud-item">점수 <b><span id="scoreText">0</span></b></span>
+          <span class="hud-item">행복 <b>+<span id="happyBonusText">0</span></b></span>
+        </div>
+        <div class="hint">
+          먹이를 선택하고 정원 아무 곳이나 누르면 놓습니다.<br>
+          🐰는 🥕, 🐿️는 🍓, 🐻는 🥛을 좋아합니다.
+        </div>
+        <div class="bush bush-left">🌿</div>
+        <div class="bush bush-right">🌿</div>
+        <div class="bush bush-top">🌿</div>
+        <div class="core" id="core">
+          <div class="core-plants">🌱 🌼 🥬</div>
+          <div class="core-title">정원 중심부</div>
+          <div class="core-sub" id="coreStatusText">여기를 지켜주세요</div>
+        </div>
+        <div id="foods"></div>
+        <div id="animals"></div>
+      </div>
+    </section>
+
+    <section class="log" id="log" aria-label="game log"></section>
+
+    <section class="tool-panel">
+      <div class="tool-title-row">
+        <div class="tool-title">먹이</div>
+        <div class="selected-text" id="selectedText">🥕 당근 선택됨</div>
+      </div>
+      <div class="tools" id="tools"></div>
+      <div class="toast" id="toast"></div>
+    </section>
+  </main>
+
+  <div class="overlay" id="overlay">
+    <div class="result-card">
+      <div class="result-title" id="resultTitle">성공</div>
+      <div class="result-summary" id="resultSummary"></div>
+      <button class="restart" id="restartButton" type="button">다시하기</button>
+    </div>
+  </div>
+
+  <script>
+window.GAME_BALANCE = {
+  // 갉작이 종류별 고정 선호 먹이 버전입니다.
+  START_MONEY: 110,
+  INCOME_INTERVAL: 3.2,
+  INCOME_AMOUNT: 19,
+  GARDEN_MAX: 13,
+
+  // 결과창에서 행복 보너스를 용돈으로 환산하는 비율입니다.
+  // 맞는 먹이로 채운 뱃고래 10당 보너스 용돈 1입니다.
+  HAPPY_AMOUNT_PER_BONUS_MONEY: 10,
+
+  // 화면 전체가 정원이고, 가운데 원형 중심부를 지키는 구조입니다.
+  CORE_RADIUS: 112,
+  CORE_WARNING_MARGIN: 64,
+
+  // 중심부 안쪽 깊숙이 들어오면 갉작 게이지가 더 빨리 찹니다.
+  CORE_DEEP_RADIUS_RATIO: 0.55,
+  CORE_DEEP_GNAW_SPEED_MULTIPLIER: 1.45,
+
+  FOOD_TYPES: {
+    carrot: {
+      id: "carrot",
+      name: "당근",
+      emoji: "🥕",
+      cost: 18,
+
+      // 🐰 기본 갉작이 담당. 싸고 빠른 응급 대응용입니다.
+      foodAmount: 24,
+      aromaRadius: 84,
+      eatRadius: 23,
+      bellyFillSpeedFactor: 1.0,
+
+      desc: "🐰 기본 갉작이 담당"
+    },
+
+    milk: {
+      id: "milk",
+      name: "우유",
+      emoji: "🥛",
+      cost: 52,
+
+      // 🐻 큰 갉작이 담당. 비싸지만 큰 갉작이를 빠르게 처리합니다.
+      foodAmount: 70,
+      aromaRadius: 56,
+      eatRadius: 26,
+      bellyFillSpeedFactor: 2.1,
+
+      desc: "🐻 큰 갉작이 담당"
+    },
+
+    berry: {
+      id: "berry",
+      name: "딸기",
+      emoji: "🍓",
+      cost: 28,
+
+      // 🐿️ 빠른 갉작이 담당. 멀리서 빠른 갉작이를 돌려세우는 먹이입니다.
+      foodAmount: 14,
+      aromaRadius: 150,
+      eatRadius: 22,
+      bellyFillSpeedFactor: 0.55,
+
+      desc: "🐿️ 빠른 갉작이 담당"
+    }
+  },
+
+  FOOD_MATCH_RULE: {
+    // 맞는 먹이는 확실히 따라가고 빠르게 배부릅니다.
+    favoriteAttractMultiplier: 1.8,
+    favoriteEatMultiplier: 1.8,
+
+    // 안 맞는 먹이는 가까이 있으면 먹을 수는 있지만 효율이 낮습니다.
+    otherAttractMultiplier: 0.6,
+    otherEatMultiplier: 0.45,
+
+    // 안 맞는 먹이라도 너무 가까우면 응급으로 먹을 수 있게 보장합니다.
+    otherMinAromaRadius: 40
+  },
+
+  MOOD_RULE: {
+    happyBellyRatio: 0.55,
+    hungryBellyRatio: 0.22,
+
+    // 확률은 낮게 둡니다. 계속 말하면 귀여움보다 산만함이 커집니다.
+    happyChancePerSecond: 0.16,
+    hungryChancePerSecond: 0.10,
+
+    speechDuration: 1.25,
+    minCooldown: 2.2,
+
+    happyTexts: [
+      "좋은 인간!",
+      "맛있어!",
+      "행복해!",
+      "더 좋아!",
+      "헤헤!"
+    ],
+
+    hungryTexts: [
+      "배고파!",
+      "도와줘",
+      "꼬르륵...",
+      "먹이 줘",
+      "힝..."
+    ],
+
+    leavingTexts: [
+      "고마워!",
+      "잘 먹었어!",
+      "배불러!",
+      "또 올게!",
+      "좋은 인간!",
+      "풀숲으로 간다!"
+    ]
+  },
+
+  ANIMAL_TYPES: {
+    basic: {
+      name: "기본 갉작이",
+      emoji: "🐰",
+      preferredFoodId: "carrot",
+      bellySize: 30,
+      speed: 54,
+      eatRate: 6,
+      gardenDamage: 1,
+      gnawInterval: 2.15,
+      score: 100
+    },
+    fast: {
+      name: "빠른 갉작이",
+      emoji: "🐿️",
+      preferredFoodId: "berry",
+      bellySize: 23,
+      speed: 78,
+      eatRate: 6,
+      gardenDamage: 1,
+      gnawInterval: 1.9,
+      score: 130
+    },
+    tough: {
+      name: "큰 갉작이",
+      emoji: "🐻",
+      preferredFoodId: "milk",
+      bellySize: 66,
+      speed: 42,
+      eatRate: 8,
+      gardenDamage: 2,
+      gnawInterval: 2.45,
+      score: 280
+    }
+  },
+
+  SPAWN_RULE: {
+    firstSpawnTime: 0,
+    interval: 4.55,
+    fixedStart: [
+      { type: "basic" },
+      { type: "basic" },
+      { type: "basic" }
+    ],
+    randomCounts: {
+      basic: 6,
+      fast: 3,
+      tough: 1
+    }
+  }
+};
+
+  </script>
+  <script>
+(() => {
+  const balance = window.GAME_BALANCE;
+
+  if (!balance) {
+    throw new Error("GAME_BALANCE가 로드되지 않았습니다. balance.js가 먼저 로드되어야 합니다.");
+  }
+
+  const {
+    START_MONEY,
+    INCOME_INTERVAL,
+    INCOME_AMOUNT,
+    GARDEN_MAX,
+    HAPPY_AMOUNT_PER_BONUS_MONEY,
+    CORE_RADIUS,
+    CORE_WARNING_MARGIN,
+    CORE_DEEP_RADIUS_RATIO,
+    CORE_DEEP_GNAW_SPEED_MULTIPLIER,
+    FOOD_TYPES,
+    ANIMAL_TYPES,
+    FOOD_MATCH_RULE,
+    MOOD_RULE,
+    SPAWN_RULE
+  } = balance;
+
+  const FOOD_IDS = Object.keys(FOOD_TYPES);
+  let selectedFoodId = FOOD_IDS[0];
+
+  function getFoodDef(foodOrId) {
+    const id = typeof foodOrId === "string" ? foodOrId : foodOrId.type;
+    return FOOD_TYPES[id];
+  }
+
+  function getFoodById(foodId) {
+    if (!foodId) return null;
+    return state.foods.find(food => food.id === foodId && food.amount > 0) ?? null;
+  }
+
+  function getPreferredFoodId(animal) {
+    return ANIMAL_TYPES[animal.type].preferredFoodId;
+  }
+
+  function getFoodMatchModifier(animal, foodOrId) {
+    const foodId = typeof foodOrId === "string" ? foodOrId : foodOrId.type;
+    const isFavorite = getPreferredFoodId(animal) === foodId;
+
+    return {
+      isFavorite,
+      attract: isFavorite
+        ? FOOD_MATCH_RULE.favoriteAttractMultiplier
+        : FOOD_MATCH_RULE.otherAttractMultiplier,
+      eat: isFavorite
+        ? FOOD_MATCH_RULE.favoriteEatMultiplier
+        : FOOD_MATCH_RULE.otherEatMultiplier
+    };
+  }
+
+  const state = {
+    running: false,
+    elapsed: 0,
+    lastFrame: 0,
+    money: START_MONEY,
+    moneyAccumulator: 0,
+    garden: GARDEN_MAX,
+    score: 0,
+    favoriteFedAmount: 0,
+    totalFedAmount: 0,
+    foods: [],
+    animals: [],
+    spawnTable: [],
+    spawnedCount: 0,
+    nextFoodId: 1,
+    nextAnimalId: 1,
+    finalBonusGiven: false
+  };
+
+  const gardenEl = document.getElementById("garden");
+  const foodsEl = document.getElementById("foods");
+  const animalsEl = document.getElementById("animals");
+  const toolsEl = document.getElementById("tools");
+  const logEl = document.getElementById("log");
+  const toastEl = document.getElementById("toast");
+  const selectedTextEl = document.getElementById("selectedText");
+  const overlayEl = document.getElementById("overlay");
+  const resultTitleEl = document.getElementById("resultTitle");
+  const resultSummaryEl = document.getElementById("resultSummary");
+  const restartButtonEl = document.getElementById("restartButton");
+
+  // Entity DOM을 매 프레임 새로 만들지 않고 유지하기 위한 맵입니다.
+  // CSS 애니메이션이 매번 초기화되지 않게 합니다.
+  const foodElementMap = new Map();
+  const animalElementMap = new Map();
+
+  const coreEl = document.getElementById("core");
+  const coreStatusTextEl = document.getElementById("coreStatusText");
+  const gardenStatEl = document.getElementById("gardenStat");
+
+
+  function getGardenSize() {
+    const rect = gardenEl.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function getCorePosition() {
+    const { width, height } = getGardenSize();
+
+    return {
+      x: width / 2,
+      y: height / 2,
+      radius: CORE_RADIUS
+    };
+  }
+
+  function getGnawSpeedMultiplier(animal) {
+    const core = getCorePosition();
+    const dist = distance(animal, core);
+
+    return dist <= core.radius * CORE_DEEP_RADIUS_RATIO
+      ? CORE_DEEP_GNAW_SPEED_MULTIPLIER
+      : 1;
+  }
+
+  function getAnimalGnawProgress(animal) {
+    const typeDef = ANIMAL_TYPES[animal.type];
+    if (!animal.isGnawing) return 0;
+
+    return clamp(1 - animal.gnawTimer / typeDef.gnawInterval, 0, 1);
+  }
+
+  function getNearestExitTarget(animal) {
+    const { width, height } = getGardenSize();
+
+    const exits = [
+      { name: "왼쪽 풀숲", x: -58, y: clamp(animal.y, 80, height - 90) },
+      { name: "오른쪽 풀숲", x: width + 58, y: clamp(animal.y, 80, height - 90) },
+      { name: "위쪽 풀숲", x: clamp(animal.x, 42, width - 42), y: -58 }
+    ];
+
+    exits.sort((a, b) => distance(animal, a) - distance(animal, b));
+    return exits[0];
+  }
+
+  function isOutOfGarden(animal) {
+    const { width, height } = getGardenSize();
+    const margin = 50;
+
+    return (
+      animal.x < -margin ||
+      animal.x > width + margin ||
+      animal.y < -margin ||
+      animal.y > height + margin
+    );
+  }
+
+  function distance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function randomIntInclusive(min, max) {
+    const low = Math.ceil(min);
+    const high = Math.floor(max);
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+  }
+
+  function pickRandom(items) {
+    if (!items || items.length === 0) return "";
+    return items[randomIntInclusive(0, items.length - 1)];
+  }
+
+  function shuffleArray(items) {
+    const result = [...items];
+
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
+  }
+
+  function buildSpawnTable() {
+    const entries = [];
+
+    (SPAWN_RULE.fixedStart ?? []).forEach(entry => {
+      entries.push({ type: entry.type });
+    });
+
+    const randomPool = [];
+
+    Object.entries(SPAWN_RULE.randomCounts ?? {}).forEach(([type, count]) => {
+      for (let i = 0; i < count; i++) {
+        randomPool.push(type);
+      }
+    });
+
+    shuffleArray(randomPool).forEach(type => {
+      entries.push({ type });
+    });
+
+    return entries.map((entry, index) => ({
+      time: (SPAWN_RULE.firstSpawnTime ?? 0) + (SPAWN_RULE.interval ?? 4) * index,
+      type: entry.type
+    }));
+  }
+
+  function getHappyBonusAmount() {
+    return Math.floor(state.favoriteFedAmount);
+  }
+
+  function getHappyBonusMoney() {
+    return Math.floor(getHappyBonusAmount() / HAPPY_AMOUNT_PER_BONUS_MONEY);
+  }
+
+  function addLog(message) {
+    const row = document.createElement("div");
+    row.textContent = `[${state.elapsed.toFixed(1)}s] ${message}`;
+    logEl.prepend(row);
+
+    while (logEl.children.length > 14) {
+      logEl.removeChild(logEl.lastChild);
+    }
+  }
+
+  function showToast(message) {
+    toastEl.textContent = message;
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+      toastEl.textContent = "";
+    }, 1300);
+  }
+
+  function getTimeUntilAffordable(foodDef) {
+    if (state.money >= foodDef.cost) return 0;
+
+    const missingMoney = foodDef.cost - state.money;
+    const incomeTicksNeeded = Math.ceil(missingMoney / INCOME_AMOUNT);
+    const timeUntilNextIncome = Math.max(0, INCOME_INTERVAL - state.moneyAccumulator);
+
+    return timeUntilNextIncome + Math.max(0, incomeTicksNeeded - 1) * INCOME_INTERVAL;
+  }
+
+  function formatAffordableTime(seconds) {
+    if (seconds <= 0) return "";
+    if (seconds < 10) return `${seconds.toFixed(1)}초 후`;
+    return `${Math.ceil(seconds)}초 후`;
+  }
+
+  function buildToolCards() {
+    toolsEl.innerHTML = "";
+
+    FOOD_IDS.forEach(foodId => {
+      const foodDef = FOOD_TYPES[foodId];
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tool-card";
+      button.dataset.foodId = foodId;
+      button.innerHTML = `
+        <div class="tool-main">
+          <div class="tool-emoji">${foodDef.emoji}</div>
+          <div>
+            <div class="tool-name">${foodDef.name}</div>
+            <div class="tool-cost" data-role="cost">필요용돈 ${foodDef.cost}</div>
+            <div class="tool-desc">${foodDef.desc}</div>
+          </div>
+        </div>
+      `;
+
+      button.addEventListener("click", () => {
+        selectedFoodId = foodId;
+        updateUI();
+      });
+
+      toolsEl.appendChild(button);
+    });
+  }
+
+  function placeFood(x, y) {
+    if (!state.running) return;
+
+    const foodDef = FOOD_TYPES[selectedFoodId];
+
+    if (state.money < foodDef.cost) {
+      showToast(`용돈이 부족합니다. 필요: ${foodDef.cost}`);
+      return;
+    }
+
+    const { width, height } = getGardenSize();
+    const safeX = clamp(x, 24, width - 24);
+    const safeY = clamp(y, 52, height - 24);
+
+    state.money -= foodDef.cost;
+
+    state.foods.push({
+      id: `food-${state.nextFoodId++}`,
+      type: selectedFoodId,
+      x: safeX,
+      y: safeY,
+      amount: foodDef.foodAmount,
+      age: 0
+    });
+
+    addLog(`${foodDef.emoji} ${foodDef.name} 배치. 먹이량 ${foodDef.foodAmount}, 배부름 속도 ×${foodDef.bellyFillSpeedFactor}`);
+    updateUI();
+  }
+
+  function onGardenPointerDown(event) {
+    if (!state.running) return;
+
+    const rect = gardenEl.getBoundingClientRect();
+    placeFood(event.clientX - rect.left, event.clientY - rect.top);
+  }
+
+  function getSpawnPosition() {
+    const { width, height } = getGardenSize();
+    const side = randomIntInclusive(0, 3);
+    const margin = 34;
+
+    if (side === 0) {
+      return { x: randomBetween(28, width - 28), y: -margin };
+    }
+
+    if (side === 1) {
+      return { x: width + margin, y: randomBetween(42, height - 42) };
+    }
+
+    if (side === 2) {
+      return { x: randomBetween(28, width - 28), y: height + margin };
+    }
+
+    return { x: -margin, y: randomBetween(42, height - 42) };
+  }
+
+  function spawnAnimals() {
+    while (
+      state.spawnedCount < state.spawnTable.length &&
+      state.elapsed >= state.spawnTable[state.spawnedCount].time
+    ) {
+      const entry = state.spawnTable[state.spawnedCount];
+      const typeDef = ANIMAL_TYPES[entry.type];
+
+      state.animals.push({
+        id: state.nextAnimalId++,
+        type: entry.type,
+        ...getSpawnPosition(),
+        belly: 0,
+        mode: "active",
+        targetFoodId: null,
+        eatingFoodId: null,
+        eatingFlash: 0,
+        moveDir: "down",
+        isGnawing: false,
+        gnawAlerted: false,
+        gnawTimer: typeDef.gnawInterval,
+        gnawProgress: 0,
+        sleepTimer: 0,
+        exitTarget: null,
+        speechText: "",
+        speechType: "",
+        speechTimer: 0,
+        speechCooldown: randomBetween(0.6, 2.0)
+      });
+
+      addLog(`${typeDef.name} ${typeDef.emoji} 등장`);
+      state.spawnedCount++;
+    }
+  }
+
+  function findBestFood(animal, options = {}) {
+    const { favoriteOnly = false } = options;
+
+    const foods = state.foods.filter(food => {
+      if (food.amount <= 0) return false;
+      if (favoriteOnly && food.type !== getPreferredFoodId(animal)) return false;
+      return true;
+    });
+
+    if (foods.length === 0) return null;
+
+    const candidates = foods
+      .map(food => {
+        const foodDef = getFoodDef(food);
+        const match = getFoodMatchModifier(animal, food);
+        const rawRadius = foodDef.aromaRadius * match.attract;
+        const effectiveRadius = match.isFavorite
+          ? rawRadius
+          : Math.max(rawRadius, FOOD_MATCH_RULE.otherMinAromaRadius ?? rawRadius);
+        const dist = distance(animal, food);
+
+        return {
+          food,
+          distance: dist,
+          normalizedDistance: dist / effectiveRadius,
+          match
+        };
+      })
+      .filter(item => item.normalizedDistance <= 1);
+
+    if (candidates.length === 0) return null;
+
+    candidates.sort((a, b) => {
+      const normalizedDiff = a.normalizedDistance - b.normalizedDistance;
+      if (normalizedDiff !== 0) return normalizedDiff;
+
+      const favoriteDiff = Number(b.match.isFavorite) - Number(a.match.isFavorite);
+      if (favoriteDiff !== 0) return favoriteDiff;
+
+      const amountDiff = b.food.amount - a.food.amount;
+      if (amountDiff !== 0) return amountDiff;
+
+      return String(a.food.id).localeCompare(String(b.food.id));
+    });
+
+    return candidates[0].food;
+  }
+
+  function moveToward(entity, target, speed, dt) {
+    const dx = target.x - entity.x;
+    const dy = target.y - entity.y;
+    const length = Math.hypot(dx, dy);
+
+    if (length <= 0.0001) return;
+
+    if (Math.abs(dx) > Math.abs(dy) * 0.45) {
+      entity.moveDir = dx > 0 ? "right" : "left";
+    } else {
+      entity.moveDir = dy > 0 ? "down" : "up";
+    }
+
+    const move = Math.min(length, speed * dt);
+    entity.x += (dx / length) * move;
+    entity.y += (dy / length) * move;
+  }
+
+  function processAnimals(dt) {
+    const core = getCorePosition();
+
+    for (const animal of state.animals) {
+      const typeDef = ANIMAL_TYPES[animal.type];
+
+      animal.eatingFlash = Math.max(0, animal.eatingFlash - dt);
+
+      if (animal.mode === "leaving") {
+        animal.targetFoodId = null;
+        animal.eatingFoodId = null;
+        animal.eatingFlash = 0;
+        animal.isGnawing = false;
+        animal.gnawAlerted = false;
+
+        if (!animal.exitTarget) {
+          animal.exitTarget = getNearestExitTarget(animal);
+        }
+
+        moveToward(animal, animal.exitTarget, typeDef.speed * 1.7, dt);
+        continue;
+      }
+
+      if (animal.sleepTimer > 0) {
+        animal.sleepTimer = Math.max(0, animal.sleepTimer - dt);
+        continue;
+      }
+
+      // 맞는 먹이가 보이면 맞는 먹이를 우선합니다.
+      // 맞는 먹이가 없으면 한 번 고른 먹이를 계속 먹어서 과도한 갈아타기를 막습니다.
+      const lockedFood = getFoodById(animal.targetFoodId);
+      const favoriteFood = findBestFood(animal, { favoriteOnly: true });
+      const targetFood =
+        favoriteFood ??
+        lockedFood ??
+        findBestFood(animal);
+
+      if (targetFood) {
+        animal.targetFoodId = targetFood.id;
+        animal.isGnawing = false;
+        animal.gnawAlerted = false;
+        animal.gnawProgress = 0;
+        animal.gnawTimer = typeDef.gnawInterval;
+
+        const foodDef = getFoodDef(targetFood);
+
+        if (distance(animal, targetFood) > foodDef.eatRadius) {
+          animal.eatingFoodId = null;
+          moveToward(animal, targetFood, typeDef.speed, dt);
+          continue;
+        }
+
+        animal.eatingFoodId = targetFood.id;
+        animal.eatingFlash = 0.18;
+
+        const match = getFoodMatchModifier(animal, targetFood);
+
+        const amountToEat = Math.min(
+          typeDef.eatRate * foodDef.bellyFillSpeedFactor * match.eat * dt,
+          targetFood.amount,
+          typeDef.bellySize - animal.belly
+        );
+
+        animal.belly += amountToEat;
+        targetFood.amount -= amountToEat;
+
+        state.totalFedAmount += amountToEat;
+        if (match.isFavorite) {
+          state.favoriteFedAmount += amountToEat;
+        }
+
+        if (targetFood.amount <= 0.001) {
+          targetFood.amount = 0;
+          addLog(`${foodDef.emoji} ${foodDef.name} 소진`);
+        }
+
+        continue;
+      }
+
+      animal.targetFoodId = null;
+      animal.eatingFoodId = null;
+
+      if (distance(animal, core) <= core.radius) {
+        if (!animal.isGnawing || !animal.gnawAlerted) {
+          addLog(`${typeDef.name} ${typeDef.emoji} 정원 중심부 갉작 준비!`);
+          animal.gnawAlerted = true;
+        }
+
+        animal.isGnawing = true;
+        animal.moveDir = "down";
+
+        const gnawSpeed = getGnawSpeedMultiplier(animal);
+        animal.gnawTimer -= dt * gnawSpeed;
+        animal.gnawProgress = getAnimalGnawProgress(animal);
+
+        if (animal.gnawTimer <= 0) {
+          animal.gnawTimer = typeDef.gnawInterval;
+          animal.gnawProgress = 0;
+          damageGarden(typeDef.gardenDamage, `${typeDef.name} ${typeDef.emoji} 정원 중심부를 갉작임`);
+        }
+
+        continue;
+      }
+
+      animal.isGnawing = false;
+      animal.gnawAlerted = false;
+      animal.gnawProgress = 0;
+      animal.gnawTimer = typeDef.gnawInterval;
+      moveToward(animal, core, typeDef.speed, dt);
+    }
+  }
+
+  function showAnimalSpeech(animal, type, text) {
+    animal.speechType = type;
+    animal.speechText = text;
+    animal.speechTimer = MOOD_RULE.speechDuration;
+    animal.speechCooldown = MOOD_RULE.minCooldown + randomBetween(0, 1.8);
+  }
+
+  function processAnimalSpeech(dt) {
+    for (const animal of state.animals) {
+      const typeDef = ANIMAL_TYPES[animal.type];
+
+      if (animal.mode === "leaving") {
+        if (animal.speechTimer > 0) {
+          animal.speechTimer = Math.max(0, animal.speechTimer - dt);
+          if (animal.speechTimer <= 0) {
+            animal.speechText = "";
+            animal.speechType = "";
+          }
+        }
+        continue;
+      }
+
+      if (animal.speechTimer > 0) {
+        animal.speechTimer = Math.max(0, animal.speechTimer - dt);
+        if (animal.speechTimer <= 0) {
+          animal.speechText = "";
+          animal.speechType = "";
+        }
+        continue;
+      }
+
+      animal.speechCooldown = Math.max(0, animal.speechCooldown - dt);
+      if (animal.speechCooldown > 0) continue;
+
+      const bellyRatio = animal.belly / typeDef.bellySize;
+      const isEating = Boolean(animal.eatingFoodId) || animal.eatingFlash > 0;
+
+      // 어느 정도 배가 차고, 특히 먹고 있을 때 좋은 반응을 낮은 확률로 띄웁니다.
+      if (bellyRatio >= MOOD_RULE.happyBellyRatio && isEating) {
+        if (Math.random() < MOOD_RULE.happyChancePerSecond * dt) {
+          showAnimalSpeech(animal, "happy", pickRandom(MOOD_RULE.happyTexts));
+        }
+        continue;
+      }
+
+      // 배가 거의 안 찬 상태에서 먹이도 못 먹고 있으면 낮은 확률로 배고픔 반응을 띄웁니다.
+      if (bellyRatio <= MOOD_RULE.hungryBellyRatio && !isEating && !animal.isGnawing) {
+        if (Math.random() < MOOD_RULE.hungryChancePerSecond * dt) {
+          showAnimalSpeech(animal, "hungry", pickRandom(MOOD_RULE.hungryTexts));
+        }
+      }
+    }
+  }
+
+  function processFoodResults() {
+    state.foods = state.foods.filter(food => food.amount > 0.001);
+  }
+
+  function startLeaving(animal, typeDef) {
+    animal.mode = "leaving";
+    animal.targetFoodId = null;
+    animal.eatingFoodId = null;
+    animal.eatingFlash = 0;
+    animal.isGnawing = false;
+    animal.gnawAlerted = false;
+    animal.exitTarget = getNearestExitTarget(animal);
+
+    // 퇴장은 성공 피드백이므로 한 번은 높은 확률로 고마움 대사를 보여줍니다.
+    showAnimalSpeech(animal, "leaving", pickRandom(MOOD_RULE.leavingTexts));
+
+    addLog(`${typeDef.name} ${typeDef.emoji} 배불러서 풀숲으로 돌아감`);
+  }
+
+  function processAnimalResults() {
+    const survivors = [];
+
+    for (const animal of state.animals) {
+      const typeDef = ANIMAL_TYPES[animal.type];
+
+      if (animal.mode !== "leaving" && animal.belly >= typeDef.bellySize) {
+        animal.belly = typeDef.bellySize;
+        startLeaving(animal, typeDef);
+        survivors.push(animal);
+        continue;
+      }
+
+      if (animal.mode === "leaving" && isOutOfGarden(animal)) {
+        state.score += typeDef.score;
+        addLog(`${typeDef.name} ${typeDef.emoji} 퇴장 완료. +${typeDef.score}`);
+        continue;
+      }
+
+      survivors.push(animal);
+    }
+
+    state.animals = survivors;
+  }
+
+  function damageGarden(amount, reason) {
+    if (!state.running) return;
+
+    state.garden = Math.max(0, state.garden - amount);
+    addLog(`${reason}. 정원 -${amount}`);
+
+    if (state.garden <= 0) {
+      finishGame(false);
+    }
+  }
+
+  function animateHappyConversion(startAmount, targetMoney) {
+    const sourceEl = document.getElementById("happyConvertSource");
+    const moneyEl = document.getElementById("happyConvertMoney");
+
+    if (!sourceEl || !moneyEl) return;
+
+    const duration = 900;
+    const startedAt = performance.now();
+
+    function step(now) {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const currentAmount = Math.max(0, Math.ceil(startAmount * (1 - eased)));
+      const currentMoney = Math.floor(targetMoney * eased);
+
+      sourceEl.textContent = String(currentAmount);
+      moneyEl.textContent = String(currentMoney);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        sourceEl.textContent = "0";
+        moneyEl.textContent = String(targetMoney);
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  function checkSuccess() {
+    if (
+      state.running &&
+      state.spawnedCount >= state.spawnTable.length &&
+      state.animals.length === 0 &&
+      state.garden > 0
+    ) {
+      finishGame(true);
+    }
+  }
+
+  function finishGame(success) {
+    if (!state.running) return;
+
+    state.running = false;
+
+    let gardenBonus = 0;
+    let moneyBonus = 0;
+    const happyAmount = getHappyBonusAmount();
+    const happyMoney = getHappyBonusMoney();
+
+    if (!state.finalBonusGiven) {
+      if (success) {
+        gardenBonus = state.garden * 50;
+
+        // 행복 보너스는 직접 점수로 더하지 않고, 결과창에서 용돈으로 환산합니다.
+        // 환산된 용돈은 남은 용돈 보너스 계산에 포함합니다.
+        moneyBonus = Math.floor((state.money + happyMoney) / 10) * 10;
+      }
+
+      state.score += gardenBonus + moneyBonus;
+      state.finalBonusGiven = true;
+    }
+
+    const favoriteFedText = Math.floor(state.favoriteFedAmount);
+
+    resultTitleEl.textContent = success ? "달래기 성공!" : "정원 방어 실패";
+    resultTitleEl.style.color = success ? "var(--accent)" : "var(--danger)";
+    resultSummaryEl.innerHTML = success
+      ? `최종 점수: <b>${state.score}</b><br>정원 보너스: ${gardenBonus}<br>남은 용돈 보너스: ${moneyBonus}<br>행복 보너스: <span id="happyConvertSource">${happyAmount}</span><br>환산 용돈: +<span id="happyConvertMoney">0</span><br>맞는 먹이로 채운 뱃고래: ${favoriteFedText}`
+      : `최종 점수: <b>${state.score}</b><br>행복 보너스: <span id="happyConvertSource">${happyAmount}</span><br>환산 용돈: +<span id="happyConvertMoney">0</span><br>맞는 먹이로 채운 뱃고래: ${favoriteFedText}<br>정원 중심부가 모두 갉작당했습니다.`;
+
+    overlayEl.classList.add("show");
+    updateUI();
+    animateHappyConversion(happyAmount, happyMoney);
+  }
+
+  function createFoodElement(food) {
+    const foodDef = getFoodDef(food);
+    const el = document.createElement("div");
+    el.dataset.foodId = food.id;
+    el.innerHTML = `
+      <div class="aroma"></div>
+      <div class="food-face">${foodDef.emoji}</div>
+      <div class="food-amount">0</div>
+    `;
+    foodsEl.appendChild(el);
+    foodElementMap.set(food.id, el);
+    return el;
+  }
+
+  function renderFoods() {
+    const aliveIds = new Set();
+
+    state.foods.forEach(food => {
+      aliveIds.add(food.id);
+
+      const foodDef = getFoodDef(food);
+      const amount = Math.max(0, Math.ceil(food.amount));
+      const isFresh = food.age < 1.25;
+      const isActive = state.animals.some(animal => animal.targetFoodId === food.id && animal.mode !== "leaving");
+
+      const el = foodElementMap.get(food.id) ?? createFoodElement(food);
+      const nextClass = `food ${isFresh ? "fresh" : ""} ${isActive ? "active" : ""}`.trim();
+
+      if (el.className !== nextClass) {
+        el.className = nextClass;
+      }
+
+      el.style.left = `${food.x}px`;
+      el.style.top = `${food.y}px`;
+      el.style.setProperty("--radius", `${foodDef.aromaRadius * 2}px`);
+
+      const faceEl = el.querySelector(".food-face");
+      const amountEl = el.querySelector(".food-amount");
+
+      if (faceEl) {
+        faceEl.textContent = foodDef.emoji;
+      }
+
+      if (amountEl) {
+        amountEl.textContent = String(amount);
+      }
+    });
+
+    for (const [id, el] of foodElementMap) {
+      if (!aliveIds.has(id)) {
+        el.remove();
+        foodElementMap.delete(id);
+      }
+    }
+  }
+
+  function createAnimalElement(animal) {
+    const el = document.createElement("div");
+    el.dataset.animalId = String(animal.id);
+    el.innerHTML = `
+      <div class="speech-bubble"></div>
+      <div class="animal-face"></div>
+      <div class="state-tag"></div>
+      <div class="gnaw-meter">
+        <div class="gnaw-meter-fill"></div>
+      </div>
+      <div class="belly">
+        <div class="belly-bar"></div>
+        <div class="belly-label"></div>
+      </div>
+    `;
+    animalsEl.appendChild(el);
+    animalElementMap.set(animal.id, el);
+    return el;
+  }
+
+  function renderAnimals() {
+    const aliveIds = new Set();
+
+    state.animals.forEach(animal => {
+      aliveIds.add(animal.id);
+
+      const typeDef = ANIMAL_TYPES[animal.type];
+      const ratio = Math.max(0, Math.min(1, animal.belly / typeDef.bellySize));
+      const isLeaving = animal.mode === "leaving";
+      const isEating = (Boolean(animal.eatingFoodId) || animal.eatingFlash > 0) && !isLeaving;
+      const isAttracted = Boolean(animal.targetFoodId) && !isEating && !isLeaving;
+      const isGnawing = animal.isGnawing && !isEating && !isLeaving;
+      const isEatingFavorite = isEating && animal.eatingFoodId && getFoodById(animal.eatingFoodId)?.type === getPreferredFoodId(animal);
+      const moveClass = animal.moveDir ? `moving-${animal.moveDir}` : "";
+
+      let tag = "";
+      if (isLeaving) tag = "💨";
+      else if (isEatingFavorite) tag = "💖";
+      else if (isEating) tag = "🍽️";
+      else if (isGnawing) tag = "😬";
+
+      const el = animalElementMap.get(animal.id) ?? createAnimalElement(animal);
+      const nextClass = `animal ${moveClass} ${isLeaving ? "leaving" : ""} ${isEating ? "eating" : ""} ${isEatingFavorite ? "eating-favorite" : ""} ${isAttracted ? "attracted" : ""} ${isGnawing ? "gnawing" : ""}`.trim();
+
+      // 같은 클래스 문자열을 계속 덮어쓰지 않습니다.
+      // 이 처리가 없으면 eating 애니메이션이 계속 처음부터 재시작될 수 있습니다.
+      if (el.className !== nextClass) {
+        el.className = nextClass;
+      }
+
+      el.style.left = `${animal.x}px`;
+      el.style.top = `${animal.y}px`;
+
+      const speechEl = el.querySelector(".speech-bubble");
+      const faceEl = el.querySelector(".animal-face");
+      const tagEl = el.querySelector(".state-tag");
+      const gnawFillEl = el.querySelector(".gnaw-meter-fill");
+      const barEl = el.querySelector(".belly-bar");
+      const labelEl = el.querySelector(".belly-label");
+
+      if (speechEl) {
+        speechEl.textContent = animal.speechText;
+        speechEl.style.display = animal.speechText ? "" : "none";
+        speechEl.className = `speech-bubble ${animal.speechType || ""}`.trim();
+      }
+
+      if (faceEl) {
+        faceEl.textContent = typeDef.emoji;
+      }
+
+      if (tagEl) {
+        tagEl.textContent = tag;
+        tagEl.style.display = tag ? "" : "none";
+      }
+
+      if (gnawFillEl) {
+        gnawFillEl.style.width = `${getAnimalGnawProgress(animal) * 100}%`;
+      }
+
+      if (barEl) {
+        barEl.style.width = `${ratio * 100}%`;
+      }
+
+      if (labelEl) {
+        labelEl.textContent = `${Math.floor(animal.belly)}/${typeDef.bellySize}`;
+      }
+    });
+
+    for (const [id, el] of animalElementMap) {
+      if (!aliveIds.has(id)) {
+        el.remove();
+        animalElementMap.delete(id);
+      }
+    }
+  }
+
+  function getCoreThreatLevel() {
+    const core = getCorePosition();
+    let hasNearAnimal = false;
+    let hasGnawingAnimal = false;
+
+    for (const animal of state.animals) {
+      if (animal.mode === "leaving" || animal.eatingFoodId) continue;
+
+      const dist = distance(animal, core);
+
+      if (animal.isGnawing || dist <= core.radius) {
+        hasGnawingAnimal = true;
+        break;
+      }
+
+      if (dist <= core.radius + CORE_WARNING_MARGIN) {
+        hasNearAnimal = true;
+      }
+    }
+
+    if (hasGnawingAnimal) return "danger";
+    if (hasNearAnimal) return "warning";
+    return "safe";
+  }
+
+  function updateCoreThreatUI() {
+    const threat = getCoreThreatLevel();
+
+    gardenEl.classList.toggle("warning", threat === "warning");
+    gardenEl.classList.toggle("danger", threat === "danger");
+
+    if (coreEl) {
+      coreEl.classList.toggle("warning", threat === "warning");
+      coreEl.classList.toggle("danger", threat === "danger");
+    }
+
+    if (gardenStatEl) {
+      gardenStatEl.classList.toggle("warning", threat === "warning");
+      gardenStatEl.classList.toggle("danger", threat === "danger");
+    }
+
+    if (coreStatusTextEl) {
+      if (threat === "danger") {
+        coreStatusTextEl.textContent = "중심부 갉작 중!";
+      } else if (threat === "warning") {
+        coreStatusTextEl.textContent = "중심부에 가까워짐!";
+      } else {
+        coreStatusTextEl.textContent = "여기를 지켜주세요";
+      }
+    }
+  }
+
+  function updateUI() {
+    document.getElementById("gardenText").textContent = state.garden;
+    document.getElementById("gardenMaxText").textContent = GARDEN_MAX;
+    document.getElementById("moneyText").textContent = state.money;
+    document.getElementById("scoreText").textContent = state.score;
+    document.getElementById("happyBonusText").textContent = getHappyBonusAmount();
+
+    const selectedFoodDef = FOOD_TYPES[selectedFoodId];
+    selectedTextEl.textContent = `${selectedFoodDef.emoji} ${selectedFoodDef.name} 선택됨`;
+
+    updateCoreThreatUI();
+
+    document.querySelectorAll(".tool-card").forEach(card => {
+      const foodId = card.dataset.foodId;
+      const foodDef = FOOD_TYPES[foodId];
+
+      const canAfford = state.money >= foodDef.cost;
+      const costEl = card.querySelector('[data-role="cost"]');
+
+      card.classList.toggle("selected", foodId === selectedFoodId);
+      card.classList.toggle("unaffordable", !canAfford);
+      card.disabled = !canAfford;
+
+      if (costEl) {
+        if (canAfford) {
+          costEl.textContent = `필요용돈 ${foodDef.cost}`;
+          costEl.classList.remove("waiting");
+        } else {
+          costEl.textContent = `필요용돈 ${foodDef.cost} · ${formatAffordableTime(getTimeUntilAffordable(foodDef))}`;
+          costEl.classList.add("waiting");
+        }
+      }
+    });
+
+    renderFoods();
+    renderAnimals();
+  }
+
+  function tick(timestamp) {
+    if (!state.lastFrame) state.lastFrame = timestamp;
+    const rawDt = (timestamp - state.lastFrame) / 1000;
+    const dt = Math.min(rawDt, 0.05);
+    state.lastFrame = timestamp;
+
+    if (state.running) {
+      state.elapsed += dt;
+
+      state.moneyAccumulator += dt;
+      while (state.moneyAccumulator >= INCOME_INTERVAL) {
+        state.money += INCOME_AMOUNT;
+        state.moneyAccumulator -= INCOME_INTERVAL;
+      }
+
+      spawnAnimals();
+      state.foods.forEach(food => {
+        food.age += dt;
+      });
+      processAnimals(dt);
+      processAnimalSpeech(dt);
+      processFoodResults();
+      processAnimalResults();
+      checkSuccess();
+      updateUI();
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  function resetGame() {
+    state.running = true;
+    state.elapsed = 0;
+    state.lastFrame = 0;
+    state.money = START_MONEY;
+    state.moneyAccumulator = 0;
+    state.garden = GARDEN_MAX;
+    state.score = 0;
+    state.favoriteFedAmount = 0;
+    state.totalFedAmount = 0;
+    state.foods = [];
+    state.animals = [];
+    state.spawnTable = buildSpawnTable();
+    state.spawnedCount = 0;
+    state.nextFoodId = 1;
+    state.nextAnimalId = 1;
+    state.finalBonusGiven = false;
+
+    overlayEl.classList.remove("show");
+    logEl.innerHTML = "";
+
+    foodsEl.innerHTML = "";
+    animalsEl.innerHTML = "";
+    foodElementMap.clear();
+    animalElementMap.clear();
+
+    addLog("달래기 세션 시작");
+    updateUI();
+  }
+
+  gardenEl.addEventListener("pointerdown", onGardenPointerDown);
+  restartButtonEl.addEventListener("click", resetGame);
+
+  buildToolCards();
+  resetGame();
+  requestAnimationFrame(tick);
+})();
+
+  </script>
+</body>
+</html>

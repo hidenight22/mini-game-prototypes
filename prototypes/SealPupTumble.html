@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>물범 아가는 엄마랑 뒹굴</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#dff7ff;color:#24414a;overflow:hidden}
+#game{position:relative;width:100vw;height:100vh;max-width:520px;margin:0 auto;overflow:hidden;background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.95),rgba(255,255,255,.1) 26%,transparent 42%),linear-gradient(#cff5ff 0%,#eefcff 45%,#f7ffff 100%)}
+.snow{position:absolute;inset:0;opacity:.35;background-image:radial-gradient(circle,#fff 1.5px,transparent 2px),radial-gradient(circle,#fff 1px,transparent 1.5px);background-size:54px 54px,32px 32px;background-position:0 0,15px 18px;pointer-events:none}
+.title{position:absolute;top:24px;left:20px;right:20px;text-align:center;font-weight:900;font-size:25px;letter-spacing:-.04em;color:#2d5a66;text-shadow:0 2px 0 rgba(255,255,255,.8)}
+.subtitle{position:absolute;top:60px;left:24px;right:24px;text-align:center;font-size:14px;color:#5d7c84}
+.hud{position:absolute;top:96px;left:22px;right:22px;display:flex;justify-content:space-between;align-items:center;font-weight:800;z-index:4}
+.pill{background:rgba(255,255,255,.72);border:2px solid rgba(255,255,255,.9);border-radius:999px;padding:8px 13px;box-shadow:0 6px 16px rgba(75,134,150,.12)}
+#message{position:absolute;top:145px;left:28px;right:28px;text-align:center;font-size:20px;font-weight:900;min-height:30px;color:#2a6875;text-shadow:0 2px 0 rgba(255,255,255,.85);z-index:5}
+#field{position:absolute;left:0;right:0;top:190px;bottom:170px}
+.ice{position:absolute;left:7%;right:7%;top:20%;height:48%;border-radius:55% 45% 52% 48%/52% 50% 48% 50%;background:rgba(255,255,255,.65);border:2px solid rgba(255,255,255,.95);box-shadow:inset 0 0 28px rgba(122,204,226,.28),0 20px 40px rgba(76,145,160,.12)}
+.distance-bar{position:absolute;left:18%;right:18%;top:14%;height:12px;border-radius:99px;background:rgba(255,255,255,.9);overflow:hidden;box-shadow:inset 0 1px 4px rgba(82,134,145,.16)}
+#distanceFill{width:50%;height:100%;border-radius:99px;background:linear-gradient(90deg,#9be2f1,#f8c8da);transition:width .22s ease}
+.seal-wrap{position:absolute;width:128px;height:88px;transform-origin:center center;transition:left .22s ease,top .22s ease,transform .25s ease;z-index:3}
+#momWrap{width:158px;height:105px}
+.seal{position:absolute;inset:0}
+.body{position:absolute;left:8%;right:5%;top:28%;bottom:13%;border-radius:60% 42% 50% 50%/58% 48% 52% 45%;background:linear-gradient(160deg,#b8d1d8,#8faeb8);box-shadow:inset -10px -10px 16px rgba(72,103,113,.18),inset 8px 7px 14px rgba(255,255,255,.38)}
+#babyWrap .body{background:linear-gradient(160deg,#d7e6eb,#a8c3cc)}
+.head{position:absolute;width:46%;height:53%;right:0;top:17%;border-radius:55% 52% 48% 50%;background:linear-gradient(160deg,#c7dce1,#9db7bf);box-shadow:inset 6px 7px 14px rgba(255,255,255,.38)}
+#babyWrap .head{background:linear-gradient(160deg,#e3f0f3,#b4ccd4)}
+.eye{position:absolute;width:7px;height:7px;right:21%;top:34%;border-radius:50%;background:#273d44;box-shadow:13px 2px 0 #273d44}
+.nose{position:absolute;width:10px;height:7px;right:8%;top:50%;border-radius:50%;background:#41575e}
+.whisker{position:absolute;right:5%;top:60%;width:31px;height:1px;background:rgba(68,91,98,.45);box-shadow:0 5px 0 rgba(68,91,98,.35);transform:rotate(8deg)}
+.flipper{position:absolute;left:24%;bottom:4%;width:44px;height:18px;border-radius:50%;background:#86a6b0;transform:rotate(-18deg)}
+#babyWrap .flipper{background:#a0bec7}
+.tail{position:absolute;left:0;top:54%;width:28px;height:22px;border-radius:50%;background:#8baab3;transform:rotate(24deg)}
+#babyWrap .tail{background:#a8c5cd}
+.shadow{position:absolute;left:9%;right:8%;bottom:0;height:16px;border-radius:50%;background:rgba(78,125,137,.12);filter:blur(1px)}
+.roll-left{animation:rollLeft .36s ease}.roll-right{animation:rollRight .36s ease}.happy{animation:happy .34s ease}.shake{animation:shake .34s ease}
+@keyframes rollLeft{0%{transform:rotate(0) translateX(0)}50%{transform:rotate(-24deg) translateX(-8px)}100%{transform:rotate(0) translateX(0)}}
+@keyframes rollRight{0%{transform:rotate(0) translateX(0)}50%{transform:rotate(24deg) translateX(8px)}100%{transform:rotate(0) translateX(0)}}
+@keyframes happy{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#roundTimer{position:absolute;left:50%;top:66%;transform:translateX(-50%);width:170px;height:12px;border-radius:99px;background:rgba(255,255,255,.8);overflow:hidden;display:none;z-index:5}#roundFill{height:100%;width:100%;background:#9be2f1;transition:width linear}#recoveryTimer{position:absolute;left:50%;top:72%;transform:translateX(-50%);width:150px;height:12px;border-radius:99px;background:rgba(255,255,255,.8);overflow:hidden;display:none;z-index:5}
+#recoveryFill{height:100%;width:100%;background:#f8a7bd;transition:width linear}
+.controls{position:absolute;left:24px;right:24px;bottom:34px;display:flex;gap:14px;z-index:10}
+button{border:0;border-radius:24px;font-size:19px;font-weight:900;padding:20px 10px;color:#2f5963;background:rgba(255,255,255,.86);box-shadow:0 10px 24px rgba(72,128,144,.18),inset 0 -3px 0 rgba(85,151,166,.12);flex:1}
+button:active{transform:translateY(2px)}
+#overlay{position:absolute;inset:0;background:rgba(224,248,255,.86);backdrop-filter:blur(4px);z-index:20;display:flex;align-items:center;justify-content:center;padding:28px}
+.card{width:100%;max-width:390px;background:rgba(255,255,255,.88);border:2px solid white;border-radius:30px;padding:26px 22px;text-align:center;box-shadow:0 18px 48px rgba(62,120,136,.18)}
+.card h1{margin:0 0 10px;font-size:28px;letter-spacing:-.05em;color:#2e6470}
+.card p{margin:8px 0;line-height:1.45;color:#5b7981;font-weight:700}
+.bigFood{font-size:64px;margin:12px 0 4px}.primary{margin-top:18px;width:100%;background:#fff}
+</style>
+</head>
+<body>
+<div id="game">
+<div class="snow"></div>
+<div class="title">물범 아가는 엄마랑 뒹굴</div>
+<div class="subtitle">v5 · 같은 방향은 먼저 퍼펙트, 멀어짐은 복귀 미션</div>
+<div class="hud"><div class="pill">성공 <span id="score">0</span>/10</div><div class="pill">먹이 <span id="foodCount">0</span></div></div>
+<div id="message">엄마를 잘 보세요</div>
+<div id="field">
+<div class="distance-bar"><div id="distanceFill"></div></div><div class="ice"></div>
+<div id="momWrap" class="seal-wrap"><div class="shadow"></div><div class="seal"><div class="tail"></div><div class="body"></div><div class="flipper"></div><div class="head"><div class="eye"></div><div class="nose"></div><div class="whisker"></div></div></div></div>
+<div id="babyWrap" class="seal-wrap"><div class="shadow"></div><div class="seal"><div class="tail"></div><div class="body"></div><div class="flipper"></div><div class="head"><div class="eye"></div><div class="nose"></div><div class="whisker"></div></div></div></div>
+<div id="roundTimer"><div id="roundFill"></div></div>
+<div id="recoveryTimer"><div id="recoveryFill"></div></div>
+</div>
+<div class="controls"><button id="leftBtn">← 왼쪽으로 뒹굴</button><button id="rightBtn">오른쪽으로 뒹굴 →</button></div>
+<div id="overlay"><div class="card"><h1>물범 아가는<br>엄마랑 뒹굴</h1><p>엄마 물범이 먼저 구릅니다.</p><p>같은 방향으로 굴면 퍼펙트!</p><p>멀어져도 바로 실패하지 않습니다. 엄마 쪽으로 두 번 굴러 돌아오세요.</p><button class="primary" id="startBtn">시작하기</button></div></div>
+</div>
+<script>
+(()=>{
+  const scoreEl=document.getElementById("score");
+  const foodCountEl=document.getElementById("foodCount");
+  const msg=document.getElementById("message");
+  const mom=document.getElementById("momWrap");
+  const baby=document.getElementById("babyWrap");
+  const overlay=document.getElementById("overlay");
+  const startBtn=document.getElementById("startBtn");
+  const leftBtn=document.getElementById("leftBtn");
+  const rightBtn=document.getElementById("rightBtn");
+  const distanceFill=document.getElementById("distanceFill");
+  const roundTimer=document.getElementById("roundTimer");
+  const roundFill=document.getElementById("roundFill");
+  const recoveryTimer=document.getElementById("recoveryTimer");
+  const recoveryFill=document.getElementById("recoveryFill");
+
+  let score=0, foodCount=0;
+  let momX=105, babyX=230, y=205;
+  let expected=null;
+  let inputLocked=true;
+  let recovering=false;
+  let recoveryNeeded=0;
+  let recoveryDir=null;
+  let recoveryTimeout=null;
+  let nextTimer=null;
+  let roundTimeout=null;
+
+  const ROUND_LIMIT_MS=1400;
+  const RECOVERY_LIMIT_MS=2500;
+  const MOVE=24;
+  const COLLISION_GAP=70;
+  const RECOVERY_GAP=165;
+
+  const foods=[
+    {icon:"🐟",name:"작은 물고기"},
+    {icon:"🦐",name:"통통한 새우"},
+    {icon:"🦑",name:"말랑한 오징어"},
+    {icon:"🦪",name:"반짝 조개"},
+    {icon:"🐠",name:"무지개 물고기"}
+  ];
+
+  function gap(){ return Math.abs(babyX-momX); }
+
+  function layout(){
+    mom.style.left=`${momX}px`;
+    baby.style.left=`${babyX}px`;
+    mom.style.top=`${y}px`;
+    baby.style.top=`${y+15}px`;
+    const g=gap();
+    const visualMax=210;
+    const ratio=Math.max(0,Math.min(1,(g-COLLISION_GAP)/(visualMax-COLLISION_GAP)));
+    distanceFill.style.width=`${12+ratio*88}%`;
+  }
+
+  function clearTimers(){
+    clearTimeout(nextTimer);
+    clearTimeout(roundTimeout);
+    clearTimeout(recoveryTimeout);
+  }
+
+  function hideTimers(){
+    roundTimer.style.display="none";
+    recoveryTimer.style.display="none";
+  }
+
+  function startBar(box, fill, ms){
+    box.style.display="block";
+    fill.style.transition="none";
+    fill.style.width="100%";
+    void fill.offsetWidth;
+    fill.style.transition=`width ${ms}ms linear`;
+    fill.style.width="0%";
+  }
+
+  function rollAnim(el,dir){
+    el.classList.remove("roll-left","roll-right","happy","shake");
+    void el.offsetWidth;
+    el.classList.add(dir<0?"roll-left":"roll-right");
+  }
+
+  function happyBoth(){
+    mom.classList.remove("happy");
+    baby.classList.remove("happy");
+    void mom.offsetWidth;
+    mom.classList.add("happy");
+    baby.classList.add("happy");
+  }
+
+  function shake(el){
+    el.classList.remove("shake");
+    void el.offsetWidth;
+    el.classList.add("shake");
+  }
+
+  function setMessage(t){ msg.textContent=t; }
+
+  function resetPositions(){
+    momX=105;
+    babyX=230;
+    layout();
+  }
+
+  function startGame(){
+    overlay.style.display="none";
+    score=0;
+    scoreEl.textContent=score;
+    resetPositions();
+    setMessage("엄마를 잘 보세요");
+    inputLocked=true;
+    recovering=false;
+    hideTimers();
+    clearTimers();
+    nextRound(650);
+  }
+
+  function nextRound(delay=800){
+    inputLocked=true;
+    recovering=false;
+    expected=null;
+    hideTimers();
+    clearTimers();
+
+    nextTimer=setTimeout(()=>{
+      if(score>=10){ winGame(); return; }
+
+      const dir=Math.random()<0.5?-1:1;
+      expected=dir;
+
+      // 엄마도 아기도 같은 방향으로 굴렀을 때 거리 변화가 과도하지 않도록 같은 이동량 사용
+      momX+=dir*MOVE;
+      rollAnim(mom,dir);
+      layout();
+
+      setMessage(dir<0?"엄마가 왼쪽으로 데굴!":"엄마가 오른쪽으로 데굴!");
+
+      setTimeout(()=>{
+        if(score>=10) return;
+        inputLocked=false;
+        setMessage("같은 방향으로 뒹굴!");
+        startBar(roundTimer,roundFill,ROUND_LIMIT_MS);
+        roundTimeout=setTimeout(()=>{
+          if(!inputLocked && !recovering) failGame("늦었어요");
+        },ROUND_LIMIT_MS);
+      },360);
+    },delay);
+  }
+
+  function playerRoll(dir){
+    if(inputLocked && !recovering) return;
+
+    const beforeGap=gap();
+    babyX+=dir*MOVE;
+    rollAnim(baby,dir);
+    layout();
+    const afterGap=gap();
+
+    if(recovering){
+      handleRecovery(dir,beforeGap,afterGap);
+      return;
+    }
+
+    inputLocked=true;
+    clearTimeout(roundTimeout);
+    roundTimer.style.display="none";
+
+    // 1순위: 충돌만 즉시 실패
+    if(afterGap<COLLISION_GAP){
+      failGame("엄마랑 꽝!");
+      return;
+    }
+
+    // 2순위: 방향이 맞으면 무조건 성공 판정
+    // 거리 상태는 성공 후 복귀 미션으로만 전환합니다. 실패로 처리하지 않습니다.
+    if(dir===expected){
+      score++;
+      scoreEl.textContent=score;
+      happyBoth();
+
+      if(score>=10){
+        setMessage("퍼펙트!");
+        setTimeout(winGame,500);
+        return;
+      }
+
+      if(afterGap>RECOVERY_GAP){
+        setMessage("퍼펙트! 그런데 멀어졌어요");
+        setTimeout(startRecovery,450);
+        return;
+      }
+
+      setMessage("퍼펙트!");
+      nextRound(750);
+      return;
+    }
+
+    // 3순위: 방향이 틀렸고 멀어졌다면 복귀 기회
+    if(afterGap>beforeGap+1 || afterGap>RECOVERY_GAP){
+      startRecovery();
+      return;
+    }
+
+    // 4순위: 방향도 틀렸고 멀어진 것도 아니면 방향 실패
+    failGame("방향이 달랐어요");
+  }
+
+  function startRecovery(){
+    if(score>=10){ winGame(); return; }
+
+    recovering=true;
+    inputLocked=false;
+    recoveryNeeded=2;
+    recoveryDir=babyX>momX?-1:1;
+
+    setMessage("엄마 쪽으로 두 번!");
+    roundTimer.style.display="none";
+    startBar(recoveryTimer,recoveryFill,RECOVERY_LIMIT_MS);
+
+    clearTimeout(recoveryTimeout);
+    recoveryTimeout=setTimeout(()=>{
+      if(recovering) failGame("엄마에게 못 돌아갔어요");
+    },RECOVERY_LIMIT_MS);
+  }
+
+  function handleRecovery(dir,beforeGap,afterGap){
+    if(afterGap<COLLISION_GAP){
+      failGame("엄마랑 꽝!");
+      return;
+    }
+
+    if(dir!==recoveryDir){
+      setMessage("엄마 쪽으로 굴러야 해요!");
+      return;
+    }
+
+    if(afterGap>=beforeGap){
+      setMessage("조금 더 엄마 쪽으로!");
+      return;
+    }
+
+    recoveryNeeded--;
+
+    if(recoveryNeeded>0){
+      setMessage("한 번 더!");
+      return;
+    }
+
+    clearTimeout(recoveryTimeout);
+    recovering=false;
+    recoveryTimer.style.display="none";
+
+    happyBoth();
+    setMessage("엄마 곁으로 복귀!");
+    nextRound(760);
+  }
+
+  function failGame(reason){
+    inputLocked=true;
+    recovering=false;
+    clearTimers();
+    hideTimers();
+    shake(baby);
+    setMessage(reason);
+
+    overlay.style.display="flex";
+    overlay.innerHTML=`<div class="card"><h1>다시 뒹굴까요?</h1><p>${reason}</p><p>성공 ${score}/10</p><button class="primary" id="restartBtn">다시 하기</button></div>`;
+    document.getElementById("restartBtn").onclick=startGame;
+  }
+
+  function winGame(){
+    inputLocked=true;
+    clearTimers();
+    hideTimers();
+
+    const food=foods[Math.floor(Math.random()*foods.length)];
+    foodCount++;
+    foodCountEl.textContent=foodCount;
+
+    overlay.style.display="flex";
+    overlay.innerHTML=`<div class="card"><h1>먹이를 찾았어요!</h1><div class="bigFood">${food.icon}</div><p>${food.name}을 얻었습니다.</p><p>엄마랑 10번 완벽하게 뒹굴었어요.</p><button class="primary" id="againBtn">한 번 더 하기</button></div>`;
+    document.getElementById("againBtn").onclick=startGame;
+  }
+
+  leftBtn.addEventListener("click",()=>playerRoll(-1));
+  rightBtn.addEventListener("click",()=>playerRoll(1));
+  startBtn.addEventListener("click",startGame);
+  window.addEventListener("resize",layout);
+  layout();
+})();
+</script>
+</body>
+</html>

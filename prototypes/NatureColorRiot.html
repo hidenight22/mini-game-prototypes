@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>대자연 색 맞춰 진압</title>
+<style>
+  :root{
+    --ink:#171717; --paper:#fff; --red:#e34242; --blue:#4ba3ff; --orange:#ff9a2f;
+    --yellow:#ffd84d; --whitepill:#f8f8f8; --iron:#6b1f2a; --purple:#8f55d8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);}
+  #app{position:fixed;inset:0;background:#fff;overflow:hidden;touch-action:none;}
+  .screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;overflow:hidden;}
+  .screen.active{display:flex;}
+  button{font:inherit;border:none;cursor:pointer;touch-action:manipulation;}
+
+  /* Opening */
+  #intro{background:#fff;}
+  .girl{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:min(66vw,360px);height:min(66vw,360px);}
+  .girl svg{width:100%;height:100%;overflow:visible;}
+  .painWord{position:absolute;padding:7px 13px;background:#fff;border:3px solid #111;border-radius:999px;font-weight:900;color:#111;box-shadow:0 2px 0 #111;white-space:nowrap;transform:translate(-50%,-50%) rotate(var(--rot));font-size:clamp(18px,5.5vw,32px);z-index:4;}
+  .painWord.red{color:#e32626;border-color:#e32626;box-shadow:0 2px 0 #e32626;}
+  #declaration{background:#fff;color:#c90000;align-items:flex-start;justify-content:flex-start;padding:22vh 8vw;}
+  #declareText{font-weight:1000;font-size:clamp(38px,10vw,70px);line-height:1.18;letter-spacing:-.05em;white-space:pre-line;}
+
+  /* Common panel */
+  .modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,460px);background:#fff;border:6px solid #171717;border-radius:32px;padding:30px 24px;box-shadow:0 14px 0 #171717;text-align:center;z-index:20;}
+  .modal p{margin:0 0 22px;font-weight:900;font-size:clamp(22px,6vw,32px);line-height:1.25;letter-spacing:-.04em;}
+  .mainBtn{background:#171717;color:#fff;border-radius:999px;padding:15px 28px;font-weight:1000;font-size:clamp(21px,6vw,31px);box-shadow:0 10px 0 #555;}
+  .mainBtn:active{transform:translateY(6px);box-shadow:0 4px 0 #555;}
+
+  /* Game */
+  #game{background:#fff;display:none;flex-direction:column;justify-content:space-between;}
+  #game.active{display:flex;}
+  .topbar{position:relative;width:100%;padding:12px 14px 0;z-index:5;}
+  .titleRow{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .gameTitle{font-weight:1000;font-size:18px;letter-spacing:-.04em;}
+  .needBadge{display:flex;align-items:center;gap:7px;background:#111;color:#fff;border-radius:999px;padding:7px 12px;font-weight:1000;font-size:15px;box-shadow:0 4px 0 #888;}
+  .needDot{width:18px;height:18px;border-radius:50%;border:2px solid #fff;background:var(--need);}
+  .bodyCount{margin-top:8px;height:14px;background:#eee;border:3px solid #111;border-radius:999px;overflow:hidden;box-shadow:0 3px 0 #111;}
+  .bodyFill{height:100%;width:100%;background:#8f55d8;transition:width .2s ease;}
+  .notice{position:absolute;left:50%;top:78px;transform:translateX(-50%);z-index:12;background:#fff;border:4px solid #111;border-radius:999px;padding:8px 15px;font-weight:1000;font-size:18px;box-shadow:0 5px 0 #111;opacity:0;pointer-events:none;white-space:nowrap;}
+  .notice.show{animation:popNotice .75s ease both;}
+  @keyframes popNotice{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}15%,70%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-10px) scale(.96)}}
+
+  #arena{position:relative;flex:1;width:100%;min-height:0;overflow:hidden;}
+  #dragonLayer{position:absolute;inset:0;}
+  .segment{position:absolute;width:54px;height:54px;border-radius:45% 55% 50% 50%;border:4px solid #111;box-shadow:0 5px 0 rgba(0,0,0,.35);transform:translate(-50%,-50%);transition:transform .16s ease, opacity .16s ease;z-index:2;}
+  .segment.outer{outline:5px solid rgba(255,255,255,.95);filter:drop-shadow(0 0 8px rgba(0,0,0,.25));animation:pulseOuter .55s infinite alternate;z-index:3;}
+  @keyframes pulseOuter{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.1)}}
+  .segment.hit{animation:segHit .18s ease both;}
+  @keyframes segHit{0%{transform:translate(-50%,-50%) scale(1.1)}40%{transform:translate(-50%,-50%) scale(1.55,.65)}100%{transform:translate(-50%,-50%) scale(.15);opacity:0}}
+  .head{position:absolute;width:74px;height:68px;border-radius:44% 56% 48% 52%;border:5px solid #111;background:#aa67e8;box-shadow:0 7px 0 rgba(0,0,0,.35);transform:translate(-50%,-50%);z-index:4;transition:left .08s linear, top .08s linear;}
+  .eye{position:absolute;top:17px;width:15px;height:19px;border-radius:50%;background:#fff;border:3px solid #111;}
+  .eye:after{content:"";position:absolute;left:5px;top:5px;width:5px;height:5px;border-radius:50%;background:#111;}
+  .eye.l{left:17px}.eye.r{right:17px}
+  .mouth{position:absolute;left:50%;bottom:13px;width:28px;height:14px;border-bottom:4px solid #111;border-radius:0 0 999px 999px;transform:translateX(-50%);}
+
+  #slotsArea{width:100%;padding:0 12px 8px;z-index:8;}
+  .slotsLabel{font-size:13px;font-weight:900;color:#555;margin:0 0 5px 4px;}
+  #slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .slot{height:76px;border:4px dashed #111;border-radius:19px;background:#fafafa;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 5px 0 #111;}
+  .slot.empty:before{content:"슬롯";font-weight:1000;color:#bbb;font-size:22px;}
+  .slot.locked{border-style:solid;background:#fff;}
+  .slot .bundle{position:relative;width:100%;height:100%;border-radius:12px;box-shadow:none;border:none;}
+  .slot .bundle:after{content:"고정";position:absolute;right:6px;top:5px;font-size:11px;font-weight:1000;background:#111;color:#fff;border-radius:999px;padding:2px 6px;}
+  .slot.waiting .bundle{filter:grayscale(.15) brightness(.92);}
+  .slot.waiting:after{content:"색 대기";position:absolute;left:6px;top:5px;font-size:11px;font-weight:1000;background:#fff;color:#111;border:3px solid #111;border-radius:999px;padding:0 6px;}
+  .bundleCount{min-width:42px;text-align:center;}
+
+  #railWrap{height:112px;width:100%;border-top:5px solid #111;background:#f4f4f4;position:relative;overflow:hidden;z-index:9;box-shadow:0 -4px 0 #111;}
+  .railLine{position:absolute;left:0;right:0;top:52%;height:8px;background:#111;transform:translateY(-50%);}
+  .bundle{position:absolute;width:92px;height:72px;border:4px solid #111;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:1000;color:#111;box-shadow:0 7px 0 rgba(0,0,0,.38);touch-action:none;z-index:10;}
+  .bundleName{font-size:15px;line-height:1;letter-spacing:-.04em;text-shadow:0 1px 0 rgba(255,255,255,.65);}
+  .bundleCount{margin-top:4px;font-size:25px;line-height:1;background:#fff;border:3px solid #111;border-radius:999px;padding:1px 9px;box-shadow:0 2px 0 #111;}
+  .bundle.used{opacity:.25;transform:scale(.8);pointer-events:none;}
+  .bundle.dragging{z-index:99;box-shadow:0 12px 0 rgba(0,0,0,.32);}
+  .smallHint{position:absolute;left:50%;bottom:116px;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:7px 12px;font-weight:900;font-size:14px;z-index:8;white-space:nowrap;}
+
+
+
+  /* Slot attackers: the medicine bundle launches tiny people-shaped pills */
+  .slot.launching{animation:slotKick .18s ease both;}
+  @keyframes slotKick{0%{transform:translateY(0)}35%{transform:translateY(5px) scale(1.03)}100%{transform:translateY(0)}}
+  .miniAttacker{position:fixed;left:0;top:0;width:34px;height:46px;border:4px solid #111;border-radius:17px 17px 12px 12px;z-index:45;pointer-events:none;box-shadow:0 7px 0 rgba(0,0,0,.42);transform:translate(-50%,-50%) scale(.9);transition:transform .26s cubic-bezier(.12,.98,.34,1.08), opacity .18s ease;}
+  .miniAttacker:before{content:"";position:absolute;left:50%;top:-18px;width:28px;height:24px;border:4px solid #111;border-radius:50%;background:inherit;transform:translateX(-50%);box-shadow:0 4px 0 rgba(0,0,0,.25);}
+  .miniAttacker:after{content:"";position:absolute;left:7px;top:-10px;width:5px;height:5px;border-radius:50%;background:#111;box-shadow:14px 0 0 #111;}
+  .miniArmL,.miniArmR,.miniLegL,.miniLegR{position:absolute;background:#111;border-radius:999px;transform-origin:center;}
+  .miniArmL{left:-15px;top:11px;width:17px;height:6px;transform:rotate(-28deg)}
+  .miniArmR{right:-15px;top:11px;width:17px;height:6px;transform:rotate(28deg)}
+  .miniLegL{left:7px;bottom:-14px;width:7px;height:18px;transform:rotate(12deg)}
+  .miniLegR{right:7px;bottom:-14px;width:7px;height:18px;transform:rotate(-12deg)}
+  .miniAttacker.flying{animation:warCry .12s linear infinite alternate;}
+  @keyframes warCry{from{filter:brightness(1);margin-top:0}to{filter:brightness(1.18);margin-top:-2px}}
+  .impactBurst{position:fixed;width:92px;height:92px;border-radius:50%;z-index:44;pointer-events:none;transform:translate(-50%,-50%) scale(.2);opacity:0;}
+  .impactBurst:before{content:"";position:absolute;inset:12px;border:8px solid #111;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:0 0 0 8px var(--burst),0 0 30px var(--burst);}
+  .impactBurst:after{content:"콰직!";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-10deg);font-size:24px;font-weight:1000;color:#111;text-shadow:2px 2px 0 #fff, -2px -2px 0 #fff;white-space:nowrap;}
+  .impactBurst.on{animation:burst .34s ease-out both;}
+  @keyframes burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-15deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(8deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.55) rotate(18deg)}}
+
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:30;}
+  .flash.on{animation:flash .18s ease;}
+  @keyframes flash{0%{opacity:.95}100%{opacity:0}}
+  .shake{animation:shake .22s linear;}
+  .bigShake{animation:bigShake .35s linear;}
+  @keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,-4px)}80%{transform:translate(5px,3px)}}
+  @keyframes bigShake{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-14px,7px) rotate(-1deg)}40%{transform:translate(12px,-6px) rotate(1deg)}60%{transform:translate(-10px,-8px) rotate(-1deg)}80%{transform:translate(10px,7px) rotate(1deg)}}
+
+  #result{background:#fff;text-align:center;padding:30px;flex-direction:column;}
+  .resultBall{width:130px;height:130px;border-radius:50%;background:#8f55d8;border:6px solid #111;box-shadow:0 12px 0 #111;position:relative;margin-bottom:34px;}
+  .resultBall:before,.resultBall:after{content:"";position:absolute;top:38px;width:22px;height:28px;border-radius:50%;background:#fff;border:4px solid #111;}
+  .resultBall:before{left:32px}.resultBall:after{right:32px}
+  .resultText{font-weight:1000;font-size:clamp(32px,9vw,52px);line-height:1.18;letter-spacing:-.05em;margin-bottom:28px;white-space:pre-line;}
+
+  .tutorialDragon{position:absolute;left:50%;top:21%;transform:translateX(-50%);font-weight:1000;font-size:17px;background:#fff;border:4px solid #111;border-radius:999px;padding:8px 14px;box-shadow:0 5px 0 #111;z-index:6;}
+  @media (max-height:650px){.slot{height:62px}.bundle{height:62px}.railWrap{height:96px}.smallHint{display:none}.segment{width:45px;height:45px}.head{width:62px;height:58px}.modal{padding:22px 18px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="intro" class="screen active">
+    <div class="girl" aria-hidden="true">
+      <svg viewBox="0 0 300 300">
+        <path d="M88 200 C68 173,73 132,103 108 C128 87,174 83,199 106 C225 130,232 171,207 200 C181 231,116 231,88 200 Z" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M101 110 C93 74,121 43,154 44 C195 45,222 81,207 126" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M94 202 C116 173,184 173,207 202" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M91 205 C72 225,73 249,102 254" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M209 205 C231 222,230 249,199 255" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M128 211 C129 238,171 238,172 211" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+        <path d="M118 134 C135 147,166 147,183 134" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <section id="declaration" class="screen"><div id="declareText"></div></section>
+
+  <section id="game" class="screen">
+    <div class="topbar">
+      <div class="titleRow">
+        <div class="gameTitle">대자연 색 맞춰 발사 v3</div>
+        <div class="needBadge"><span>바깥 색</span><span id="needDot" class="needDot"></span><span id="needName">-</span></div>
+      </div>
+      <div class="bodyCount"><div id="bodyFill" class="bodyFill"></div></div>
+    </div>
+    <div id="notice" class="notice">진압!</div>
+    <div id="arena">
+      <div id="dragonLayer"></div>
+      <div class="smallHint">같은 색 약을 슬롯에 올리면 스스로 돌진합니다</div>
+    </div>
+    <div id="slotsArea">
+      <div class="slotsLabel">발사 슬롯 · 올라간 약이 사람처럼 돌진합니다</div>
+      <div id="slots"></div>
+    </div>
+    <div id="railWrap"><div class="railLine"></div></div>
+    <div id="flash" class="flash"></div>
+  </section>
+
+  <section id="result" class="screen">
+    <div class="resultBall"></div>
+    <div class="resultText">진압 완료.
+오늘의 대자연은 실타래가 됐다.</div>
+    <button id="restartBtn" class="mainBtn">다시 감기</button>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const screens = ['intro','declaration','game','result'].map($);
+  const app = $('app');
+  const railWrap = $('railWrap');
+  const slotsEl = $('slots');
+  const dragonLayer = $('dragonLayer');
+  const flash = $('flash');
+  const notice = $('notice');
+  const needDot = $('needDot');
+  const needName = $('needName');
+  const bodyFill = $('bodyFill');
+  const declareText = $('declareText');
+  const restartBtn = $('restartBtn');
+
+  const meds = [
+    {id:'pain', name:'진통제', colorName:'흰색', color:'#f8f8f8', text:'#111'},
+    {id:'anti', name:'소염제', colorName:'빨강', color:'#e34242', text:'#111'},
+    {id:'water', name:'물', colorName:'파랑', color:'#4ba3ff', text:'#111'},
+    {id:'iron', name:'철분제', colorName:'검붉', color:'#6b1f2a', text:'#fff'},
+    {id:'hot', name:'핫팩', colorName:'주황', color:'#ff9a2f', text:'#111'},
+    {id:'head', name:'두통약', colorName:'노랑', color:'#ffd84d', text:'#111'}
+  ];
+  const medById = Object.fromEntries(meds.map(m => [m.id, m]));
+
+  let state = null;
+  let lastTime = 0;
+  let rafId = 0;
+  let spawnTimer = 0;
+  let attackTimer = 0;
+  let renderTimer = 0;
+  let isResolvingHit = false;
+  let resolvingStartedAt = 0;
+  let dragging = null;
+  let modalStep = 0;
+
+  function show(id){ screens.forEach(s => s.classList.toggle('active', s.id === id)); }
+  function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  function safeOn(el, fn){
+    let lock = false;
+    const run = (e) => { e.preventDefault(); if(lock) return; lock = true; setTimeout(()=>lock=false, 250); fn(e); };
+    el.addEventListener('pointerup', run, {passive:false});
+    el.addEventListener('click', run, {passive:false});
+    el.addEventListener('touchend', run, {passive:false});
+  }
+
+  function makeModal(text, btnText, cb){
+    const old = document.querySelector('.modal');
+    if(old) old.remove();
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = `<p>${text}</p><button class="mainBtn">${btnText}</button>`;
+    app.appendChild(m);
+    safeOn(m.querySelector('button'), () => { m.remove(); cb && cb(); });
+    return m;
+  }
+
+  async function intro(){
+    show('intro');
+    document.querySelectorAll('.painWord').forEach(n => n.remove());
+    await wait(500);
+    for(let i=0;i<45;i++){
+      const w = document.createElement('div');
+      w.className = 'painWord';
+      w.textContent = '아파';
+      w.style.left = (8 + Math.random()*84) + '%';
+      w.style.top = (10 + Math.random()*80) + '%';
+      w.style.setProperty('--rot', (Math.random()*34-17)+'deg');
+      w.style.fontSize = `clamp(18px, ${4.5 + Math.random()*4.5}vw, 40px)`;
+      $('intro').appendChild(w);
+      await wait(i < 8 ? 130 : 38);
+    }
+    await wait(500);
+    document.querySelectorAll('.painWord').forEach(n => n.classList.add('red'));
+    await wait(1000);
+    declaration();
+  }
+
+  async function declaration(){
+    show('declaration');
+    declareText.textContent = '';
+    const a = '대자연 이 새끼,\n';
+    const b = '가만 안 둘 거야.';
+    for(const ch of a){ declareText.textContent += ch; await wait(120); }
+    for(let i=0;i<b.length;i++){ declareText.textContent += b[i]; await wait(Math.max(18, 95 - i*6)); }
+    app.classList.add('bigShake'); setTimeout(()=>app.classList.remove('bigShake'), 360);
+    await wait(400);
+    show('game');
+    makeModal('대자연의 바깥 색을 보세요.', '확인', () => {
+      makeModal('같은 색 약을 슬롯에 올리면 스스로 돌진합니다.<br>한 번 올린 약은 내릴 수 없습니다.', '그래도 시작', startGame);
+    });
+  }
+
+  function buildBody(){
+    // Generate groups so slot-count decisions matter.
+    const arr = [];
+    let prev = null;
+    while(arr.length < 26){
+      let m = meds[Math.floor(Math.random()*meds.length)].id;
+      if(m === prev && Math.random()<0.45) m = meds[Math.floor(Math.random()*meds.length)].id;
+      const run = 1 + Math.floor(Math.random()*4);
+      for(let i=0;i<run && arr.length<26;i++) arr.push(m);
+      prev = m;
+    }
+    // Ensure first few are playable with common colors.
+    arr.splice(0, 5, 'anti', 'anti', 'water', 'pain', 'hot');
+    return arr;
+  }
+
+  function startGame(){
+    const old = document.querySelector('.modal'); if(old) old.remove();
+    state = {
+      body: buildBody(), total: 26, slots: [null,null,null], bundles: [], over:false,
+      dragonT: 0, lastNeed:null, grace:0
+    };
+    state.total = state.body.length;
+    dragonLayer.innerHTML = '';
+    railWrap.querySelectorAll('.bundle').forEach(b => b.remove());
+    slotsEl.innerHTML = '';
+    for(let i=0;i<3;i++){
+      const s = document.createElement('div');
+      s.className = 'slot empty'; s.dataset.index = i;
+      slotsEl.appendChild(s);
+      s.addEventListener('pointerup', e => handleSlotPointer(e, i));
+      s.addEventListener('touchend', e => handleSlotPointer(e, i), {passive:false});
+    }
+    spawnTimer = 0; attackTimer = 0; renderTimer = 0; isResolvingHit = false; lastTime = performance.now();
+    renderSlots(); renderDragon(); updateNeed();
+    spawnBundle(true);
+    spawnBundle(false, state.body[2] || state.body[0]);
+    spawnBundle(false, state.body[3] || state.body[0]);
+    spawnBundle(false);
+    ensureNeededAvailable();
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function showNotice(text){
+    notice.textContent = text;
+    notice.classList.remove('show'); void notice.offsetWidth; notice.classList.add('show');
+  }
+
+  function updateNeed(){
+    if(!state || !state.body.length) return;
+    const m = medById[state.body[0]] || meds[0];
+    needDot.style.setProperty('--need', m.color);
+    needName.textContent = m.colorName;
+    bodyFill.style.width = Math.max(0, state.body.length / state.total * 100) + '%';
+  }
+
+  function renderSlots(){
+    if(!state) return;
+    const need = state.body[0];
+    [...slotsEl.children].forEach((slot, i) => {
+      slot.innerHTML = '';
+      const b = state.slots[i];
+      const waiting = b && need && b.med !== need;
+      slot.className = 'slot ' + (b ? 'locked' : 'empty') + (waiting ? ' waiting' : '');
+      if(b){
+        b.count = normalizeCount(b.count);
+        const el = bundleNode(b, false);
+        el.style.position = 'relative'; el.style.left = ''; el.style.top = ''; el.style.transform = '';
+        slot.appendChild(el);
+      }
+    });
+  }
+
+  function normalizeCount(value){
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.max(1, Math.floor(n)) : 1;
+  }
+
+  function bundleNode(bundle, onRail=true){
+    bundle.count = normalizeCount(bundle.count);
+    const m = medById[bundle.med] || meds[0];
+    bundle.med = m.id;
+    const el = document.createElement('div');
+    el.className = 'bundle';
+    el.dataset.bid = bundle.id;
+    el.style.background = m.color;
+    el.style.color = m.text;
+    el.innerHTML = `<div class="bundleName">${m.name}</div><div class="bundleCount">×${bundle.count}</div>`;
+    if(onRail){
+      el.style.left = bundle.x + 'px';
+      el.style.top = '20px';
+      el.addEventListener('pointerdown', onBundleDown);
+      el.addEventListener('touchstart', onBundleTouchStart, {passive:false});
+    }
+    return el;
+  }
+
+  function spawnBundle(forceNeeded=false, medOverride=null){
+    if(!state || !state.body.length) return;
+    const need = state.body[0];
+    let med = medOverride || ((forceNeeded || Math.random()<0.52) ? need : meds[Math.floor(Math.random()*meds.length)].id);
+    if(!medById[med]) med = need;
+    const count = normalizeCount(1 + Math.floor(Math.random()*5));
+    const id = 'b' + Math.random().toString(36).slice(2);
+    const x = railWrap.clientWidth + 40 + Math.random()*40;
+    const bundle = {id, med, count, x, y: 20, el:null};
+    const el = bundleNode(bundle, true);
+    bundle.el = el;
+    state.bundles.push(bundle);
+    railWrap.appendChild(el);
+  }
+
+  function ensureNeededAvailable(){
+    if(!state || state.over || !state.body.length) return;
+    const need = state.body[0];
+    const hasMatchingSlot = state.slots.some(s => s && s.med === need && s.count > 0);
+    const hasMatchingRail = state.bundles.some(b => b.med === need);
+    const hasEmptySlot = state.slots.some(s => !s);
+    if(!hasMatchingSlot && !hasMatchingRail && hasEmptySlot){
+      spawnBundle(true);
+      showNotice(medById[need].name + ' 필요!');
+    }
+  }
+
+  function onBundleTouchStart(e){ if(e.touches && e.touches[0]) onBundleDown(e, e.touches[0]); }
+  function onBundleDown(e, touch){
+    e.preventDefault();
+    if(!state || state.over) return;
+    const target = e.currentTarget;
+    const id = target.dataset.bid;
+    const b = state.bundles.find(x => x.id === id);
+    if(!b) return;
+    const p = touch || e;
+    dragging = {bundle:b, dx:p.clientX - target.getBoundingClientRect().left, dy:p.clientY - target.getBoundingClientRect().top};
+    target.classList.add('dragging');
+    target.style.position = 'fixed';
+    target.style.left = (p.clientX - dragging.dx) + 'px';
+    target.style.top = (p.clientY - dragging.dy) + 'px';
+    document.addEventListener('pointermove', onDragMove, {passive:false});
+    document.addEventListener('pointerup', onDragEnd, {passive:false});
+    document.addEventListener('touchmove', onTouchMove, {passive:false});
+    document.addEventListener('touchend', onTouchEnd, {passive:false});
+  }
+  function onTouchMove(e){ if(e.touches && e.touches[0]) onDragMove(e, e.touches[0]); }
+  function onTouchEnd(e){ onDragEnd(e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e); }
+  function onDragMove(e, touch){
+    if(!dragging) return; e.preventDefault && e.preventDefault();
+    const p = touch || e;
+    const el = dragging.bundle.el;
+    el.style.left = (p.clientX - dragging.dx) + 'px';
+    el.style.top = (p.clientY - dragging.dy) + 'px';
+  }
+  function onDragEnd(e){
+    if(!dragging) return;
+    const b = dragging.bundle; const el = b.el;
+    const r = el.getBoundingClientRect(); const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let placed = false;
+    [...slotsEl.children].forEach((slot, i) => {
+      const sr = slot.getBoundingClientRect();
+      if(cx >= sr.left && cx <= sr.right && cy >= sr.top && cy <= sr.bottom && !state.slots[i] && !placed){
+        state.slots[i] = {med:b.med, count:normalizeCount(b.count)};
+        placed = true;
+      }
+    });
+    if(placed){
+      state.bundles = state.bundles.filter(x => x !== b);
+      el.remove(); renderSlots(); showNotice('발사 준비!');
+    } else {
+      el.classList.remove('dragging'); el.style.position = 'absolute'; el.style.left = b.x + 'px'; el.style.top = '20px';
+    }
+    dragging = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('touchend', onTouchEnd);
+  }
+  function handleSlotPointer(e, i){ e.preventDefault && e.preventDefault(); }
+
+  function attackStep(){
+    if(!state || state.over || !state.body.length) return;
+    if(isResolvingHit){
+      if(performance.now() - resolvingStartedAt > 900){ isResolvingHit = false; }
+      else return;
+    }
+    const need = state.body[0];
+    const idx = state.slots.findIndex(s => s && s.med === need && normalizeCount(s.count) > 0);
+    if(idx < 0){
+      renderSlots();
+      ensureNeededAvailable();
+      if(state.slots.every(Boolean) && state.grace <= 0){ showNotice('슬롯이 막혔다!'); state.grace = 8; }
+      state.grace = Math.max(0, state.grace - 1);
+      return;
+    }
+
+    const slotData = state.slots[idx];
+    slotData.count = normalizeCount(slotData.count);
+    const slotEl = slotsEl.children[idx];
+    const targetEl = dragonLayer.querySelector('.segment.outer');
+    if(!slotEl || !targetEl){ renderDragon(); return; }
+
+    isResolvingHit = true;
+    resolvingStartedAt = performance.now();
+    slotEl.classList.remove('launching'); void slotEl.offsetWidth; slotEl.classList.add('launching');
+    showNotice(medById[slotData.med].name + ' 돌격!');
+
+    launchMiniAttacker(idx, slotData.med, () => {
+      if(!state || state.over){ isResolvingHit = false; return; }
+      slotData.count -= 1;
+      const removed = state.body.shift();
+      hitSegment(removed);
+      flashHit(slotData.med);
+      if(slotData.count <= 0) state.slots[idx] = null;
+      renderSlots(); updateNeed();
+      ensureNeededAvailable();
+      setTimeout(() => {
+        renderDragon();
+        renderSlots();
+        isResolvingHit = false;
+        if(state && state.body.length === 0) clearGame();
+      }, 170);
+    });
+  }
+
+  function launchMiniAttacker(slotIndex, medId, onHit){
+    const med = medById[medId];
+    const slotEl = slotsEl.children[slotIndex];
+    const targetEl = dragonLayer.querySelector('.segment.outer');
+    if(!slotEl || !targetEl){ onHit && onHit(); return; }
+    const sr = slotEl.getBoundingClientRect();
+    const tr = targetEl.getBoundingClientRect();
+    const sx = sr.left + sr.width/2;
+    const sy = sr.top + sr.height/2 - 8;
+    const tx = tr.left + tr.width/2;
+    const ty = tr.top + tr.height/2;
+
+    const a = document.createElement('div');
+    a.className = 'miniAttacker';
+    a.style.background = med.color;
+    a.style.color = med.text;
+    a.style.left = sx + 'px';
+    a.style.top = sy + 'px';
+    a.innerHTML = '<span class="miniArmL"></span><span class="miniArmR"></span><span class="miniLegL"></span><span class="miniLegR"></span>';
+    app.appendChild(a);
+
+    const dx = tx - sx, dy = ty - sy;
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+    void a.offsetWidth;
+    a.classList.add('flying');
+    a.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${angle}deg) scale(1.25)`;
+
+    setTimeout(() => {
+      a.style.opacity = '0';
+      createImpact(tx, ty, med.color);
+      setTimeout(()=>a.remove(), 120);
+      onHit && onHit();
+    }, 260);
+  }
+
+  function createImpact(x, y, color){
+    const b = document.createElement('div');
+    b.className = 'impactBurst';
+    b.style.left = x + 'px';
+    b.style.top = y + 'px';
+    b.style.setProperty('--burst', color);
+    app.appendChild(b);
+    void b.offsetWidth;
+    b.classList.add('on');
+    setTimeout(()=>b.remove(), 380);
+  }
+
+  function flashHit(medId){
+    const kind = medById[medId] ? medById[medId].id : "";
+    flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
+    app.classList.remove('shake'); void app.offsetWidth; app.classList.add('shake'); setTimeout(()=>app.classList.remove('shake'), 230);
+    if(navigator.vibrate) navigator.vibrate(kind === "iron" || kind === "anti" ? [55,20,35] : 35);
+  }
+
+  function hitSegment(){
+    const seg = dragonLayer.querySelector('.segment.outer');
+    if(seg){ seg.classList.add('hit'); setTimeout(()=>seg.remove(), 170); }
+  }
+
+  function renderDragon(){
+    if(!state) return;
+    dragonLayer.innerHTML = '';
+    const arena = $('arena');
+    const w = arena.clientWidth || window.innerWidth;
+    const h = arena.clientHeight || 380;
+    const n = state.body.length;
+    const maxShow = Math.min(n, 30);
+    const t = state.dragonT;
+    const cx = w*0.5 + Math.sin(t*.7)*w*.08;
+    const cy = h*0.48 + Math.cos(t*.8)*h*.06;
+    const ampX = Math.min(118, w*.32);
+    const ampY = Math.min(88, h*.24);
+    const pts = [];
+    for(let i=0;i<maxShow;i++){
+      const p = i/(Math.max(1,maxShow-1));
+      const angle = t + p*Math.PI*2.35;
+      const x = cx + Math.cos(angle)*ampX*(1-p*.55) + Math.sin(p*8+t)*18;
+      const y = cy + Math.sin(angle*1.25)*ampY*(1-p*.5) + p*20;
+      pts.push({x,y});
+    }
+    // outer is body[0], placed near visible tail/front, head follows last.
+    pts.forEach((pt, i) => {
+      const med = medById[state.body[i]];
+      const s = document.createElement('div');
+      s.className = 'segment' + (i===0 ? ' outer' : '');
+      s.style.left = pt.x+'px'; s.style.top = pt.y+'px';
+      s.style.background = med.color; s.style.zIndex = String(3 + maxShow - i);
+      if(med.text === '#fff') s.style.borderColor = '#111';
+      dragonLayer.appendChild(s);
+    });
+    const hp = pts[pts.length-1] || {x:cx,y:cy};
+    const head = document.createElement('div');
+    head.className = 'head'; head.style.left = hp.x+'px'; head.style.top = hp.y+'px';
+    head.innerHTML = '<div class="eye l"></div><div class="eye r"></div><div class="mouth"></div>';
+    dragonLayer.appendChild(head);
+  }
+
+  function update(dt){
+    if(!state || state.over) return;
+    state.dragonT += dt * .0012;
+    // rail movement
+    for(const b of state.bundles){
+      if(dragging && dragging.bundle === b) continue;
+      b.x -= dt * 0.075;
+      if(b.el) b.el.style.left = b.x + 'px';
+    }
+    state.bundles = state.bundles.filter(b => {
+      if(b.x < -120){ b.el && b.el.remove(); return false; }
+      return true;
+    });
+    spawnTimer += dt;
+    if(spawnTimer > 850){ spawnTimer = 0; spawnBundle(false); ensureNeededAvailable(); }
+    attackTimer += dt;
+    if(attackTimer > 520){ attackTimer = 0; attackStep(); }
+    renderTimer += dt;
+    if(renderTimer > 120 && !isResolvingHit){ renderTimer = 0; renderDragon(); }
+  }
+
+  function loop(ts){
+    const dt = Math.min(50, ts - lastTime); lastTime = ts;
+    update(dt);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function clearGame(){
+    state.over = true;
+    cancelAnimationFrame(rafId);
+    app.classList.add('bigShake'); flash.classList.add('on');
+    if(navigator.vibrate) navigator.vibrate([80,30,80]);
+    setTimeout(()=>{ app.classList.remove('bigShake'); show('result'); }, 650);
+  }
+
+  restartBtn.addEventListener('pointerup', (e)=>{ e.preventDefault(); show('game'); startGame(); });
+  restartBtn.addEventListener('click', (e)=>{ e.preventDefault(); show('game'); startGame(); });
+
+  window.addEventListener('error', (ev) => {
+    const old = document.querySelector('.modal'); if(old) old.remove();
+    makeModal('오류가 발생했습니다.<br><span style="font-size:18px;color:#777">'+String(ev.message)+'</span>', '그래도 시작', startGame);
+  });
+
+  intro();
+})();
+</script>
+</body>
+</html>

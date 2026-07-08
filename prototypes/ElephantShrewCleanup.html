@@ -1,0 +1,1318 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>치워요 코끼리 땃쥐땃쥐</title>
+  <style>
+:root {
+  --bg: #eaf8dc;
+  --ink: #2c261f;
+  --accent: #ffb74d;
+  --accent-dark: #a85718;
+  --card: rgba(255, 250, 233, 0.94);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+button { font: inherit; cursor: pointer; border: 0; }
+.app { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; background: linear-gradient(#eaf8dc, #bfe6a6); }
+.game { position: relative; width: 100%; max-width: 520px; flex: 1; min-height: 0; overflow: hidden; background: #9ccc79; touch-action: none; }
+.game-canvas { position: absolute; display: block; touch-action: none; }
+.ad-slot { width: 100%; max-width: 520px; height: calc(54px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); display: grid; place-items: center; background: rgba(255,255,255,0.8); color: #6b625a; font-size: 13px; border-top: 1px solid rgba(0,0,0,0.12); }
+.screen { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 28%, rgba(255,255,255,0.45), rgba(102,145,71,0.72)); }
+.title-card, .result-card, .modal-card { width: min(88vw, 390px); padding: 28px 24px; border-radius: 28px; background: var(--card); box-shadow: 0 18px 50px rgba(48, 57, 34, 0.28); text-align: center; border: 2px solid rgba(255,255,255,0.65); }
+.eyebrow { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.14em; font-weight: 800; color: var(--accent-dark); }
+h1 { margin: 0; font-size: clamp(36px, 10vw, 54px); line-height: 1.05; letter-spacing: -0.05em; }
+h2 { margin: 0 0 12px; font-size: 28px; line-height: 1.2; letter-spacing: -0.04em; }
+.subtitle { margin: 14px 0 24px; font-weight: 700; color: #66523e; }
+.primary-button, .secondary-button { width: 100%; min-height: 52px; margin-top: 10px; border-radius: 18px; font-weight: 900; }
+.primary-button { background: linear-gradient(180deg, #ffc35a, #ff9f2e); color: #3b240e; box-shadow: 0 6px 0 #ba671e; }
+.primary-button:active { transform: translateY(3px); box-shadow: 0 3px 0 #ba671e; }
+.secondary-button { background: rgba(91, 125, 66, 0.13); color: #3d4c2c; }
+.hud { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; width: min(94%, 480px); pointer-events: none; }
+.hud-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.meter-card { padding: 8px 12px; border-radius: 16px; background: rgba(255,255,255,0.86); box-shadow: 0 6px 20px rgba(48,57,34,0.16); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 800; }
+.meter-card strong { font-size: 20px; }
+.chase-wrap { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 16px; background: rgba(255,255,255,0.78); font-size: 13px; font-weight: 900; }
+.chase-bar { height: 14px; border-radius: 99px; overflow: hidden; background: rgba(63,39,28,0.18); }
+.chase-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffbd57, #f04f35); transition: width 0.12s linear; }
+.message-toast { position: absolute; z-index: 8; top: 112px; left: 50%; transform: translateX(-50%); min-width: 180px; max-width: 86%; padding: 12px 18px; border-radius: 999px; text-align: center; background: rgba(255, 250, 235, 0.94); box-shadow: 0 10px 28px rgba(43,52,33,0.22); font-weight: 900; pointer-events: none; }
+.message-toast--good { background: #fff3c4; color: #765015; }
+.message-toast--bad { background: #ffe2e2; color: #8d2727; animation: shake 0.22s linear 2; }
+.modal { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: rgba(30, 39, 28, 0.44); }
+.modal-card p { margin: 9px 0; line-height: 1.55; font-weight: 650; color: #53463b; }
+.result-badge { margin: 18px 0 12px; padding: 13px 16px; border-radius: 16px; background: rgba(255, 183, 77, 0.25); font-weight: 900; }
+.hidden { display: none !important; }
+@keyframes shake { 0%,100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 7px)); } 75% { transform: translateX(calc(-50% + 7px)); } }
+@media (min-width: 700px) { .app { justify-content: center; } .game { border-left: 1px solid rgba(0,0,0,0.1); border-right: 1px solid rgba(0,0,0,0.1); } }
+
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <main id="game" class="game" aria-label="치워요 코끼리 땃쥐땃쥐 게임">
+      <section id="titleScreen" class="screen screen--title">
+        <div class="title-card">
+          <p class="eyebrow">TOSS MINI GAME MVP</p>
+          <h1>치워요<br />코끼리 땃쥐땃쥐</h1>
+          <p class="subtitle">길을 치워요. 도망쳐요.</p>
+          <button id="startButton" class="primary-button">시작하기</button>
+          <button id="guideButton" class="secondary-button">조작법</button>
+        </div>
+      </section>
+
+      <section id="hud" class="hud hidden">
+        <div class="hud-row">
+          <div class="meter-card">
+            <span>거리</span>
+            <strong id="distanceText">0m</strong>
+          </div>
+          <div class="meter-card">
+            <span>남은 시간</span>
+            <strong id="timeText">30.0</strong>
+          </div>
+        </div>
+        <div class="chase-wrap">
+          <span>추격</span>
+          <div class="chase-bar"><div id="chaseFill" class="chase-fill"></div></div>
+        </div>
+      </section>
+
+      <canvas id="gameCanvas" class="game-canvas" width="720" height="1280"></canvas>
+
+      <section id="messageToast" class="message-toast hidden">길을 치워요!</section>
+
+      <section id="guideModal" class="modal hidden">
+        <div class="modal-card">
+          <h2>조작법</h2>
+          <p>앞길의 장애물을 손가락으로 밀어서 치워주세요.</p>
+          <p>무거운 건 끝까지 밀고, 낙엽은 짧게 쓸고, 작은 건 툭 치면 됩니다.</p>
+          <p>독버섯, 벌집, 뱀은 건드리지 마세요. 30초 동안 도망치면 성공입니다.</p>
+          <button id="closeGuideButton" class="primary-button">확인</button>
+        </div>
+      </section>
+
+      <section id="resultScreen" class="screen screen--result hidden">
+        <div class="result-card">
+          <p id="resultLabel" class="eyebrow">성공</p>
+          <h2 id="resultTitle">땃쥐가 살아남았습니다!</h2>
+          <p id="resultDetail">거리 100m</p>
+          <div id="resultBadge" class="result-badge">큰코땃쥐 카드 획득</div>
+          <button id="retryButton" class="primary-button">다시 하기</button>
+          <button id="homeButton" class="secondary-button">처음 화면</button>
+        </div>
+      </section>
+    </main>
+    <aside class="ad-slot">하단 배너 광고 영역</aside>
+  </div>
+  <script>
+/* ===== config.js ===== */
+const GAME = {
+  designWidth: 720,
+  designHeight: 1280,
+  playSeconds: 30,
+  targetDistance: 100,
+  baseSpeed: 300,
+  minSpeed: 170,
+  maxSpeed: 520,
+  spawnStart: 980,
+  spawnEnd: 620,
+  chaseMax: 100,
+  dragClearDistance: 150,
+  obstacleHitY: 990,
+  laneLeft: 160,
+  laneRight: 560,
+  laneCenter: 360,
+};
+
+const TEXT = {
+  title: '치워요 코끼리 땃쥐땃쥐',
+  start: '시작하기',
+  guide: '조작법',
+  successTitle: '땃쥐가 살아남았습니다!',
+  failTitle: '땃쥐가 붙잡혔습니다!',
+  clearMessages: ['좋아요!', '길이 열렸어요!', '땃쥐땃쥐!', '도망쳐요!'],
+  missMessages: ['앗!', '늦었어요!', '추격자가 가까워져요!'],
+  hazardMessages: ['그건 건드리면 안 돼요!', '위험!', '조심하세요!'],
+};
+
+const SHREWS = [
+  { id: 'longnose', name: '큰코땃쥐', color: '#d79b58', nose: 44, ear: 20 },
+  { id: 'roundear', name: '둥근귀땃쥐', color: '#c98869', nose: 32, ear: 30 },
+  { id: 'weasel', name: '족제비땃쥐', color: '#b9794c', nose: 38, ear: 18 },
+  { id: 'fourtoe', name: '네발가락땃쥐', color: '#d7b071', nose: 36, ear: 24 },
+];
+
+const OBSTACLE_TYPES = {
+  block: {
+    label: '무거운 장애물',
+    hint: '무거움',
+    names: ['큰 돌', '굵은 나뭇가지', '밤송이 더미'],
+    color: '#6d5f52',
+    stroke: '#3f372f',
+    clearScore: 14,
+    missChase: 24,
+    missSlow: 115,
+    dragResistance: 0.42,
+    yDrag: 0.14,
+    clearDistance: 245,
+    clearByLaneOnly: true,
+    throwBoost: 0.78,
+    spawnWeight: 0.32,
+  },
+  slow: {
+    label: '쓸어내는 장애물',
+    hint: '쓸기',
+    names: ['낙엽 더미', '풀숲', '작은 자갈'],
+    color: '#8fb36d',
+    stroke: '#526d3d',
+    clearScore: 8,
+    missChase: 9,
+    missSlow: 45,
+    dragResistance: 1.22,
+    yDrag: 0.38,
+    clearDistance: 88,
+    clearByLaneOnly: false,
+    throwBoost: 1.35,
+    spawnWeight: 0.30,
+  },
+  evade: {
+    label: '툭 치면 피하는 장애물',
+    hint: '툭',
+    names: ['작은 버섯', '얇은 줄기', '작은 뿌리'],
+    color: '#d9b46c',
+    stroke: '#8c6e35',
+    clearScore: 5,
+    missChase: 5,
+    missSlow: 22,
+    dragResistance: 1.65,
+    yDrag: 0.24,
+    clearDistance: 54,
+    clearByLaneOnly: false,
+    throwBoost: 1.9,
+    spawnWeight: 0.22,
+  },
+  hazard: {
+    label: '건드리면 안 됨',
+    hint: '금지',
+    names: ['독버섯', '벌집', '자는 뱀'],
+    color: '#c96a8a',
+    stroke: '#7a2f49',
+    clearScore: -12,
+    missChase: 0,
+    missSlow: 0,
+    dragResistance: 0,
+    yDrag: 0,
+    clearDistance: 9999,
+    clearByLaneOnly: false,
+    throwBoost: 0,
+    spawnWeight: 0.16,
+  },
+};
+
+/* ===== ui.js ===== */
+
+class UI {
+  constructor() {
+    this.titleScreen = document.querySelector('#titleScreen');
+    this.resultScreen = document.querySelector('#resultScreen');
+    this.guideModal = document.querySelector('#guideModal');
+    this.hud = document.querySelector('#hud');
+    this.toast = document.querySelector('#messageToast');
+    this.distanceText = document.querySelector('#distanceText');
+    this.timeText = document.querySelector('#timeText');
+    this.chaseFill = document.querySelector('#chaseFill');
+    this.resultLabel = document.querySelector('#resultLabel');
+    this.resultTitle = document.querySelector('#resultTitle');
+    this.resultDetail = document.querySelector('#resultDetail');
+    this.resultBadge = document.querySelector('#resultBadge');
+    this.toastTimer = null;
+  }
+
+  showTitle() {
+    this.titleScreen.classList.remove('hidden');
+    this.resultScreen.classList.add('hidden');
+    this.hud.classList.add('hidden');
+  }
+
+  showGame() {
+    this.titleScreen.classList.add('hidden');
+    this.resultScreen.classList.add('hidden');
+    this.hud.classList.remove('hidden');
+  }
+
+  showGuide() {
+    this.guideModal.classList.remove('hidden');
+  }
+
+  hideGuide() {
+    this.guideModal.classList.add('hidden');
+  }
+
+  updateHud({ distance, timeLeft, chase }) {
+    this.distanceText.textContent = `${Math.floor(distance)}m`;
+    this.timeText.textContent = Math.max(0, timeLeft).toFixed(1);
+    this.chaseFill.style.width = `${Math.min(100, Math.max(0, chase))}%`;
+  }
+
+  toastMessage(message, tone = 'normal') {
+    this.toast.textContent = message;
+    this.toast.className = `message-toast message-toast--${tone}`;
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.toast.classList.add('hidden');
+    }, 650);
+  }
+
+  showResult({ success, distance, shrewName }) {
+    this.hud.classList.add('hidden');
+    this.resultScreen.classList.remove('hidden');
+    this.resultLabel.textContent = success ? '성공' : '실패';
+    this.resultTitle.textContent = success ? TEXT.successTitle : TEXT.failTitle;
+    this.resultDetail.textContent = `도망친 거리 ${Math.floor(distance)}m`;
+    this.resultBadge.textContent = success ? `${shrewName} 카드 획득` : '다시 한 번 길을 치워주세요';
+  }
+}
+
+/* ===== entities.js ===== */
+
+let obstacleId = 1;
+
+function createObstacle(rng, elapsed) {
+  const difficulty = Math.min(1, elapsed / GAME.playSeconds);
+  const roll = rng();
+  let kind = 'block';
+  if (roll < 0.32) kind = 'block';
+  else if (roll < 0.62) kind = 'slow';
+  else if (roll < 0.84) kind = 'evade';
+  else kind = 'hazard';
+
+  const type = OBSTACLE_TYPES[kind];
+  let size = 96;
+  if (kind === 'block') size = 118 + rng() * 28;
+  if (kind === 'slow') size = 104 + rng() * 36;
+  if (kind === 'evade') size = 78 + rng() * 20;
+  if (kind === 'hazard') size = 88 + rng() * 16;
+
+  const laneWidth = GAME.laneRight - GAME.laneLeft;
+  const x = GAME.laneLeft + 70 + rng() * (laneWidth - 140);
+  const wobble = (rng() - 0.5) * 40 * difficulty;
+  const baseVy = 310 + difficulty * 135 + rng() * 45;
+
+  return {
+    id: obstacleId++,
+    kind,
+    name: type.names[Math.floor(rng() * type.names.length)],
+    x: x + wobble,
+    y: -90,
+    w: size,
+    h: size,
+    vx: kind === 'evade' ? (rng() - 0.5) * 45 : 0,
+    vy: kind === 'slow' ? baseVy * 0.94 : kind === 'evade' ? baseVy * 1.08 : baseVy,
+    grabbed: false,
+    cleared: false,
+    resolved: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    lastX: 0,
+    lastY: 0,
+    dragTotal: 0,
+    wobbleSeed: rng() * Math.PI * 2,
+    born: performance.now(),
+  };
+}
+
+function hitTestObstacle(obstacle, x, y) {
+  return !obstacle.resolved &&
+    x >= obstacle.x - obstacle.w / 2 &&
+    x <= obstacle.x + obstacle.w / 2 &&
+    y >= obstacle.y - obstacle.h / 2 &&
+    y <= obstacle.y + obstacle.h / 2;
+}
+
+function isOutsidePath(obstacle) {
+  return obstacle.x < GAME.laneLeft - 45 || obstacle.x > GAME.laneRight + 45;
+}
+
+/* ===== draw.js ===== */
+
+function clearCanvas(ctx) {
+  ctx.clearRect(0, 0, GAME.designWidth, GAME.designHeight);
+}
+
+function drawWorld(ctx, state) {
+  drawBackground(ctx, state);
+  drawPath(ctx, state);
+  drawPredatorShadow(ctx, state.chase);
+  drawSpeedLines(ctx, state.speedLines);
+  state.obstacles.forEach((obstacle) => drawObstacle(ctx, obstacle));
+  drawShockwaves(ctx, state.shockwaves);
+  drawShrew(ctx, state.shrew, state.runBob, state.dodgeOffset, state.shrewMood);
+  drawParticles(ctx, state.particles);
+}
+
+function drawBackground(ctx, state) {
+  const grad = ctx.createLinearGradient(0, 0, 0, GAME.designHeight);
+  grad.addColorStop(0, '#d7f3c8');
+  grad.addColorStop(0.48, '#b9df9a');
+  grad.addColorStop(1, '#8bb86b');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, GAME.designWidth, GAME.designHeight);
+
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  for (let i = 0; i < 18; i += 1) {
+    const y = ((i * 96 + state.scroll * 0.28) % 1450) - 120;
+    const x = i % 2 === 0 ? 64 : 640;
+    ctx.fillStyle = i % 3 === 0 ? '#4f8f48' : '#3f793d';
+    leaf(ctx, x, y, 48 + (i % 4) * 8, i % 2 === 0 ? -0.7 : 0.7);
+  }
+  ctx.restore();
+}
+
+function drawPath(ctx, state) {
+  ctx.save();
+  ctx.fillStyle = '#d2af74';
+  roundRect(ctx, GAME.laneLeft - 30, -20, GAME.laneRight - GAME.laneLeft + 60, GAME.designHeight + 40, 90);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(98, 68, 36, 0.28)';
+  ctx.lineWidth = 8;
+  ctx.setLineDash([36, 42]);
+  ctx.lineDashOffset = -state.scroll * 0.45;
+  ctx.beginPath();
+  ctx.moveTo(GAME.laneCenter, 0);
+  ctx.lineTo(GAME.laneCenter, GAME.designHeight);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = 'rgba(74, 93, 40, 0.35)';
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  ctx.moveTo(GAME.laneLeft - 36, 0);
+  ctx.lineTo(GAME.laneLeft - 42, GAME.designHeight);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(GAME.laneRight + 36, 0);
+  ctx.lineTo(GAME.laneRight + 42, GAME.designHeight);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPredatorShadow(ctx, chase) {
+  const y = GAME.designHeight + 65 - chase * 4.6;
+  ctx.save();
+  ctx.globalAlpha = 0.18 + chase / 300;
+  ctx.fillStyle = '#2a1d1d';
+  ctx.beginPath();
+  ctx.ellipse(GAME.laneCenter, y, 170, 82, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.75;
+  ctx.font = '700 28px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('다가오는 그림자', GAME.laneCenter, y + 12);
+  ctx.restore();
+}
+
+function drawShrew(ctx, shrew, bob, dodgeOffset, mood = 'run') {
+  const x = GAME.laneCenter + dodgeOffset;
+  const y = 1040 + Math.sin(bob) * 7;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(70, 44, 26, 0.22)';
+  ctx.beginPath();
+  ctx.ellipse(0, 60, 105, 26, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = shrew.color;
+  ctx.strokeStyle = '#5e3c24';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 98, 58, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = shrew.color;
+  ctx.beginPath();
+  ctx.ellipse(70, -8, 54, 38, 0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#f0c58d';
+  ctx.beginPath();
+  ctx.ellipse(96 + shrew.nose * 0.35, -2, shrew.nose, 14, 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#2e1b14';
+  ctx.beginPath();
+  if (mood === 'shock') {
+    ctx.arc(88, -22, 9, 0, Math.PI * 2);
+  } else {
+    ctx.arc(88, -20, 7, 0, Math.PI * 2);
+  }
+  ctx.fill();
+
+  if (mood === 'happy') {
+    ctx.strokeStyle = '#5e3c24';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(103, -4, 14, 0.05, Math.PI * 0.7);
+    ctx.stroke();
+  } else if (mood === 'shock') {
+    ctx.fillStyle = '#fff4e0';
+    ctx.font = '900 34px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('!', 122, -48);
+  }
+
+  ctx.fillStyle = '#e5b184';
+  ctx.beginPath();
+  ctx.arc(38, -50, shrew.ear, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.strokeStyle = '#5e3c24';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-86, 4);
+  ctx.quadraticCurveTo(-138, -15, -170, 12);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#4a2d1b';
+  ctx.lineWidth = 7;
+  for (let i = -1; i <= 1; i += 2) {
+    ctx.beginPath();
+    ctx.moveTo(-28, 45);
+    ctx.lineTo(-50 + i * 18, 70 + Math.sin(bob) * 7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(36, 45);
+    ctx.lineTo(54 + i * 18, 70 - Math.sin(bob) * 7);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawObstacle(ctx, obstacle) {
+  const type = OBSTACLE_TYPES[obstacle.kind];
+  ctx.save();
+  ctx.translate(obstacle.x, obstacle.y);
+  const scale = obstacle.grabbed ? 1.07 : 1;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = 'rgba(49, 35, 20, 0.20)';
+  ctx.beginPath();
+  ctx.ellipse(0, obstacle.h * 0.42, obstacle.w * 0.44, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = type.color;
+  ctx.strokeStyle = type.stroke;
+  ctx.lineWidth = 6;
+
+  if (obstacle.kind === 'block') drawBlock(ctx, obstacle);
+  if (obstacle.kind === 'slow') drawSlow(ctx, obstacle);
+  if (obstacle.kind === 'evade') drawEvade(ctx, obstacle);
+  if (obstacle.kind === 'hazard') drawHazard(ctx, obstacle);
+
+  ctx.fillStyle = '#3f2b20';
+  ctx.font = '700 21px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(obstacle.name, 0, obstacle.h * 0.62);
+
+  ctx.fillStyle = obstacle.kind === 'hazard' ? '#8d2727' : 'rgba(255,250,235,0.92)';
+  ctx.strokeStyle = obstacle.kind === 'hazard' ? '#fff4e0' : 'rgba(63,43,32,0.22)';
+  ctx.lineWidth = 3;
+  roundRect(ctx, -42, -obstacle.h * 0.58, 84, 30, 15);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = obstacle.kind === 'hazard' ? '#fff4e0' : '#3f2b20';
+  ctx.font = '900 17px system-ui, sans-serif';
+  ctx.fillText(type.hint, 0, -obstacle.h * 0.58 + 21);
+  ctx.restore();
+}
+
+function drawBlock(ctx, obstacle) {
+  if (obstacle.name.includes('돌')) {
+    blob(ctx, 0, 0, obstacle.w * 0.9, obstacle.h * 0.72, 9);
+  } else if (obstacle.name.includes('가지')) {
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.moveTo(-52, 10);
+    ctx.lineTo(54, -16);
+    ctx.stroke();
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(10, -5);
+    ctx.lineTo(45, 24);
+    ctx.stroke();
+  } else {
+    for (let i = 0; i < 3; i += 1) {
+      ctx.beginPath();
+      ctx.arc(-34 + i * 34, -4 + (i % 2) * 8, 32, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+}
+
+function drawSlow(ctx, obstacle) {
+  for (let i = 0; i < 9; i += 1) {
+    leaf(ctx, -42 + (i % 3) * 42, -22 + Math.floor(i / 3) * 28, 34, (i - 4) * 0.2);
+  }
+}
+
+function drawEvade(ctx, obstacle) {
+  if (obstacle.name.includes('버섯')) {
+    ctx.beginPath();
+    ctx.ellipse(0, -18, 52, 32, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f4dfbb';
+    ctx.fillRect(-16, -14, 32, 48);
+    ctx.strokeRect(-16, -14, 32, 48);
+  } else {
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(-45, 34);
+    ctx.quadraticCurveTo(-8, -40, 48, 28);
+    ctx.stroke();
+  }
+}
+
+function drawHazard(ctx, obstacle) {
+  if (obstacle.name.includes('버섯')) {
+    ctx.fillStyle = '#d94b72';
+    ctx.beginPath();
+    ctx.ellipse(0, -12, 54, 36, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fff1d8';
+    for (let i = 0; i < 4; i += 1) {
+      ctx.beginPath();
+      ctx.arc(-24 + i * 16, -24 + (i % 2) * 8, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#f0d2a5';
+    ctx.fillRect(-15, -12, 30, 48);
+    ctx.strokeRect(-15, -12, 30, 48);
+  } else if (obstacle.name.includes('벌집')) {
+    ctx.fillStyle = '#e5a739';
+    blob(ctx, 0, -4, 80, 82, 8);
+    ctx.strokeStyle = '#6a4422';
+    for (let y = -25; y < 28; y += 18) {
+      ctx.beginPath();
+      ctx.moveTo(-34, y);
+      ctx.lineTo(34, y + 4);
+      ctx.stroke();
+    }
+  } else {
+    ctx.strokeStyle = '#714028';
+    ctx.lineWidth = 18;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-52, 14);
+    ctx.quadraticCurveTo(-20, -34, 18, 0);
+    ctx.quadraticCurveTo(54, 34, 44, -18);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#fff4e0';
+  ctx.font = '900 30px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('!', 0, -54);
+}
+
+function drawSpeedLines(ctx, speedLines) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.48)';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  speedLines.forEach((line) => {
+    ctx.globalAlpha = line.life;
+    ctx.beginPath();
+    ctx.moveTo(line.x, line.y);
+    ctx.lineTo(line.x, line.y + line.len);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawShockwaves(ctx, shockwaves) {
+  ctx.save();
+  shockwaves.forEach((wave) => {
+    ctx.globalAlpha = wave.life;
+    ctx.strokeStyle = wave.color;
+    ctx.lineWidth = 7 * wave.life;
+    ctx.beginPath();
+    ctx.ellipse(wave.x, wave.y, wave.r * 1.25, wave.r * 0.62, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawParticles(ctx, particles) {
+  ctx.save();
+  particles.forEach((p) => {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function leaf(ctx, x, y, size, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 0.42, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function blob(ctx, x, y, w, h, points) {
+  ctx.beginPath();
+  for (let i = 0; i <= points; i += 1) {
+    const angle = (i / points) * Math.PI * 2;
+    const radius = 0.86 + (i % 2) * 0.18;
+    const px = x + Math.cos(angle) * (w / 2) * radius;
+    const py = y + Math.sin(angle) * (h / 2) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ===== audio.js ===== */
+class AudioController {
+  constructor() {
+    this.bgm = new Audio('./assets/bgm.mp3');
+    this.bgm.loop = true;
+    this.bgm.volume = 0.58;
+    this.enabled = true;
+    this.ctx = null;
+    this.master = null;
+    this.nextChaseBeat = 0;
+    this.comboVoiceCooldown = 0;
+  }
+
+  async unlock() {
+    if (!this.enabled) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!this.ctx) {
+      this.ctx = new AudioContextClass();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.34;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === 'suspended') {
+      try { await this.ctx.resume(); } catch (_) {}
+    }
+  }
+
+  async playBgm() {
+    if (!this.enabled) return;
+    await this.unlock();
+    try {
+      await this.bgm.play();
+    } catch (_) {
+      // assets/bgm.mp3가 없거나 모바일 브라우저가 막아도 효과음과 게임은 계속 진행합니다.
+    }
+  }
+
+  stopBgm() {
+    this.bgm.pause();
+    this.bgm.currentTime = 0;
+    this.nextChaseBeat = 0;
+  }
+
+  tone(freq, duration, options = {}) {
+    if (!this.ctx || !this.master) return;
+    const now = this.ctx.currentTime + (options.delay || 0);
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = options.type || 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    if (options.toFreq) osc.frequency.exponentialRampToValueAtTime(options.toFreq, now + duration);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(options.gain || 0.12, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(this.master);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  noise(duration, options = {}) {
+    if (!this.ctx || !this.master) return;
+    const sampleRate = this.ctx.sampleRate;
+    const length = Math.max(1, Math.floor(sampleRate * duration));
+    const buffer = this.ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    }
+    const source = this.ctx.createBufferSource();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+    source.buffer = buffer;
+    filter.type = options.filterType || 'highpass';
+    filter.frequency.value = options.frequency || 900;
+    gain.gain.value = options.gain || 0.12;
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.master);
+    source.start(this.ctx.currentTime + (options.delay || 0));
+  }
+
+  clear(kind, combo) {
+    if (kind === 'block') {
+      this.tone(130, 0.13, { type: 'triangle', gain: 0.16, toFreq: 72 });
+      this.noise(0.11, { filterType: 'lowpass', frequency: 420, gain: 0.16, delay: 0.015 });
+    } else if (kind === 'slow') {
+      this.noise(0.12, { filterType: 'bandpass', frequency: 1200, gain: 0.11 });
+      this.tone(520, 0.07, { type: 'sine', gain: 0.06, toFreq: 720, delay: 0.02 });
+    } else if (kind === 'evade') {
+      this.tone(740, 0.08, { type: 'sine', gain: 0.08, toFreq: 980 });
+    }
+    if (combo > 1) this.combo(combo);
+  }
+
+  hazard() {
+    this.tone(210, 0.20, { type: 'sawtooth', gain: 0.13, toFreq: 90 });
+    this.tone(460, 0.10, { type: 'square', gain: 0.05, toFreq: 340, delay: 0.03 });
+    this.noise(0.12, { filterType: 'bandpass', frequency: 1800, gain: 0.10 });
+  }
+
+  bump(kind) {
+    const heavy = kind === 'block';
+    this.tone(heavy ? 95 : 180, heavy ? 0.18 : 0.11, { type: 'triangle', gain: heavy ? 0.17 : 0.1, toFreq: heavy ? 55 : 120 });
+    this.noise(heavy ? 0.16 : 0.08, { filterType: 'lowpass', frequency: heavy ? 360 : 760, gain: heavy ? 0.18 : 0.09 });
+  }
+
+  dodge() {
+    this.tone(680, 0.09, { type: 'sine', gain: 0.08, toFreq: 1180 });
+    this.noise(0.055, { filterType: 'highpass', frequency: 1800, gain: 0.055 });
+  }
+
+  combo(combo) {
+    if (!this.ctx) return;
+    if (![3, 5, 10, 15, 20].includes(combo)) return;
+    const now = this.ctx.currentTime;
+    if (now < this.comboVoiceCooldown) return;
+    this.comboVoiceCooldown = now + 0.35;
+    this.tone(520, 0.08, { type: 'sine', gain: 0.07 });
+    this.tone(660, 0.08, { type: 'sine', gain: 0.07, delay: 0.07 });
+    if (combo >= 10) this.tone(880, 0.11, { type: 'sine', gain: 0.08, delay: 0.15 });
+  }
+
+  chase(chaseValue) {
+    if (!this.ctx || chaseValue < 56) return;
+    const now = this.ctx.currentTime;
+    const interval = chaseValue > 84 ? 0.34 : chaseValue > 70 ? 0.48 : 0.68;
+    if (now < this.nextChaseBeat) return;
+    this.nextChaseBeat = now + interval;
+    this.tone(82, 0.08, { type: 'triangle', gain: 0.055, toFreq: 58 });
+    if (chaseValue > 84) this.tone(68, 0.09, { type: 'triangle', gain: 0.05, toFreq: 50, delay: 0.13 });
+  }
+
+  finish(success) {
+    if (success) {
+      this.tone(520, 0.12, { type: 'sine', gain: 0.10 });
+      this.tone(660, 0.12, { type: 'sine', gain: 0.10, delay: 0.1 });
+      this.tone(880, 0.18, { type: 'sine', gain: 0.12, delay: 0.2 });
+    } else {
+      this.tone(210, 0.22, { type: 'sawtooth', gain: 0.13, toFreq: 80 });
+      this.noise(0.18, { filterType: 'lowpass', frequency: 300, gain: 0.16 });
+    }
+  }
+}
+
+/* ===== game.js ===== */
+
+class ShrewGame {
+  constructor(canvas, ui, audio) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.ui = ui;
+    this.audio = audio;
+    this.scale = 1;
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.running = false;
+    this.lastTime = 0;
+    this.activeObstacle = null;
+    this.pointerId = null;
+    this.rngSeed = Math.floor(Math.random() * 999999);
+    this.loop = this.loop.bind(this);
+    this.handlePointerDown = this.handlePointerDown.bind(this);
+    this.handlePointerMove = this.handlePointerMove.bind(this);
+    this.handlePointerUp = this.handlePointerUp.bind(this);
+    this.resize = this.resize.bind(this);
+    window.addEventListener('resize', this.resize);
+    this.canvas.addEventListener('pointerdown', this.handlePointerDown, { passive: false });
+    this.canvas.addEventListener('pointermove', this.handlePointerMove, { passive: false });
+    this.canvas.addEventListener('pointerup', this.handlePointerUp, { passive: false });
+    this.canvas.addEventListener('pointercancel', this.handlePointerUp, { passive: false });
+    this.resize();
+    this.resetState();
+  }
+
+  resetState() {
+    this.state = {
+      elapsed: 0,
+      timeLeft: GAME.playSeconds,
+      distance: 0,
+      chase: 22,
+      speed: GAME.baseSpeed,
+      spawnTimer: 0.35,
+      scroll: 0,
+      combo: 0,
+      runBob: 0,
+      dodgeOffset: 0,
+      dodgeVelocity: 0,
+      obstacles: [],
+      particles: [],
+      shockwaves: [],
+      speedLines: [],
+      screenShake: 0,
+      shrewMood: 'run',
+      shrewMoodTimer: 0,
+      shrew: SHREWS[Math.floor(Math.random() * SHREWS.length)],
+      finished: false,
+    };
+    this.activeObstacle = null;
+    this.pointerId = null;
+  }
+
+  start() {
+    this.resetState();
+    this.running = true;
+    this.lastTime = performance.now();
+    this.ui.showGame();
+    this.ui.toastMessage('길을 치워요!', 'normal');
+    requestAnimationFrame(this.loop);
+  }
+
+  stop() {
+    this.running = false;
+  }
+
+  loop(now) {
+    if (!this.running) return;
+    const dt = Math.min(0.033, (now - this.lastTime) / 1000);
+    this.lastTime = now;
+    this.update(dt);
+    this.render();
+    if (this.running) requestAnimationFrame(this.loop);
+  }
+
+  update(dt) {
+    const s = this.state;
+    s.elapsed += dt;
+    s.timeLeft = GAME.playSeconds - s.elapsed;
+    s.scroll += s.speed * dt;
+    s.runBob += dt * 20;
+    s.distance += (s.speed / GAME.baseSpeed) * dt * (GAME.targetDistance / GAME.playSeconds);
+    s.chase += dt * 3.2;
+
+    const targetDodge = 0;
+    s.dodgeVelocity += (targetDodge - s.dodgeOffset) * 18 * dt;
+    s.dodgeVelocity *= 0.83;
+    s.dodgeOffset += s.dodgeVelocity;
+
+    s.speed += (GAME.baseSpeed + s.combo * 5 - s.speed) * dt * 0.8;
+    s.speed = Math.max(GAME.minSpeed, Math.min(GAME.maxSpeed, s.speed));
+
+    this.updateSpawning(dt);
+    this.updateObstacles(dt);
+    this.updateParticles(dt);
+    this.updateShockwaves(dt);
+    this.updateSpeedLines(dt);
+    this.updateMood(dt);
+    this.audio?.chase(s.chase);
+    this.ui.updateHud(s);
+
+    if (s.chase >= GAME.chaseMax) this.finish(false);
+    if (s.timeLeft <= 0 || s.distance >= GAME.targetDistance) this.finish(true);
+  }
+
+  updateSpawning(dt) {
+    const s = this.state;
+    s.spawnTimer -= dt;
+    const interval = GAME.spawnStart / 1000 + (GAME.spawnEnd - GAME.spawnStart) / 1000 * Math.min(1, s.elapsed / GAME.playSeconds);
+    if (s.spawnTimer <= 0) {
+      s.obstacles.push(createObstacle(() => this.random(), s.elapsed));
+      s.spawnTimer = interval + this.random() * 0.25;
+    }
+  }
+
+  updateObstacles(dt) {
+    const s = this.state;
+    for (const obstacle of s.obstacles) {
+      if (obstacle.grabbed) continue;
+      obstacle.y += obstacle.vy * dt;
+      obstacle.x += obstacle.vx * dt;
+
+      if (obstacle.kind === 'evade' && !obstacle.cleared && !obstacle.resolved) {
+        obstacle.x += Math.sin(s.elapsed * 5.2 + obstacle.wobbleSeed) * 18 * dt;
+      }
+
+      const friction = obstacle.kind === 'block' ? 0.985 : obstacle.kind === 'slow' ? 0.94 : 0.90;
+      obstacle.vx *= friction;
+
+      if (obstacle.cleared && Math.abs(obstacle.vx) < 20) {
+        obstacle.vx += obstacle.x < GAME.laneCenter ? -80 : 80;
+      }
+
+      if (!obstacle.resolved && obstacle.y >= GAME.obstacleHitY) {
+        this.resolveObstacleReach(obstacle);
+      }
+    }
+    s.obstacles = s.obstacles.filter((o) => o.y < GAME.designHeight + 180 && o.x > -220 && o.x < GAME.designWidth + 220 && !o.removeNow);
+  }
+
+  updateParticles(dt) {
+    const s = this.state;
+    s.particles.forEach((p) => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 180 * dt;
+      p.life -= dt * 1.4;
+    });
+    s.particles = s.particles.filter((p) => p.life > 0);
+  }
+
+  updateShockwaves(dt) {
+    const s = this.state;
+    s.shockwaves.forEach((wave) => {
+      wave.r += wave.vr * dt;
+      wave.life -= dt * 1.7;
+    });
+    s.shockwaves = s.shockwaves.filter((wave) => wave.life > 0);
+    s.screenShake = Math.max(0, s.screenShake - dt * 18);
+  }
+
+  updateSpeedLines(dt) {
+    const s = this.state;
+    if (s.combo >= 3 && this.random() < dt * Math.min(18, 4 + s.combo)) {
+      const side = this.random() < 0.5 ? -1 : 1;
+      s.speedLines.push({
+        x: GAME.laneCenter + side * (105 + this.random() * 105),
+        y: -30,
+        len: 70 + this.random() * 95,
+        vy: 520 + s.speed * 0.55,
+        life: 0.65,
+      });
+    }
+    s.speedLines.forEach((line) => {
+      line.y += line.vy * dt;
+      line.life -= dt * 1.35;
+    });
+    s.speedLines = s.speedLines.filter((line) => line.life > 0 && line.y < GAME.designHeight + 80);
+  }
+
+  updateMood(dt) {
+    const s = this.state;
+    if (s.shrewMoodTimer > 0) {
+      s.shrewMoodTimer -= dt;
+      if (s.shrewMoodTimer <= 0) s.shrewMood = 'run';
+    }
+  }
+
+  setMood(mood, duration = 0.35) {
+    this.state.shrewMood = mood;
+    this.state.shrewMoodTimer = duration;
+  }
+
+  shake(amount) {
+    this.state.screenShake = Math.max(this.state.screenShake, amount);
+  }
+
+  shockwave(x, y, color, strength = 1) {
+    this.state.shockwaves.push({ x, y, color, r: 20, vr: 180 * strength, life: 0.75 });
+  }
+
+  resolveObstacleReach(obstacle) {
+    if (obstacle.resolved) return;
+    obstacle.resolved = true;
+    const type = OBSTACLE_TYPES[obstacle.kind];
+
+    if (obstacle.kind === 'hazard') {
+      this.autoDodge(obstacle);
+      obstacle.removeNow = true;
+      return;
+    }
+
+    if (obstacle.kind === 'evade') {
+      this.state.combo = 0;
+      this.state.chase += type.missChase;
+      this.state.speed -= type.missSlow;
+      this.autoDodge(obstacle);
+      this.setMood('shock', 0.22);
+      this.ui.toastMessage('슉 피했어요!', 'normal');
+      obstacle.removeNow = true;
+      return;
+    }
+
+    this.state.combo = 0;
+    this.state.chase += type.missChase;
+    this.state.speed -= type.missSlow;
+    const message = obstacle.kind === 'block' ? '쿵!' : '버벅버벅!';
+    this.setMood('shock', obstacle.kind === 'block' ? 0.45 : 0.28);
+    this.shake(obstacle.kind === 'block' ? 14 : 6);
+    this.audio?.bump(obstacle.kind);
+    this.ui.toastMessage(message, obstacle.kind === 'block' ? 'bad' : 'normal');
+    this.shockwave(obstacle.x, obstacle.y, obstacle.kind === 'block' ? '#6d5f52' : '#8fb36d', obstacle.kind === 'block' ? 1.25 : 0.75);
+    this.burst(obstacle.x, obstacle.y, obstacle.kind === 'block' ? '#6d5f52' : '#8fb36d');
+    obstacle.removeNow = true;
+  }
+
+  touchHazard(obstacle) {
+    if (obstacle.resolved) return;
+    obstacle.resolved = true;
+    obstacle.grabbed = false;
+    this.state.combo = 0;
+    this.state.chase += 20;
+    this.state.speed -= 70;
+    this.setMood('shock', 0.55);
+    this.shake(18);
+    this.audio?.hazard();
+    this.ui.toastMessage(TEXT.hazardMessages[Math.floor(this.random() * TEXT.hazardMessages.length)], 'bad');
+    this.shockwave(obstacle.x, obstacle.y, '#c96a8a', 1.45);
+    this.burst(obstacle.x, obstacle.y, '#c96a8a');
+    obstacle.removeNow = true;
+  }
+
+  clearObstacle(obstacle) {
+    if (obstacle.resolved) return;
+    obstacle.resolved = true;
+    obstacle.grabbed = false;
+    obstacle.cleared = true;
+    const throwDirection = obstacle.x >= GAME.laneCenter ? 1 : -1;
+    const type = OBSTACLE_TYPES[obstacle.kind];
+    obstacle.vx = throwDirection * Math.max(420, Math.abs(obstacle.vx)) * type.throwBoost;
+    obstacle.vy *= obstacle.kind === 'block' ? 0.18 : obstacle.kind === 'slow' ? 0.12 : 0.05;
+
+    if (obstacle.kind === 'hazard') {
+      this.state.combo = 0;
+      this.state.chase += 18;
+      this.state.speed -= 60;
+      this.setMood('shock', 0.55);
+      this.shake(16);
+      this.audio?.hazard();
+      this.ui.toastMessage(TEXT.hazardMessages[Math.floor(this.random() * TEXT.hazardMessages.length)], 'bad');
+      this.shockwave(obstacle.x, obstacle.y, '#c96a8a', 1.35);
+      this.burst(obstacle.x, obstacle.y, '#c96a8a');
+      obstacle.removeNow = true;
+      return;
+    }
+
+    this.state.combo += 1;
+    this.state.chase = Math.max(0, this.state.chase - type.clearScore);
+    this.state.speed += 18;
+    this.setMood('happy', 0.24);
+    this.audio?.clear(obstacle.kind, this.state.combo);
+    this.shockwave(obstacle.x, obstacle.y, type.color, obstacle.kind === 'block' ? 1.1 : 0.75);
+    const comboText = this.state.combo >= 5 ? `${this.state.combo}콤보!` : TEXT.clearMessages[Math.floor(this.random() * TEXT.clearMessages.length)];
+    this.ui.toastMessage(comboText, 'good');
+    this.burst(obstacle.x, obstacle.y, type.color);
+  }
+
+  autoDodge(obstacle) {
+    const direction = obstacle.x >= GAME.laneCenter ? -1 : 1;
+    this.state.dodgeVelocity += direction * 300;
+    this.audio?.dodge();
+    this.shockwave(GAME.laneCenter + direction * 52, 1030, '#f5e8bb', 0.65);
+    this.burst(GAME.laneCenter + direction * 52, 1030, '#f5e8bb');
+  }
+
+  burst(x, y, color) {
+    for (let i = 0; i < 12; i += 1) {
+      const angle = this.random() * Math.PI * 2;
+      const speed = 80 + this.random() * 220;
+      this.state.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 4 + this.random() * 8,
+        color,
+        life: 0.6 + this.random() * 0.35,
+      });
+    }
+  }
+
+  finish(success) {
+    if (this.state.finished) return;
+    this.state.finished = true;
+    this.running = false;
+    this.audio?.finish(success);
+    this.ui.showResult({ success, distance: this.state.distance, shrewName: this.state.shrew.name });
+  }
+
+  render() {
+    clearCanvas(this.ctx);
+    this.ctx.save();
+    if (this.state.screenShake > 0) {
+      const amp = this.state.screenShake;
+      this.ctx.translate((this.random() - 0.5) * amp, (this.random() - 0.5) * amp);
+    }
+    drawWorld(this.ctx, this.state);
+    this.ctx.restore();
+  }
+
+  handlePointerDown(event) {
+    if (!this.running) return;
+    event.preventDefault();
+    const point = this.toGamePoint(event);
+    const candidates = [...this.state.obstacles].reverse();
+    const hit = candidates.find((obstacle) => hitTestObstacle(obstacle, point.x, point.y));
+    if (!hit) return;
+    if (hit.kind === 'hazard') {
+      this.touchHazard(hit);
+      return;
+    }
+    this.pointerId = event.pointerId;
+    this.activeObstacle = hit;
+    hit.grabbed = true;
+    hit.dragStartX = point.x;
+    hit.dragStartY = point.y;
+    hit.lastX = point.x;
+    hit.lastY = point.y;
+    hit.dragTotal = 0;
+    this.canvas.setPointerCapture(event.pointerId);
+  }
+
+  handlePointerMove(event) {
+    if (!this.running || this.pointerId !== event.pointerId || !this.activeObstacle) return;
+    event.preventDefault();
+    const point = this.toGamePoint(event);
+    const obstacle = this.activeObstacle;
+    const dx = point.x - obstacle.lastX;
+    const dy = point.y - obstacle.lastY;
+    const type = OBSTACLE_TYPES[obstacle.kind];
+    const appliedDx = dx * type.dragResistance;
+    const appliedDy = dy * type.yDrag;
+    obstacle.x += appliedDx;
+    obstacle.y += appliedDy;
+    obstacle.lastX = point.x;
+    obstacle.lastY = point.y;
+    obstacle.dragTotal += Math.abs(dx) + Math.abs(dy) * 0.35;
+    obstacle.vx = appliedDx * 22;
+
+    const leftRightDrag = Math.abs(point.x - obstacle.dragStartX);
+    const enoughFlick = obstacle.dragTotal >= type.clearDistance;
+    const laneCleared = isOutsidePath(obstacle);
+    const clearByFlick = !type.clearByLaneOnly && enoughFlick;
+    const clearHeavy = type.clearByLaneOnly && laneCleared && leftRightDrag > 130;
+
+    if (laneCleared || clearByFlick || clearHeavy) {
+      obstacle.cleared = true;
+      this.clearObstacle(obstacle);
+      this.activeObstacle = null;
+      this.pointerId = null;
+      try { this.canvas.releasePointerCapture(event.pointerId); } catch (_) {}
+    }
+  }
+
+  handlePointerUp(event) {
+    if (this.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    if (this.activeObstacle) {
+      const obstacle = this.activeObstacle;
+      obstacle.grabbed = false;
+      if (obstacle.kind === 'block' && !obstacle.resolved && obstacle.dragTotal > 40) {
+        this.ui.toastMessage('무거워요! 끝까지 밀어주세요', 'normal');
+        this.audio?.bump('slow');
+      }
+      this.activeObstacle = null;
+    }
+    this.pointerId = null;
+    try { this.canvas.releasePointerCapture(event.pointerId); } catch (_) {}
+  }
+
+  toGamePoint(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left - this.offsetX) / this.scale,
+      y: (event.clientY - rect.top - this.offsetY) / this.scale,
+    };
+  }
+
+  resize() {
+    const parent = this.canvas.parentElement;
+    const width = parent.clientWidth;
+    const height = parent.clientHeight;
+    const scale = Math.min(width / GAME.designWidth, height / GAME.designHeight);
+    const displayWidth = GAME.designWidth * scale;
+    const displayHeight = GAME.designHeight * scale;
+    this.scale = scale;
+    this.offsetX = (width - displayWidth) / 2;
+    this.offsetY = (height - displayHeight) / 2;
+    this.canvas.style.width = `${displayWidth}px`;
+    this.canvas.style.height = `${displayHeight}px`;
+    this.canvas.style.left = `${this.offsetX}px`;
+    this.canvas.style.top = `${this.offsetY}px`;
+  }
+
+  random() {
+    this.rngSeed = (this.rngSeed * 1664525 + 1013904223) % 4294967296;
+    return this.rngSeed / 4294967296;
+  }
+}
+
+/* ===== main.js ===== */
+
+const canvas = document.querySelector('#gameCanvas');
+const ui = new UI();
+const audio = new AudioController();
+const game = new ShrewGame(canvas, ui, audio);
+
+document.querySelector('#startButton').addEventListener('click', () => {
+  audio.playBgm();
+  game.start();
+});
+
+document.querySelector('#retryButton').addEventListener('click', () => {
+  audio.playBgm();
+  game.start();
+});
+
+document.querySelector('#homeButton').addEventListener('click', () => {
+  game.stop();
+  audio.stopBgm();
+  ui.showTitle();
+  game.render();
+});
+
+document.querySelector('#guideButton').addEventListener('click', () => {
+  ui.showGuide();
+});
+
+document.querySelector('#closeGuideButton').addEventListener('click', () => {
+  ui.hideGuide();
+});
+
+game.render();
+  </script>
+</body>
+</html>

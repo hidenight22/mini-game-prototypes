@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>고양이 섬에 밤이 오면</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: #0b1220;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #fff;
+      touch-action: none;
+    }
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      inset: 0;
+    }
+    #ui {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+    .panel {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      width: min(360px, calc(100vw - 28px));
+      background: rgba(10, 16, 28, 0.72);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.24);
+      backdrop-filter: blur(8px);
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0 0 6px 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .desc {
+      font-size: 12px;
+      line-height: 1.45;
+      opacity: .88;
+    }
+    .status {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 5px 8px;
+      font-size: 12px;
+    }
+    .label {
+      opacity: .58;
+    }
+    .value {
+      font-weight: 700;
+    }
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bar > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #fbbf24, #fb7185);
+      transition: width .18s;
+    }
+    .controls {
+      pointer-events: auto;
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: min(320px, calc(100vw - 24px));
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.88);
+      color: #172033;
+      padding: 10px 13px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(0,0,0,.22);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button.active {
+      background: #fbbf24;
+      color: #1a1302;
+    }
+    button.danger {
+      background: #fb7185;
+      color: white;
+    }
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 92px;
+      transform: translateX(-50%);
+      background: rgba(8, 12, 20, .76);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      text-align: center;
+      max-width: calc(100vw - 32px);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-8px);
+    }
+    .help {
+      pointer-events: none;
+      position: absolute;
+      left: 14px;
+      bottom: 12px;
+      width: min(420px, calc(100vw - 28px));
+      font-size: 11px;
+      line-height: 1.45;
+      opacity: .72;
+      background: rgba(10, 16, 28, 0.44);
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: radial-gradient(circle at center, #23334d, #07101d 70%);
+      z-index: 10;
+      padding: 24px;
+    }
+    #loading.hidden {
+      display: none;
+    }
+    .loadbox {
+      max-width: 420px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 22px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .small {
+      opacity: .75;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 700px) {
+      .panel { top: 10px; left: 10px; padding: 10px 12px; }
+      h1 { font-size: 14px; }
+      .desc, .status { font-size: 11px; }
+      .help { display: none; }
+      button { padding: 9px 11px; font-size: 11px; }
+      .controls { bottom: 10px; right: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="loading">
+    <div class="loadbox">
+      <strong>고양이 섬 3D 프로토타입 로딩 중</strong>
+      <div class="small">
+        Three.js CDN을 사용합니다. 인터넷 연결이 필요합니다.<br>
+        검은 화면이면 PC 브라우저 또는 VSCode Live Server에서 열어보십시오.
+      </div>
+    </div>
+  </div>
+
+  <div id="ui">
+    <div class="panel">
+      <h1>고양이 섬 3D 테스트</h1>
+      <div class="desc">
+        맵, 고양이 9마리 배회, 클릭 선택, 카메라 회전/줌/각도 전환을 확인하는 기술 테스트입니다.
+      </div>
+      <div class="status">
+        <div class="label">선택</div><div class="value" id="selectedName">없음</div>
+        <div class="label">상태</div><div class="value" id="catState">맵 관찰 중</div>
+        <div class="label">친밀도</div><div><div class="bar"><div id="affBar"></div></div></div>
+      </div>
+    </div>
+
+    <div class="help">
+      PC: 드래그 = 카메라 회전 / 휠 = 줌 / 고양이 클릭 = 선택 / 선택 후 쓰다듬기 모드에서 고양이 위를 천천히 문지르기<br>
+      모바일: 화면 드래그 = 회전 / 버튼으로 시점 변경 / 고양이 탭 = 선택
+    </div>
+
+    <div class="toast" id="toast">알림</div>
+
+    <div class="controls">
+      <div class="row">
+        <button id="btnOrbit" class="active">자유시점</button>
+        <button id="btnFollow">따라가기</button>
+        <button id="btnPet">쓰다듬기</button>
+      </div>
+      <div class="row">
+        <button id="btnQuarter">쿼터뷰</button>
+        <button id="btnTop">탑뷰</button>
+        <button id="btnSide">사이드</button>
+        <button id="btnFront">정면</button>
+      </div>
+      <div class="row">
+        <button id="btnNext">다음 고양이</button>
+        <button id="btnZoomIn">＋</button>
+        <button id="btnZoomOut">－</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+  (function() {
+    const loading = document.getElementById('loading');
+
+    if (!window.THREE) {
+      loading.querySelector('.loadbox').innerHTML =
+        '<strong>Three.js 로딩 실패</strong><div class="small">인터넷 연결 또는 CDN 접근이 막힌 상태입니다. PC 브라우저에서 다시 여십시오.</div>';
+      return;
+    }
+
+    const THREE = window.THREE;
+    const app = document.getElementById('app');
+    const selectedName = document.getElementById('selectedName');
+    const catState = document.getElementById('catState');
+    const affBar = document.getElementById('affBar');
+    const toastEl = document.getElementById('toast');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x90c7ff);
+    scene.fog = new THREE.Fog(0x90c7ff, 34, 86);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 200);
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    const clock = new THREE.Clock();
+
+    const hemi = new THREE.HemisphereLight(0xddeeff, 0x667744, 2.0);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff2d0, 3.0);
+    sun.position.set(-16, 26, 14);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 2048;
+    sun.shadow.mapSize.height = 2048;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 70;
+    sun.shadow.camera.left = -30;
+    sun.shadow.camera.right = 30;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    scene.add(sun);
+
+    const mats = {
+      grass: new THREE.MeshStandardMaterial({ color: 0x5bbf5f, roughness: .9 }),
+      sand: new THREE.MeshStandardMaterial({ color: 0xf4d487, roughness: .96 }),
+      water: new THREE.MeshStandardMaterial({ color: 0x2988c8, roughness: .55, metalness: .05, transparent: true, opacity: .86 }),
+      path: new THREE.MeshStandardMaterial({ color: 0xcaa56d, roughness: .96 }),
+      rock: new THREE.MeshStandardMaterial({ color: 0x8a8d92, roughness: 1 }),
+      trunk: new THREE.MeshStandardMaterial({ color: 0x795333, roughness: .88 }),
+      leaf: new THREE.MeshStandardMaterial({ color: 0x2f9f62, roughness: .85 }),
+      hutWall: new THREE.MeshStandardMaterial({ color: 0xd6a45b, roughness: .88 }),
+      hutRoof: new THREE.MeshStandardMaterial({ color: 0x9b5538, roughness: .9 }),
+      ring: new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: .95 }),
+      white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .7 }),
+      black: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: .7 }),
+      pink: new THREE.MeshStandardMaterial({ color: 0xff9bb6, roughness: .7 }),
+      nest: new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 1 }),
+      bird: new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: .7 }),
+      flower1: new THREE.MeshStandardMaterial({ color: 0xff81a7, roughness: .8 }),
+      flower2: new THREE.MeshStandardMaterial({ color: 0x7dd3fc, roughness: .8 })
+    };
+
+    function mesh(geo, mat, pos, rot, scale, parent) {
+      const m = new THREE.Mesh(geo, mat);
+      if (pos) m.position.set(pos[0], pos[1], pos[2]);
+      if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+      if (scale) m.scale.set(scale[0], scale[1], scale[2]);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      (parent || scene).add(m);
+      return m;
+    }
+
+    function makeCylinder(radiusTop, radiusBottom, height, segments) {
+      return new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments || 48);
+    }
+
+    // Water and island
+    const water = mesh(new THREE.PlaneGeometry(170, 170, 1, 1), mats.water, [0, -0.08, 0], [-Math.PI/2, 0, 0]);
+    water.receiveShadow = true;
+
+    const island = mesh(makeCylinder(19, 22, 1.4, 96), mats.sand, [0, -0.72, 0]);
+    const grass = mesh(new THREE.CylinderGeometry(15.4, 17.2, .46, 96), mats.grass, [0, .08, 0]);
+
+    // Low paths as thin planes
+    function addPath(x, z, sx, sz, rot) {
+      const p = mesh(new THREE.PlaneGeometry(1, 1), mats.path, [x, .325, z], [-Math.PI/2, 0, rot || 0], [sx, sz, 1]);
+      p.receiveShadow = true;
+      return p;
+    }
+    addPath(0, 0, 4.2, 26, .25);
+    addPath(-3.5, -1, 3.2, 18, -1.0);
+    addPath(5, 3.5, 2.4, 12, 1.1);
+    addPath(0, 0, 13, 3.1, -.15);
+
+    // Small pond
+    const pond = mesh(new THREE.CylinderGeometry(3.0, 3.2, .08, 48), new THREE.MeshStandardMaterial({ color: 0x5bc0de, transparent: true, opacity: .92, roughness: .5 }), [-7.5, .38, 5.5]);
+
+    // Huts
+    function addHut(x, z, r) {
+      const g = new THREE.Group();
+      g.position.set(x, .35, z);
+      g.rotation.y = r || 0;
+      scene.add(g);
+      mesh(new THREE.BoxGeometry(2.2, 1.5, 2.0), mats.hutWall, [0, .75, 0], null, null, g);
+      const roof = mesh(new THREE.ConeGeometry(1.75, 1.2, 4), mats.hutRoof, [0, 1.95, 0], [0, Math.PI/4, 0], [1.0, .9, 1.0], g);
+      mesh(new THREE.BoxGeometry(.55, .9, .08), new THREE.MeshStandardMaterial({ color: 0x4b2e23 }), [0, .45, -1.03], null, null, g);
+      return g;
+    }
+    addHut(8.5, -4.8, -.25);
+    addHut(-9.2, -4.6, .42);
+
+    // Trees
+    function addPalm(x, z, s, r) {
+      const g = new THREE.Group();
+      g.position.set(x, .32, z);
+      g.rotation.y = r || 0;
+      g.scale.set(s, s, s);
+      scene.add(g);
+      const trunk = mesh(new THREE.CylinderGeometry(.22, .33, 3.2, 8), mats.trunk, [0, 1.6, 0], [0.12, 0, -0.08], null, g);
+      trunk.castShadow = true;
+      for (let i = 0; i < 6; i++) {
+        const leaf = mesh(new THREE.ConeGeometry(.46, 2.7, 8), mats.leaf, [0, 3.25, 0], [Math.PI/2.9, i*Math.PI/3, 0], [1, 1, .33], g);
+        leaf.position.x = Math.cos(i*Math.PI/3) * .74;
+        leaf.position.z = Math.sin(i*Math.PI/3) * .74;
+      }
+      return g;
+    }
+    const treeSpots = [
+      [-12, 6, 1.1, .2], [-11, -9, .9, .5], [12, 7, 1.0, 1.5], [6, 10, .85, 2.2],
+      [-5, 11, .95, .8], [13, -8, .9, 1.1], [-14, 0, .75, 0], [2, -13, .8, .4],
+      [-2, 13, .7, 1.8]
+    ];
+    treeSpots.forEach(t => addPalm(...t));
+
+    // Nests and birds, for "night defense" future hook
+    function addNest(x, z) {
+      const g = new THREE.Group();
+      g.position.set(x, .5, z);
+      scene.add(g);
+      mesh(new THREE.TorusGeometry(.62, .12, 8, 24), mats.nest, [0, .18, 0], [Math.PI/2, 0, 0], null, g);
+      mesh(new THREE.SphereGeometry(.18, 12, 8), mats.bird, [-.18, .33, .02], null, [1, .7, 1], g);
+      mesh(new THREE.SphereGeometry(.18, 12, 8), mats.bird, [.18, .33, -.04], null, [1, .7, 1], g);
+    }
+    addNest(-5.5, 9.4);
+    addNest(7.5, 8.2);
+
+    // Rocks and flowers
+    const rockGeo = new THREE.DodecahedronGeometry(1, 0);
+    for (let i=0; i<18; i++) {
+      const ang = i * Math.PI * 2 / 18 + (i%2)*.12;
+      const rad = 13 + Math.random()*3.2;
+      const x = Math.cos(ang)*rad;
+      const z = Math.sin(ang)*rad;
+      mesh(rockGeo, mats.rock, [x, .48, z], [Math.random(), Math.random(), Math.random()], [.25+.3*Math.random(), .18+.22*Math.random(), .22+.22*Math.random()]);
+    }
+    for (let i=0; i<45; i++) {
+      const a = Math.random()*Math.PI*2;
+      const r = 3 + Math.random()*11;
+      const x = Math.cos(a)*r, z = Math.sin(a)*r;
+      if (Math.random() < .45) {
+        mesh(new THREE.SphereGeometry(.08, 8, 6), Math.random()>.5 ? mats.flower1 : mats.flower2, [x, .48, z], null, [1, .5, 1]);
+      }
+    }
+
+    // Cats
+    const catPalette = [
+      {name:'밤이', body:0x2f2f35, belly:0x57575f, eye:0xffdd66},
+      {name:'밀크', body:0xf7f0df, belly:0xffffff, eye:0x76d7ff},
+      {name:'치즈', body:0xe59f43, belly:0xffd88a, eye:0x5ee27b},
+      {name:'콩이', body:0x7a5846, belly:0xb08a72, eye:0xfef08a},
+      {name:'연탄', body:0x15181f, belly:0x343945, eye:0xa7f3d0},
+      {name:'구름', body:0xd8dbe2, belly:0xffffff, eye:0x60a5fa},
+      {name:'삼색', body:0xfff7e8, belly:0xf7e9d0, eye:0xfbbf24, patch:0x2b2b32},
+      {name:'모래', body:0xc69c6d, belly:0xe6caa1, eye:0x86efac},
+      {name:'새벽', body:0x6b7280, belly:0x9ca3af, eye:0xfcd34d}
+    ];
+
+    const cats = [];
+    const selectable = [];
+
+    function material(color) {
+      return new THREE.MeshStandardMaterial({ color, roughness: .72, metalness: 0.02 });
+    }
+
+    function makeCat(data, index) {
+      const group = new THREE.Group();
+      group.name = data.name;
+      group.userData.catIndex = index;
+      scene.add(group);
+
+      const bodyMat = material(data.body);
+      const bellyMat = material(data.belly);
+      const eyeMat = new THREE.MeshBasicMaterial({ color: data.eye });
+      const patchMat = material(data.patch || data.body);
+
+      // body/head use ellipsoid sphere scaling
+      const body = mesh(new THREE.SphereGeometry(.75, 20, 14), bodyMat, [0, .78, 0], null, [1.35, .72, .68], group);
+      const head = mesh(new THREE.SphereGeometry(.55, 20, 14), bodyMat, [.92, 1.12, 0], null, [1, .92, .9], group);
+      const belly = mesh(new THREE.SphereGeometry(.44, 16, 10), bellyMat, [.05, .72, -.48], null, [1.1, .55, .14], group);
+
+      // ears
+      mesh(new THREE.ConeGeometry(.22, .46, 4), bodyMat, [.75, 1.68, -.34], [0, .78, 0], [1, 1, .8], group);
+      mesh(new THREE.ConeGeometry(.22, .46, 4), bodyMat, [.75, 1.68, .34], [0, .78, 0], [1, 1, .8], group);
+
+      // eyes, nose
+      mesh(new THREE.SphereGeometry(.055, 8, 6), eyeMat, [1.42, 1.2, -.18], null, [1, 1, .5], group);
+      mesh(new THREE.SphereGeometry(.055, 8, 6), eyeMat, [1.42, 1.2, .18], null, [1, 1, .5], group);
+      mesh(new THREE.SphereGeometry(.05, 8, 6), mats.pink, [1.47, 1.06, 0], null, [1, .75, 1], group);
+
+      // legs
+      const legGeo = new THREE.CylinderGeometry(.12, .16, .55, 8);
+      [[-.42,.35,-.32],[-.42,.35,.32],[.45,.35,-.32],[.45,.35,.32]].forEach(p => {
+        mesh(legGeo, bodyMat, p, null, null, group);
+      });
+
+      // tail: a tilted cylinder attached to rear
+      const tail = mesh(new THREE.CylinderGeometry(.09, .13, 1.25, 10), bodyMat, [-.98, 1.0, 0], [0, 0, Math.PI/2.8], null, group);
+      tail.name = 'tail';
+
+      // whiskers
+      const whiskerMat = new THREE.LineBasicMaterial({ color: 0xeeeeee, transparent:true, opacity:.8 });
+      function addWhisker(zSign, y, offset) {
+        const points = [
+          new THREE.Vector3(1.47, y, zSign*.09),
+          new THREE.Vector3(1.84, y+offset, zSign*.34)
+        ];
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), whiskerMat);
+        group.add(line);
+      }
+      addWhisker(1, 1.08, .05);
+      addWhisker(1, 1.02, -.02);
+      addWhisker(-1, 1.08, .05);
+      addWhisker(-1, 1.02, -.02);
+
+      if (data.patch) {
+        mesh(new THREE.SphereGeometry(.18, 12, 8), patchMat, [.88, 1.36, -.33], null, [1.5, .5, .22], group);
+        mesh(new THREE.SphereGeometry(.22, 12, 8), material(0xdf8b38), [.12, 1.1, .52], null, [1.2, .8, .18], group);
+      }
+
+      // selection ring
+      const ring = mesh(new THREE.TorusGeometry(1.22, .035, 8, 42), mats.ring, [0, .08, 0], [Math.PI/2,0,0], null, group);
+      ring.visible = false;
+      ring.castShadow = false;
+      ring.receiveShadow = false;
+
+      group.traverse(o => {
+        if (o.isMesh) {
+          o.userData.catIndex = index;
+          selectable.push(o);
+        }
+      });
+
+      const angle = index * Math.PI * 2 / catPalette.length;
+      const radius = 5 + (index % 3) * 2.2;
+      group.position.set(Math.cos(angle)*radius, .42, Math.sin(angle)*radius);
+
+      return {
+        group, body, head, tail, ring,
+        name: data.name,
+        affection: Math.floor(Math.random()*22),
+        speed: .7 + Math.random()*.35,
+        target: randomPoint(13),
+        state: '산책 중',
+        idleTimer: 0,
+        wobble: Math.random()*10,
+        desiredYaw: 0
+      };
+    }
+
+    function randomPoint(maxR) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 2 + Math.sqrt(Math.random()) * maxR;
+      return new THREE.Vector3(Math.cos(a)*r, .42, Math.sin(a)*r);
+    }
+
+    catPalette.forEach((data, i) => cats.push(makeCat(data, i)));
+
+    // Camera state
+    let cameraTarget = new THREE.Vector3(0, 1.1, 0);
+    const cam = {
+      radius: 27,
+      theta: Math.PI * .25,
+      phi: Math.PI * .35,
+      mode: 'orbit',
+      follow: false
+    };
+
+    let selectedCat = -1;
+    let petMode = false;
+
+    function updateCamera() {
+      let target = cameraTarget.clone();
+      if (cam.follow && selectedCat >= 0) {
+        const p = cats[selectedCat].group.position;
+        target.set(p.x, 1.1, p.z);
+      }
+      const sinPhi = Math.sin(cam.phi);
+      camera.position.set(
+        target.x + cam.radius * sinPhi * Math.cos(cam.theta),
+        target.y + cam.radius * Math.cos(cam.phi),
+        target.z + cam.radius * sinPhi * Math.sin(cam.theta)
+      );
+      camera.lookAt(target);
+    }
+
+    function setView(name) {
+      cam.follow = false;
+      document.getElementById('btnFollow').classList.remove('active');
+      document.getElementById('btnOrbit').classList.add('active');
+      if (name === 'quarter') { cam.theta = Math.PI * .25; cam.phi = Math.PI * .34; cam.radius = 27; }
+      if (name === 'top') { cam.theta = Math.PI * .25; cam.phi = .12; cam.radius = 34; }
+      if (name === 'side') { cam.theta = Math.PI * .0; cam.phi = Math.PI * .42; cam.radius = 27; }
+      if (name === 'front') { cam.theta = Math.PI * .5; cam.phi = Math.PI * .42; cam.radius = 27; }
+      toast(name === 'top' ? '탑뷰' : name === 'side' ? '사이드뷰' : name === 'front' ? '정면뷰' : '쿼터뷰');
+    }
+
+    // Interaction
+    let dragging = false;
+    let moved = false;
+    let lastX = 0, lastY = 0;
+    let lastPet = null;
+    let pointerDownTime = 0;
+
+    function normalizePointer(ev) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function selectCat(idx) {
+      if (idx < 0 || idx >= cats.length) return;
+      selectedCat = idx;
+      cats.forEach((c, i) => c.ring.visible = i === idx);
+      selectedName.textContent = cats[idx].name;
+      catState.textContent = cats[idx].state;
+      affBar.style.width = cats[idx].affection + '%';
+      toast(cats[idx].name + ' 선택');
+    }
+
+    function tryPick(ev) {
+      normalizePointer(ev);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(selectable, false);
+      if (hits.length) {
+        const idx = hits[0].object.userData.catIndex;
+        selectCat(idx);
+        return true;
+      }
+      return false;
+    }
+
+    function doPet(ev) {
+      if (!petMode || selectedCat < 0) return;
+      normalizePointer(ev);
+      raycaster.setFromCamera(pointer, camera);
+      const catObjects = [];
+      cats[selectedCat].group.traverse(o => { if (o.isMesh) catObjects.push(o); });
+      const hits = raycaster.intersectObjects(catObjects, false);
+      if (!hits.length) return;
+
+      const now = performance.now();
+      const hit = hits[0].point;
+      if (lastPet) {
+        const dist = hit.distanceTo(lastPet.point);
+        const dt = Math.max(16, now - lastPet.time);
+        const speed = dist / dt;
+        const cat = cats[selectedCat];
+
+        if (speed > 0.0006 && speed < 0.006) {
+          cat.affection = Math.min(100, cat.affection + 1.2);
+          cat.state = '기분 좋음';
+          catState.textContent = cat.state;
+          affBar.style.width = cat.affection + '%';
+          if (Math.random() < .04) toast('골골골...');
+        } else if (speed >= 0.006) {
+          cat.affection = Math.max(0, cat.affection - .6);
+          cat.state = '너무 빠름';
+          catState.textContent = cat.state;
+          affBar.style.width = cat.affection + '%';
+        }
+      }
+      lastPet = { point: hit.clone(), time: now };
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (ev) => {
+      dragging = true;
+      moved = false;
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+      pointerDownTime = performance.now();
+      if (petMode) doPet(ev);
+    });
+
+    renderer.domElement.addEventListener('pointermove', (ev) => {
+      if (!dragging) return;
+      const dx = ev.clientX - lastX;
+      const dy = ev.clientY - lastY;
+      if (Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+
+      if (petMode && selectedCat >= 0) {
+        doPet(ev);
+      } else {
+        cam.theta -= dx * 0.006;
+        cam.phi -= dy * 0.005;
+        cam.phi = Math.max(.1, Math.min(Math.PI*.48, cam.phi));
+      }
+
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+    });
+
+    renderer.domElement.addEventListener('pointerup', (ev) => {
+      const elapsed = performance.now() - pointerDownTime;
+      if (!moved && elapsed < 260) {
+        tryPick(ev);
+      }
+      dragging = false;
+      lastPet = null;
+    });
+
+    renderer.domElement.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      cam.radius += ev.deltaY * 0.022;
+      cam.radius = Math.max(10, Math.min(48, cam.radius));
+    }, { passive: false });
+
+    function hook(id, fn) { document.getElementById(id).addEventListener('click', fn); }
+    hook('btnQuarter', () => setView('quarter'));
+    hook('btnTop', () => setView('top'));
+    hook('btnSide', () => setView('side'));
+    hook('btnFront', () => setView('front'));
+    hook('btnZoomIn', () => { cam.radius = Math.max(10, cam.radius - 3); });
+    hook('btnZoomOut', () => { cam.radius = Math.min(48, cam.radius + 3); });
+    hook('btnNext', () => selectCat((selectedCat + 1 + cats.length) % cats.length));
+    hook('btnOrbit', () => {
+      cam.follow = false;
+      document.getElementById('btnOrbit').classList.add('active');
+      document.getElementById('btnFollow').classList.remove('active');
+      toast('자유시점');
+    });
+    hook('btnFollow', () => {
+      if (selectedCat < 0) selectCat(0);
+      cam.follow = !cam.follow;
+      document.getElementById('btnFollow').classList.toggle('active', cam.follow);
+      document.getElementById('btnOrbit').classList.toggle('active', !cam.follow);
+      toast(cam.follow ? cats[selectedCat].name + ' 따라가기' : '따라가기 해제');
+    });
+    hook('btnPet', () => {
+      if (selectedCat < 0) selectCat(0);
+      petMode = !petMode;
+      document.getElementById('btnPet').classList.toggle('active', petMode);
+      toast(petMode ? '쓰다듬기 모드: 고양이 위를 천천히 문지르세요' : '쓰다듬기 모드 해제');
+    });
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 1400);
+    }
+
+    function updateCats(dt, t) {
+      cats.forEach((cat, i) => {
+        const pos = cat.group.position;
+        const to = cat.target.clone().sub(pos);
+        to.y = 0;
+        const dist = to.length();
+
+        if (dist < .6) {
+          cat.idleTimer -= dt;
+          cat.state = '두리번';
+          if (cat.idleTimer <= 0) {
+            cat.target = randomPoint(13.5);
+            cat.idleTimer = .6 + Math.random()*1.2;
+            cat.state = '산책 중';
+          }
+        } else {
+          const dir = to.normalize();
+          pos.addScaledVector(dir, cat.speed * dt);
+          cat.desiredYaw = Math.atan2(dir.x, dir.z) + Math.PI/2;
+          cat.state = (i % 4 === 0 && Math.random() < .003) ? '새 둥지 관심' : '산책 중';
+        }
+
+        // smooth rotation
+        let diff = cat.desiredYaw - cat.group.rotation.y;
+        while (diff > Math.PI) diff -= Math.PI*2;
+        while (diff < -Math.PI) diff += Math.PI*2;
+        cat.group.rotation.y += diff * Math.min(1, dt*5);
+
+        // bob and tail
+        const walk = Math.min(1, dist);
+        cat.body.position.y = .78 + Math.sin(t*7 + cat.wobble) * .035 * walk;
+        cat.head.position.y = 1.12 + Math.sin(t*6 + cat.wobble) * .025;
+        cat.tail.rotation.z = Math.PI/2.8 + Math.sin(t*4 + cat.wobble) * .18;
+
+        if (i === selectedCat) {
+          catState.textContent = cat.state;
+          affBar.style.width = cat.affection + '%';
+        }
+      });
+    }
+
+    // water animation: subtle vertical movement by scaling opacity-ish color
+    function updateDecor(t) {
+      water.position.y = -0.08 + Math.sin(t*.7)*.025;
+      pond.position.y = .38 + Math.sin(t*1.2)*.015;
+    }
+
+    function animate() {
+      const dt = Math.min(0.033, clock.getDelta());
+      const t = clock.elapsedTime;
+      updateCats(dt, t);
+      updateDecor(t);
+      updateCamera();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    // Initial state
+    selectCat(0);
+    setView('quarter');
+    setTimeout(() => {
+      loading.classList.add('hidden');
+      toast('고양이를 클릭하고 시점을 돌려보십시오');
+    }, 350);
+    animate();
+  })();
+  </script>
+</body>
+</html>

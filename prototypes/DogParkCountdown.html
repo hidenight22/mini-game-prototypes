@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>개판 십초전</title>
+  <style>
+    :root{
+      --bg1:#fff3d6; --bg2:#ffdfea; --ink:#3a2417; --accent:#ff7358; --accentDark:#c94d34;
+      --blue:#3aaef5; --green:#9ee68b; --card:#fffaf1; --line:#d29a5b; --gold:#ffd84f;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{margin:0;height:100%;overflow:hidden;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);user-select:none;}
+    button{font:inherit;border:0;border-radius:18px;background:var(--accent);color:white;font-weight:1000;padding:13px 15px;box-shadow:0 6px 0 var(--accentDark);cursor:pointer;touch-action:manipulation;}
+    button:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accentDark);}
+    button:disabled{opacity:.45;filter:grayscale(.4);transform:none;box-shadow:0 4px 0 #999;}
+    .app{height:100dvh;display:flex;justify-content:center;align-items:center;padding:12px;position:relative;}
+    .screen{display:none;width:100%;height:100%;max-width:520px;margin:0 auto;}
+    .screen.active{display:flex;flex-direction:column;}
+    h1{margin:10px 0 3px;text-align:center;font-size:33px;letter-spacing:-1px;text-shadow:0 3px 0 #fff;}
+    .subtitle{text-align:center;font-weight:900;color:#7d4b31;margin-bottom:8px;}
+    .panel{background:rgba(255,250,241,.94);border:3px solid #fff;border-radius:28px;box-shadow:0 12px 30px rgba(90,48,20,.16);padding:16px;}
+    .small{font-size:13px;opacity:.76;font-weight:800;line-height:1.35;}
+
+    /* Title */
+    #titleScreen{justify-content:center;text-align:center;}
+    .startDog{font-size:88px;line-height:1;filter:drop-shadow(0 8px 0 rgba(0,0,0,.08));animation:bob 1.3s ease-in-out infinite;}
+    .wallet{display:flex;justify-content:center;gap:8px;margin:12px 0;font-weight:1000;}
+    .wallet span{background:#fff;border-radius:999px;padding:7px 11px;box-shadow:0 3px 0 #e6c696;}
+
+    /* Select */
+    #selectScreen{justify-content:space-between;padding:8px 0;}
+    .topbar{text-align:center;}
+    .selectWrap{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:0;}
+    .arrow{width:52px;height:72px;border-radius:22px;background:#fff;color:var(--ink);box-shadow:0 6px 0 #d9bf93;font-size:34px;padding:0;}
+    .arrow:active{box-shadow:0 2px 0 #d9bf93;}
+    .dogCard{flex:1;min-width:0;max-width:342px;text-align:center;position:relative;overflow:hidden;}
+    .dogCard:before{content:"";position:absolute;inset:12px;background:radial-gradient(circle at 50% 16%,#fff 0 24%,transparent 25%),linear-gradient(180deg,#d9f7ff,#fff0);border-radius:28px;z-index:0;}
+    .dogCard>*{position:relative;z-index:1;}
+    .dogStage{height:208px;display:flex;align-items:center;justify-content:center;position:relative;}
+    .bigDog{font-size:116px;line-height:1;animation:bob 1.2s ease-in-out infinite;filter:drop-shadow(0 10px 0 rgba(0,0,0,.08));}
+    .costumeBadge{position:absolute;top:15px;right:22px;background:#fff;border:3px solid #ffd275;border-radius:999px;padding:8px 12px;font-size:28px;box-shadow:0 5px 0 #e9ba61;}
+    .dogName{font-size:27px;font-weight:1000;margin-top:-2px;}
+    .dogDesc{font-weight:900;color:#7c523a;min-height:44px;line-height:1.25;margin:6px 0 10px;}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+    .stat{background:#fff;border-radius:16px;padding:8px;font-weight:1000;font-size:14px;}
+    .dots{display:flex;justify-content:center;gap:6px;margin:10px 0 0;}
+    .dot{width:9px;height:9px;border-radius:50%;background:#d7bca2;}.dot.on{background:var(--accent);transform:scale(1.25);}
+    .bottomActions{padding:0 0 10px;text-align:center;}
+    .selectBtn{width:88%;max-width:330px;font-size:20px;}
+
+    /* Race */
+    #raceScreen{padding:7px 0 8px;gap:8px;}
+    .hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:rgba(255,255,255,.82);border-radius:18px;padding:8px 10px;font-weight:1000;box-shadow:0 4px 0 rgba(224,184,122,.45);}
+    .hud .center{text-align:center;}.timer{font-size:27px;color:#d64e32;line-height:1;}.rankMini{text-align:right;font-size:14px;line-height:1.2;}
+    .myMini{font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .raceBox{flex:1;min-height:0;background:linear-gradient(180deg,#abed97 0 17%,#f6c580 17% 100%);border:4px solid #fff;border-radius:24px;box-shadow:0 12px 28px rgba(90,48,20,.18);overflow:hidden;position:relative;}
+    .sky{position:absolute;inset:0 0 auto;height:17%;background:linear-gradient(180deg,#bcecff,#dff7ff);z-index:0;}
+    .cloud{position:absolute;font-size:30px;opacity:.78;top:10px;}
+    .world{position:absolute;left:0;right:0;top:17%;bottom:0;transform:translateX(0);will-change:transform;}
+    .trackPattern{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 42px,rgba(176,104,37,.10) 42px 84px);}
+    .finishGate{position:absolute;top:0;bottom:0;width:12px;background:repeating-linear-gradient(45deg,#fff 0 8px,#222 8px 16px);opacity:.9;z-index:2;}
+    .finishText{position:absolute;top:3px;transform:translateX(-36px);font-weight:1000;color:#1e160f;text-shadow:0 2px #fff;font-size:13px;}
+    .lane{position:absolute;left:0;width:3000px;height:16.66%;border-bottom:2px dashed rgba(124,78,37,.25);}
+    .lane:last-child{border-bottom:0;}
+    .runner{position:absolute;left:0;top:50%;display:flex;align-items:center;gap:0;z-index:3;transform:translate(0,-50%);}
+    .runner .dogEmoji{font-size:35px;line-height:1;filter:drop-shadow(0 5px 0 rgba(0,0,0,.12));}
+    .runner .miniCostume{font-size:18px;margin-left:-8px;margin-top:-20px;}
+    .runner.mine .dogEmoji{font-size:48px;}
+    .runner.mine:before{content:"";position:absolute;width:58px;height:22px;border-radius:50%;background:rgba(255,216,79,.88);left:-5px;bottom:-2px;z-index:-1;box-shadow:0 0 14px #fff36c;}
+    .myTag{position:absolute;left:8px;top:-24px;white-space:nowrap;background:#ffe84c;border:2px solid #5b3926;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:1000;box-shadow:0 3px 0 rgba(0,0,0,.12);}
+    .bubble{position:absolute;left:36px;top:-22px;white-space:nowrap;background:#fff;border:2px solid #5b3926;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:1000;opacity:0;transform:scale(.8);transition:.15s;pointer-events:none;}
+    .bubble.show{opacity:1;transform:scale(1);}
+    .poop{position:absolute;font-size:18px;top:50%;transform:translate(-50%,-5%);z-index:1;}
+    .countdown{position:absolute;inset:0;background:rgba(255,244,216,.78);display:flex;align-items:center;justify-content:center;font-size:72px;font-weight:1000;color:#e84f35;text-shadow:0 5px 0 #fff;z-index:9;}
+    .countdown.hide{display:none;}
+    .itemBar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .itemBtn{padding:9px 6px;border-radius:16px;font-size:14px;line-height:1.15;background:#fff;color:var(--ink);box-shadow:0 5px 0 #d9bf93;border:2px solid #fff;}
+    .itemBtn strong{display:block;font-size:20px;margin-bottom:2px;}.itemBtn:active{box-shadow:0 2px 0 #d9bf93;}.itemBtn.used{background:#ddd;color:#777;}
+    .toast{position:absolute;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:#3a2417;color:#fff;border-radius:999px;padding:10px 16px;font-weight:1000;z-index:20;opacity:0;transition:.2s;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .rankBadge{position:absolute;right:10px;top:10px;background:#ffe84c;border:3px solid #5b3926;border-radius:999px;padding:7px 12px;font-size:18px;font-weight:1000;box-shadow:0 4px 0 rgba(0,0,0,.14);z-index:8;}
+    .liveBoard{background:rgba(255,255,255,.9);border-radius:16px;padding:7px 10px;font-size:13px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 0 rgba(224,184,122,.45);}
+    .liveBoard b{color:#d64e32;}
+    .eventFeed{background:#3a2417;color:#fff;border-radius:16px;padding:8px 11px;font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 0 rgba(0,0,0,.18);}
+    .eventFeed.hot{animation:feedPop .22s ease-out;}
+    @keyframes feedPop{0%{transform:scale(.96)}70%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+    /* Result */
+    #resultScreen{justify-content:center;gap:12px;text-align:center;}
+    .resultTitle{font-size:36px;font-weight:1000;margin:0;text-shadow:0 4px 0 #fff;}
+    .rank{font-size:68px;font-weight:1000;color:#e84f35;line-height:1;}
+    .resultDog{font-size:82px;line-height:1;}
+    .resultMsg{font-size:23px;font-weight:1000;margin:8px 0;}
+    .reward{display:flex;justify-content:center;gap:9px;margin:10px 0;}
+    .reward span{background:#fff;border-radius:999px;padding:9px 13px;font-weight:1000;box-shadow:0 4px 0 #e6c696;}
+    .resultList{background:#fff;border-radius:20px;padding:10px;text-align:left;font-weight:900;max-height:154px;overflow:auto;}
+    .resultRow{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-bottom:1px dashed #e7caa4;}.resultRow:last-child{border-bottom:0;}
+    .again{display:flex;gap:10px;justify-content:center;}.again button{flex:1;max-width:210px;}
+
+    @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+    @media (max-height:700px){h1{font-size:28px}.dogStage{height:166px}.bigDog{font-size:94px}.dogName{font-size:23px}.stats{display:none}.resultList{max-height:118px}.resultDog{font-size:66px}.rank{font-size:56px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div id="toast" class="toast">사용했습니다!</div>
+
+  <section id="titleScreen" class="screen active">
+    <div class="panel" style="margin:auto;width:100%;text-align:center;">
+      <div class="startDog">🐶</div>
+      <h1>개판 십초전</h1>
+      <div class="subtitle">진땀 쏙 빼는 댕웃긴 시합</div>
+      <div class="wallet"><span id="coinView">🪙 0</span><span id="pieceView">🎁 0</span></div>
+      <p class="small">세로 화면에서 가로로 달립니다.<br>내 개를 고르고, 60초 동안 개판을 구경하고 수습하세요.</p>
+      <button onclick="goSelect()">강아지 고르기</button>
+    </div>
+  </section>
+
+  <section id="selectScreen" class="screen">
+    <div class="topbar">
+      <h1>출전견 선택</h1>
+      <div class="subtitle">화살표로 한 마리씩 신중하게 살펴보세요</div>
+    </div>
+    <div class="selectWrap">
+      <button class="arrow" onclick="prevDog()">‹</button>
+      <div class="dogCard panel">
+        <div class="dogStage">
+          <div id="costumeBadge" class="costumeBadge">🦸</div>
+          <div id="bigDog" class="bigDog">🐶</div>
+        </div>
+        <div id="dogName" class="dogName">슈퍼 포메</div>
+        <div id="dogDesc" class="dogDesc">빠른데 갑자기 딴 데 봅니다.</div>
+        <div class="stats">
+          <div id="stat1" class="stat">속도 ★★★★</div>
+          <div id="stat2" class="stat">집중 ★★</div>
+          <div id="stat3" class="stat">체력 ★★</div>
+          <div id="stat4" class="stat">개판 ★★★★★</div>
+        </div>
+        <div id="dots" class="dots"></div>
+      </div>
+      <button class="arrow" onclick="nextDog()">›</button>
+    </div>
+    <div class="bottomActions">
+      <button class="selectBtn" onclick="startRace()">이 강아지로 출전</button>
+    </div>
+  </section>
+
+  <section id="raceScreen" class="screen">
+    <div class="hud">
+      <div class="myMini">내 개<br><span id="myDogName">-</span></div>
+      <div class="center"><div class="timer"><span id="timeLeft">60.0</span>s</div></div>
+      <div class="rankMini">현재<br><span id="liveRank">-위</span></div>
+    </div>
+    <div id="raceBox" class="raceBox">
+      <div class="sky"><span class="cloud" style="left:12%">☁️</span><span class="cloud" style="left:67%;top:20px">☁️</span></div>
+      <div id="world" class="world"></div>
+      <div id="rankBadge" class="rankBadge">현재 -위</div>
+      <div id="countdown" class="countdown">3</div>
+    </div>
+    <div id="liveBoard" class="liveBoard">현재 순위 준비 중</div>
+    <div id="eventFeed" class="eventFeed">해설: 출발 전부터 이미 개판입니다.</div>
+    <div class="itemBar">
+      <button id="itemSnack" class="itemBtn" onclick="useItem('snack')"><strong>🦴</strong>간식<br><small id="itemSnackText">앞으로 대시</small></button>
+      <button id="itemCheer" class="itemBtn" onclick="useItem('cheer')"><strong>📣</strong>응원<br><small id="itemCheerText">딴짓 해제</small></button>
+      <button id="itemLeash" class="itemBtn" onclick="useItem('leash')"><strong>🪢</strong>목줄<br><small id="itemLeashText">이탈 복귀</small></button>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="screen">
+    <div class="panel">
+      <div class="resultDog" id="resultDog">🐶</div>
+      <div class="resultTitle">경기 종료!</div>
+      <div class="rank" id="rankText">1위</div>
+      <div class="resultMsg" id="resultMsg">우리 개가 이걸?</div>
+      <div class="reward"><span id="coinReward">🪙 +0</span><span id="pieceReward">🎁 +0</span></div>
+      <div class="resultList" id="resultList"></div>
+      <div class="again" style="margin-top:14px;">
+        <button onclick="goSelect()">다른 개 고르기</button>
+        <button onclick="startRace()">다시 달리기</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const TRACK_LENGTH = 180;
+const PIXELS_PER_METER = 34;
+const RACE_DURATION = 60000;
+const baseDogs = [
+  {name:'슈퍼 포메', breed:'포메라니안', emoji:'🐕', costume:'🦸', desc:'빠른데 갑자기 딴 데 봅니다.', speed:4, focus:2, stamina:2, chaos:5},
+  {name:'핫도그 말티', breed:'말티즈', emoji:'🐶', costume:'🌭', desc:'귀엽습니다. 그런데 뛰는지는 별개입니다.', speed:3, focus:3, stamina:2, chaos:4},
+  {name:'거미 시바', breed:'시바견', emoji:'🐕', costume:'🕷️', desc:'남의 말은 잘 안 듣지만 폼은 좋습니다.', speed:3, focus:2, stamina:4, chaos:5},
+  {name:'공룡 코기', breed:'웰시코기', emoji:'🐕‍🦺', costume:'🦖', desc:'다리가 짧아도 마음은 티라노입니다.', speed:3, focus:4, stamina:3, chaos:3},
+  {name:'우주 불독', breed:'불독', emoji:'🐩', costume:'🚀', desc:'느립니다. 대신 묵직하게 개판입니다.', speed:2, focus:3, stamina:5, chaos:4},
+  {name:'정체불명 믹스', breed:'믹스견', emoji:'🐕', costume:'🍌', desc:'오늘의 변수입니다. 아무도 모릅니다.', speed:4, focus:3, stamina:3, chaos:4}
+];
+let dogs = [];
+let selectedIndex = 0;
+let raceState = null;
+let raf = null;
+let wallet = {coin:0,piece:0};
+const ITEM_INFO = {
+  snack:{cd:5000, btn:'itemSnack', text:'itemSnackText', ready:'앞으로 대시'},
+  cheer:{cd:6000, btn:'itemCheer', text:'itemCheerText', ready:'딴짓 해제'},
+  leash:{cd:7000, btn:'itemLeash', text:'itemLeashText', ready:'이탈 복귀'}
+};
+
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function stars(n){ return '★★★★★'.slice(0,n) + '☆☆☆☆☆'.slice(0,5-n); }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function saveWallet(){ localStorage.setItem('dogRaceWallet', JSON.stringify(wallet)); updateWallet(); }
+function loadWallet(){ try{ wallet = JSON.parse(localStorage.getItem('dogRaceWallet')) || wallet; }catch(e){} updateWallet(); }
+function updateWallet(){ document.querySelectorAll('#coinView').forEach(e=>e.textContent='🪙 '+wallet.coin); document.querySelectorAll('#pieceView').forEach(e=>e.textContent='🎁 '+wallet.piece); }
+function cloneDogs(){
+  dogs = baseDogs.map((d,i)=>({
+    ...d,
+    id:i,
+    speed: d.breed==='믹스견'?rand(2,5):d.speed,
+    focus: d.breed==='믹스견'?rand(1,5):d.focus,
+    stamina: d.breed==='믹스견'?rand(2,5):d.stamina,
+    chaos: d.breed==='믹스견'?rand(2,5):d.chaos,
+    dist:0, laneOffset:0, state:'run', stateUntil:0, eventCooldown:0, bubble:'', poopMarks:[], finished:false, finishTime:null, boostUntil:0
+  }));
+}
+
+function goSelect(){ if(raf) cancelAnimationFrame(raf); cloneDogs(); updateDogCard(); show('selectScreen'); }
+function prevDog(){ selectedIndex = (selectedIndex + dogs.length - 1) % dogs.length; updateDogCard(); }
+function nextDog(){ selectedIndex = (selectedIndex + 1) % dogs.length; updateDogCard(); }
+function updateDogCard(){
+  const d = dogs[selectedIndex];
+  document.getElementById('bigDog').textContent = d.emoji;
+  document.getElementById('costumeBadge').textContent = d.costume;
+  document.getElementById('dogName').textContent = d.name;
+  document.getElementById('dogDesc').textContent = d.desc;
+  document.getElementById('stat1').textContent = '속도 ' + stars(d.speed);
+  document.getElementById('stat2').textContent = '집중 ' + stars(d.focus);
+  document.getElementById('stat3').textContent = '체력 ' + stars(d.stamina);
+  document.getElementById('stat4').textContent = '개판 ' + stars(d.chaos);
+  document.getElementById('dots').innerHTML = dogs.map((_,i)=>`<div class="dot ${i===selectedIndex?'on':''}"></div>`).join('');
+}
+
+function startRace(){
+  if(raf) cancelAnimationFrame(raf);
+  cloneDogs();
+  const myId = selectedIndex;
+  document.getElementById('myDogName').textContent = dogs[myId].costume + ' ' + dogs[myId].name;
+  buildWorld(myId);
+  show('raceScreen');
+  let c = 3;
+  const cd = document.getElementById('countdown');
+  cd.classList.remove('hide'); cd.textContent = c;
+  const int = setInterval(()=>{
+    c--;
+    if(c>0) cd.textContent = c;
+    else if(c===0) cd.textContent = '출발!';
+    else { clearInterval(int); cd.classList.add('hide'); beginRace(myId); }
+  },700);
+}
+
+function buildWorld(myId){
+  const world = document.getElementById('world');
+  const trackWidth = TRACK_LENGTH * PIXELS_PER_METER + 360;
+  world.style.width = trackWidth + 'px';
+  world.innerHTML = '<div class="trackPattern"></div>';
+  const finishX = 90 + TRACK_LENGTH*PIXELS_PER_METER;
+  const finish = document.createElement('div');
+  finish.className='finishGate'; finish.style.left = finishX+'px';
+  finish.innerHTML='<div class="finishText">FINISH</div>'; world.appendChild(finish);
+  dogs.forEach((d,i)=>{
+    const lane = document.createElement('div'); lane.className='lane'; lane.id='lane'+i;
+    lane.style.top = (i*16.66)+'%'; lane.style.width = trackWidth+'px';
+    const r = document.createElement('div'); r.className='runner'+(i===myId?' mine':''); r.id='runner'+i;
+    r.innerHTML = `${i===myId?'<span class="myTag">내 개!</span>':''}<span class="dogEmoji">${d.emoji}</span><span class="miniCostume">${d.costume}</span><span class="bubble" id="bubble${i}"></span>`;
+    lane.appendChild(r); world.appendChild(lane);
+  });
+}
+
+function resetItems(){
+  if(!raceState) return;
+  raceState.itemCd = {snack:0, cheer:0, leash:0};
+  raceState.itemUses = 0;
+  Object.values(ITEM_INFO).forEach(info=>{
+    const b=document.getElementById(info.btn); const t=document.getElementById(info.text);
+    if(b){ b.disabled=false; b.classList.remove('used'); }
+    if(t) t.textContent=info.ready;
+  });
+}
+function toast(text){ const t=document.getElementById('toast'); t.textContent=text; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),800); }
+function announce(text){
+  const f=document.getElementById('eventFeed'); if(!f) return;
+  f.textContent='해설: '+text;
+  f.classList.remove('hot'); void f.offsetWidth; f.classList.add('hot');
+}
+function updateItemButtons(){
+  if(!raceState || !raceState.itemCd) return;
+  for(const [type,info] of Object.entries(ITEM_INFO)){
+    const b=document.getElementById(info.btn); const t=document.getElementById(info.text);
+    const left=Math.max(0, info.nextReady ? info.nextReady-raceState.elapsed : 0);
+    if(left>0){ if(b) b.disabled=true; if(t) t.textContent=(left/1000).toFixed(1)+'초'; }
+    else { if(b) b.disabled=false; if(t) t.textContent=info.ready; }
+  }
+}
+function setCooldown(type){
+  const info=ITEM_INFO[type];
+  info.nextReady = raceState.elapsed + info.cd;
+  raceState.itemUses++;
+  updateItemButtons();
+}
+function useItem(type){
+  if(!raceState || !raceState.running) return;
+  const info=ITEM_INFO[type];
+  if(info.nextReady && info.nextReady > raceState.elapsed){ toast('아직 준비 중입니다'); return; }
+  const mine = dogs[raceState.myId];
+  if(type==='snack'){
+    mine.dist += 5.2; mine.boostUntil = raceState.elapsed + 1200; mine.state='run'; mine.stateUntil=0;
+    setBubble(raceState.myId,'간식 최고!'); setCooldown('snack'); toast('간식 대시!'); announce('간식 투입! 내 개가 정신을 차립니다.');
+  }
+  if(type==='cheer'){
+    mine.state='run'; mine.stateUntil=0; mine.eventCooldown=1.0; mine.boostUntil = raceState.elapsed + 950;
+    setBubble(raceState.myId,'할 수 있개!'); setCooldown('cheer'); toast('응원 성공!'); announce('응원으로 딴짓을 끊었습니다.');
+  }
+  if(type==='leash'){
+    mine.laneOffset=0; mine.state='run'; mine.stateUntil=0; mine.eventCooldown=1.2; mine.boostUntil = raceState.elapsed + 500;
+    setBubble(raceState.myId,'복귀!'); setCooldown('leash'); toast('목줄 복귀!'); announce('목줄로 코스를 다시 잡았습니다.');
+  }
+}
+
+function beginRace(myId){
+  const start = performance.now();
+  raceState = {start,last:start,duration:RACE_DURATION,myId,running:true,elapsed:0,itemCd:{snack:0,cheer:0,leash:0},itemUses:0};
+  Object.values(ITEM_INFO).forEach(info=>info.nextReady=0);
+  resetItems();
+  announce('출발했습니다. 이제부터 진짜 개판입니다.');
+  dogs.forEach(d=>{ d.dist=0; d.state='run'; d.stateUntil=0; d.eventCooldown=0; d.finished=false; d.finishTime=null; d.poopMarks=[]; d.laneOffset=0; d.boostUntil=0; });
+  raf = requestAnimationFrame(tickRace);
+}
+function tickRace(now){
+  const rs = raceState;
+  rs.elapsed = now - rs.start;
+  const dt = Math.min(50, now - rs.last) / 1000;
+  rs.last = now;
+  const remain = Math.max(0, (rs.duration - rs.elapsed) / 1000);
+  document.getElementById('timeLeft').textContent = remain.toFixed(1);
+  dogs.forEach((d,i)=>updateDog(d,i,dt,rs.elapsed));
+  updateLiveRank(rs.myId);
+  updateItemButtons();
+  renderWorld(rs.myId);
+  if(rs.elapsed >= rs.duration || dogs.every(d=>d.dist>=TRACK_LENGTH)) return finishRace(rs.myId);
+  raf = requestAnimationFrame(tickRace);
+}
+function updateDog(d,i,dt,elapsed){
+  if(d.dist >= TRACK_LENGTH){ if(!d.finished){d.finished=true; d.finishTime=elapsed;} return; }
+  if(elapsed < d.stateUntil){
+    if(d.state==='lie' || d.state==='sniff' || d.state==='poop') return;
+    if(d.state==='walk') d.dist += (0.9 + d.speed*0.08) * dt;
+    if(d.state==='sprint') d.dist += (4.7 + d.speed*0.32) * dt;
+    if(d.state==='wander'){ d.dist += (1.4 + d.speed*0.10) * dt; d.laneOffset = Math.sin(elapsed/100)*16; }
+    return;
+  }
+  if(d.state !== 'run'){ d.state='run'; d.laneOffset *= .3; setBubble(i,''); }
+  d.eventCooldown -= dt;
+  let eventChance = (0.012 + d.chaos*0.005 - d.focus*0.0014) * (dt*60);
+  if(raceState && i===raceState.myId) eventChance *= 1.28;
+  if(d.eventCooldown <= 0 && Math.random() < eventChance){ triggerEvent(d,i,elapsed); return; }
+  const boost = elapsed < d.boostUntil ? 1.7 : 1;
+  const base = (2.0 + d.speed*0.22 + d.focus*0.04) * boost;
+  d.dist += base * dt;
+}
+function triggerEvent(d,i,elapsed){
+  const e = pick(['lie','sniff','poop','walk','sprint','wander']);
+  d.state = e; d.eventCooldown = 0.8 + Math.random()*0.9;
+  const isMine = raceState && i===raceState.myId;
+  if(e==='lie'){ d.stateUntil = elapsed + 1100 + Math.random()*900; setBubble(i,'안 감.'); if(isMine) announce('내 개가 누웠습니다. 📣 응원이 필요합니다.'); }
+  if(e==='sniff'){ d.stateUntil = elapsed + 900 + Math.random()*800; setBubble(i,'킁킁'); if(isMine) announce('내 개가 냄새를 맡기 시작했습니다. 🦴 간식으로 끌어오세요.'); }
+  if(e==='poop'){ d.stateUntil = elapsed + 900 + Math.random()*700; d.poopMarks.push(d.dist); setBubble(i,'잠깐.'); if(isMine) announce('내 개가 경기 중 중요한 일을 봅니다.'); }
+  if(e==='walk'){ d.stateUntil = elapsed + 1100 + Math.random()*900; setBubble(i,'산책 아님?'); if(isMine) announce('내 개가 산책 모드입니다. 간식이나 응원이 좋습니다.'); }
+  if(e==='sprint'){ d.stateUntil = elapsed + 750 + Math.random()*700; setBubble(i,'갑자기 신남!'); if(isMine) announce('좋습니다. 내 개가 갑자기 신났습니다!'); else if(Math.random()<.35) announce(d.name+'가 갑자기 치고 나갑니다.'); }
+  if(e==='wander'){ d.stateUntil = elapsed + 1000 + Math.random()*850; setBubble(i,'저기 뭐야?'); d.laneOffset = pick([-1,1])*(14+Math.random()*22); if(isMine) announce('내 개가 코스 밖으로 샙니다. 🪢 목줄 타이밍입니다.'); }
+}
+function setBubble(i,text){ const b=document.getElementById('bubble'+i); if(!b) return; b.textContent=text; b.classList.toggle('show',!!text); }
+function updateLiveRank(myId){
+  const ranked=[...dogs].sort((a,b)=>b.dist-a.dist);
+  const myRank = ranked.findIndex(d=>d.id===myId)+1;
+  document.getElementById('liveRank').textContent = myRank+'위';
+  const badge = document.getElementById('rankBadge');
+  if(badge) badge.textContent = '현재 '+myRank+'위';
+  const board = document.getElementById('liveBoard');
+  if(board){
+    board.innerHTML = '<b>현재 순위</b> ' + ranked.map((d,idx)=>`${idx+1}.${d.costume}${d.id===myId?' 내개':''}`).join(' · ');
+  }
+}
+function renderWorld(myId){
+  const raceBox=document.getElementById('raceBox'); const world=document.getElementById('world');
+  const myX = 90 + dogs[myId].dist * PIXELS_PER_METER;
+  const desired = raceBox.clientWidth * 0.42;
+  const maxShift = Math.max(0, (TRACK_LENGTH*PIXELS_PER_METER + 360) - raceBox.clientWidth);
+  const shift = Math.max(0, Math.min(maxShift, myX - desired));
+  world.style.transform = `translateX(${-shift}px)`;
+  dogs.forEach((d,i)=>{
+    const r=document.getElementById('runner'+i); if(!r) return;
+    const x=90 + d.dist*PIXELS_PER_METER;
+    const rotate = d.state==='lie' ? ' rotate(90deg)' : '';
+    r.style.transform = `translate(${x}px, calc(-50% + ${d.laneOffset}px))${rotate}`;
+    const lane=document.getElementById('lane'+i);
+    if(lane){
+      lane.querySelectorAll('.poop').forEach(p=>p.remove());
+      d.poopMarks.forEach(p=>{ const mark=document.createElement('span'); mark.className='poop'; mark.textContent='💩'; mark.style.left=(90+p*PIXELS_PER_METER)+'px'; lane.appendChild(mark); });
+    }
+  });
+}
+function finishRace(myId){
+  if(raf) cancelAnimationFrame(raf);
+  if(raceState) raceState.running=false;
+  dogs.forEach(d=>{ if(!d.finished) d.finishTime = RACE_DURATION + (TRACK_LENGTH-d.dist)*140; });
+  const ranked=[...dogs].sort((a,b)=>{
+    if(a.dist>=TRACK_LENGTH && b.dist>=TRACK_LENGTH) return a.finishTime-b.finishTime;
+    return b.dist-a.dist;
+  });
+  const myRank=ranked.findIndex(d=>d.id===myId)+1;
+  const mine=dogs[myId];
+  let coin=10, piece=0;
+  if(myRank===1){ coin=100; piece=2; }
+  else if(myRank<=3){ coin=60; piece=1; }
+  else if(myRank<=5){ coin=30; }
+  if(mine.dist<18){ coin=5; }
+  const bonus = raceState ? Math.min(30, raceState.itemUses*3) : 0;
+  coin += bonus;
+  wallet.coin += coin; wallet.piece += piece; saveWallet();
+  document.getElementById('resultDog').textContent = mine.emoji + mine.costume;
+  document.getElementById('rankText').textContent = myRank+'위';
+  document.getElementById('resultMsg').textContent = myRank===1?'우리 개가 이걸?':myRank<=3?'제법 달렸개':myRank<=5?'그래도 움직였개':'참가에 의의가 있개';
+  document.getElementById('coinReward').textContent = '🪙 +' + coin;
+  document.getElementById('pieceReward').textContent = '🎁 +' + piece;
+  document.getElementById('resultList').innerHTML = ranked.map((d,idx)=>`<div class="resultRow"><span>${idx+1}위 ${d.costume} ${d.name}</span><span>${Math.min(TRACK_LENGTH,Math.floor(d.dist))}m</span></div>`).join('');
+  show('resultScreen');
+}
+
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now(); if(now-lastTouchEnd<=300)e.preventDefault(); lastTouchEnd=now;},{passive:false});
+loadWallet(); cloneDogs(); updateDogCard();
+</script>
+</body>
+</html>

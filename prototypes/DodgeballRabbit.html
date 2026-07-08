@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>피구 최후의 1인이 나야</title>
+<style>
+  :root{
+    --bg:#f6efe5; --ink:#3d2d26; --line:#6a4a3a; --accent:#ff7d54; --soft:#ffe1d0; --court:#f5c77f;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  body{margin:0;background:#1e1715;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);overflow:hidden}
+  #game{width:100vw;height:100vh;max-width:520px;margin:0 auto;background:linear-gradient(#fff8eb,#ffe5b9);position:relative;overflow:hidden;touch-action:none}
+  canvas{width:100%;height:100%;display:block}
+  .ui{position:absolute;inset:0;pointer-events:none}
+  .topbar{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;z-index:5}
+  .pill{background:rgba(255,255,255,.82);border:2px solid rgba(90,59,45,.18);border-radius:999px;padding:8px 12px;box-shadow:0 4px 0 rgba(0,0,0,.08);font-size:14px}
+  .hint{position:absolute;left:18px;right:18px;bottom:22px;text-align:center;background:rgba(255,255,255,.88);border:2px solid rgba(90,59,45,.18);border-radius:18px;padding:12px 14px;font-weight:800;line-height:1.35;box-shadow:0 6px 0 rgba(0,0,0,.08);z-index:5}
+  .screen{position:absolute;inset:0;background:linear-gradient(#fff8ee,#ffd697);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;pointer-events:auto;z-index:20}
+  .hidden{display:none!important}
+  h1{font-size:34px;line-height:1.06;margin:0 0 12px;color:#4b2d24;letter-spacing:-1.6px}
+  h2{font-size:28px;line-height:1.1;margin:0 0 12px;color:#4b2d24}
+  p{font-size:16px;line-height:1.45;margin:8px 0;color:#61463b;font-weight:650}
+  button{border:0;background:var(--accent);color:white;font-weight:900;font-size:18px;border-radius:16px;padding:14px 24px;margin:8px;box-shadow:0 6px 0 #b74f35;cursor:pointer}
+  button.secondary{background:#806052;box-shadow:0 6px 0 #4e372f}
+  button.small{font-size:14px;padding:10px 14px;border-radius:12px;margin:5px;box-shadow:0 4px 0 #b74f35}
+  .shopgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px;margin:12px 0}
+  .card{background:rgba(255,255,255,.76);border:2px solid rgba(90,59,45,.16);border-radius:18px;padding:12px;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.08)}
+  .owned{outline:3px solid #ff9d61}
+  .toast{position:absolute;top:66px;left:24px;right:24px;text-align:center;background:#3d2d26;color:white;border-radius:14px;padding:10px 12px;font-weight:900;z-index:30;opacity:0;transform:translateY(-12px);transition:.2s}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+  <div class="ui">
+    <div class="topbar">
+      <div class="pill" id="phaseLabel">수비</div>
+      <div class="pill" id="scoreLabel">상대 3 / 3</div>
+      <div class="pill" id="coinLabel">코인 0</div>
+    </div>
+    <div class="hint" id="hint">날아오는 공의 도착 지점을 길게 눌러 잡으세요.</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="screen" id="titleScreen">
+    <h1>피구 최후의<br>1인이 나야</h1>
+    <p>복실한 손으로 공을 잡고,<br>잡은 공으로 상대 동물들을 탈락시키세요.</p>
+    <button id="startBtn">게임 시작</button>
+    <button class="secondary" id="shopBtn">캐릭터 / 꾸미기</button>
+    <p style="font-size:13px;opacity:.75">MVP: 잡기 + 던지기 + 상점 더미</p>
+  </div>
+
+  <div class="screen hidden" id="shopScreen">
+    <h2>캐릭터 / 꾸미기</h2>
+    <p>플레이 중 가장 많이 보이는 건 손입니다.<br>그래서 손 스킨 중심 BM으로 구성합니다.</p>
+    <div class="shopgrid" id="shopGrid"></div>
+    <button class="secondary" id="backBtn">돌아가기</button>
+  </div>
+
+  <div class="screen hidden" id="resultScreen">
+    <h2 id="resultTitle">승리!</h2>
+    <p id="resultText">상대를 모두 탈락시켰습니다.</p>
+    <button id="retryBtn">다시 하기</button>
+    <button class="secondary" id="homeBtn">첫 화면</button>
+  </div>
+</div>
+<script>
+(() => {
+  const canvas = document.getElementById('cv');
+  const ctx = canvas.getContext('2d');
+  const gameEl = document.getElementById('game');
+  const titleScreen = document.getElementById('titleScreen');
+  const shopScreen = document.getElementById('shopScreen');
+  const resultScreen = document.getElementById('resultScreen');
+  const phaseLabel = document.getElementById('phaseLabel');
+  const scoreLabel = document.getElementById('scoreLabel');
+  const coinLabel = document.getElementById('coinLabel');
+  const hint = document.getElementById('hint');
+  const toast = document.getElementById('toast');
+
+  let W=0,H=0,DPR=1;
+  const state = {
+    mode:'title', phase:'defense', coins:0, totalEnemies:3, enemies:[],
+    ball:null, pointer:null, handSkin:'cat', accessory:'redBand', throwPower:0, pressStart:0,
+    catchZone:null, msgTimer:0, lastTime:0, aim:null, winCoins:0
+  };
+
+  const skins = {
+    cat:{name:'고양이 손', color:'#f2b176', pad:'#7d4b41', price:0, owned:true},
+    dog:{name:'강아지 손', color:'#c98b58', pad:'#5a392f', price:80, owned:false},
+    rabbit:{name:'토끼 솜손', color:'#fff1ea', pad:'#ef9db7', price:120, owned:false},
+    bear:{name:'곰 복실손', color:'#8d5b3e', pad:'#3b2a24', price:160, owned:false}
+  };
+  const accessories = {
+    redBand:{name:'빨간 손목밴드', color:'#e6493f', price:0, owned:true},
+    starPatch:{name:'별 반창고', color:'#ffd84d', price:60, owned:false},
+    blueTape:{name:'파란 스포츠테이프', color:'#4aa3ff', price:90, owned:false},
+    flower:{name:'꽃 팔찌', color:'#ff92c2', price:130, owned:false}
+  };
+
+  function resize(){
+    const r = gameEl.getBoundingClientRect();
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    canvas.width = Math.floor(W*DPR); canvas.height = Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resize); resize();
+
+  function showToast(text){ toast.textContent=text; toast.classList.add('show'); clearTimeout(state.toastT); state.toastT=setTimeout(()=>toast.classList.remove('show'),1200); }
+  function hideScreens(){ titleScreen.classList.add('hidden'); shopScreen.classList.add('hidden'); resultScreen.classList.add('hidden'); }
+  function updateLabels(){
+    phaseLabel.textContent = state.phase === 'defense' ? '수비' : '공격';
+    const alive = state.enemies.filter(e=>!e.dead).length;
+    scoreLabel.textContent = `상대 ${alive} / ${state.totalEnemies}`;
+    coinLabel.textContent = `코인 ${state.coins}`;
+  }
+
+  function startGame(){
+    hideScreens(); state.mode='play'; state.phase='defense'; state.totalEnemies=3; state.winCoins=0;
+    state.enemies = [];
+    for(let i=0;i<state.totalEnemies;i++){
+      state.enemies.push({
+        x: W*(0.25 + i*0.25), y: H*0.35 + (i%2)*70, r:22,
+        vx: (i%2?1:-1)*(45+20*i), vy:(i%2?-1:1)*(35+12*i), dead:false, hitT:0,
+        animal:['토끼','너구리','강아지'][i%3], color:['#fff0e8','#9c6b4e','#d79a5d'][i%3]
+      });
+    }
+    spawnIncomingBall(); updateLabels();
+  }
+
+  function spawnIncomingBall(){
+    state.phase='defense'; state.aim=null; state.throwPower=0;
+    const tx = W*(0.22 + Math.random()*0.56);
+    const ty = H*(0.42 + Math.random()*0.25);
+    state.catchZone={x:tx,y:ty,r:44,t:0};
+    state.ball={kind:'incoming', sx:W/2, sy:H*0.18, x:W/2, y:H*0.18, tx, ty, t:0, dur:1.55, r:16};
+    hint.textContent='공의 도착 지점을 길게 눌러 잡으세요. 늦거나 빗나가면 패배입니다.';
+    updateLabels();
+  }
+
+  function enterAttack(){
+    state.phase='attack'; state.ball={kind:'held', x:W/2, y:H*0.78, r:17}; state.aim=null; state.throwPower=0;
+    hint.textContent='상대의 예상 위치를 누르세요. 길게 누를수록 강하게 던집니다.';
+    updateLabels(); showToast('잡았다! 반격하세요');
+  }
+
+  function throwBall(x,y,power){
+    const startX=W/2, startY=H*0.78;
+    const dx=x-startX, dy=y-startY;
+    const len=Math.hypot(dx,dy)||1;
+    const speed = 520 + power*520;
+    state.ball={kind:'thrown', x:startX,y:startY,vx:dx/len*speed,vy:dy/len*speed,r:16,life:0};
+    hint.textContent='명중하면 상대가 탈락합니다. 빗나가면 다시 수비합니다.';
+  }
+
+  function endGame(win){
+    state.mode='result'; hideScreens(); resultScreen.classList.remove('hidden');
+    if(win){
+      const reward = 50 + Math.floor(Math.random()*20); state.coins += reward; state.winCoins=reward;
+      document.getElementById('resultTitle').textContent='승리!';
+      document.getElementById('resultText').textContent=`상대를 모두 탈락시켰습니다. 코인 ${reward}개 획득.`;
+    }else{
+      document.getElementById('resultTitle').textContent='패배';
+      document.getElementById('resultText').textContent='공에 맞았습니다. 도착 지점을 더 정확히 잡아야 합니다.';
+    }
+    updateLabels(); renderShop();
+  }
+
+  function renderShop(){
+    const grid=document.getElementById('shopGrid'); grid.innerHTML='';
+    const add=(type,key,item)=>{
+      const div=document.createElement('div'); div.className='card '+(item.owned?'owned':'');
+      const selected = (type==='skin' && state.handSkin===key) || (type==='acc' && state.accessory===key);
+      div.innerHTML=`<div style="font-size:22px">${type==='skin'?'🐾':'✨'}</div><div>${item.name}</div><div style="font-size:13px;margin-top:4px">${item.owned?(selected?'장착 중':'보유'):`${item.price} 코인`}</div>`;
+      div.onclick=()=>{
+        if(!item.owned){
+          if(state.coins<item.price){ showToast('코인이 부족합니다'); return; }
+          state.coins-=item.price; item.owned=true; showToast('구매 완료');
+        }
+        if(type==='skin') state.handSkin=key; else state.accessory=key;
+        updateLabels(); renderShop();
+      };
+      grid.appendChild(div);
+    };
+    Object.entries(skins).forEach(([k,v])=>add('skin',k,v));
+    Object.entries(accessories).forEach(([k,v])=>add('acc',k,v));
+  }
+
+  function pointerPos(ev){ const r=canvas.getBoundingClientRect(); const t=ev.touches?ev.touches[0]:ev; return {x:t.clientX-r.left,y:t.clientY-r.top}; }
+  canvas.addEventListener('pointerdown', e=>{
+    if(state.mode!=='play') return; const p=pointerPos(e); state.pointer={x:p.x,y:p.y,down:true}; state.pressStart=performance.now(); state.aim=p;
+  });
+  canvas.addEventListener('pointermove', e=>{ if(state.pointer){ const p=pointerPos(e); state.pointer.x=p.x; state.pointer.y=p.y; state.aim=p; }});
+  canvas.addEventListener('pointerup', e=>{
+    if(state.mode!=='play') return;
+    const p=state.pointer || pointerPos(e); const held=(performance.now()-state.pressStart)/1000;
+    if(state.phase==='defense'){
+      const z=state.catchZone;
+      const close = Math.hypot(p.x-z.x,p.y-z.y) < z.r+14;
+      const timing = state.ball && state.ball.t > 0.54 && state.ball.t < 1.08;
+      const longEnough = held > 0.22;
+      if(close && timing && longEnough) enterAttack();
+      else endGame(false);
+    }else if(state.phase==='attack' && state.ball && state.ball.kind==='held'){
+      throwBall(p.x,p.y,Math.min(1,held/1.0));
+    }
+    state.pointer=null;
+  });
+
+  document.getElementById('startBtn').onclick=startGame;
+  document.getElementById('retryBtn').onclick=startGame;
+  document.getElementById('homeBtn').onclick=()=>{hideScreens();titleScreen.classList.remove('hidden');state.mode='title'};
+  document.getElementById('shopBtn').onclick=()=>{hideScreens();renderShop();shopScreen.classList.remove('hidden')};
+  document.getElementById('backBtn').onclick=()=>{hideScreens();titleScreen.classList.remove('hidden')};
+
+  function roundRect(x,y,w,h,r,fill,stroke){
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}
+  }
+  function drawPaw(x,y,scale=1){
+    const s=skins[state.handSkin]; const a=accessories[state.accessory];
+    ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+    ctx.fillStyle=s.color; ctx.strokeStyle='rgba(70,45,35,.28)'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.ellipse(0,22,46,58,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    for(const [tx,ty,tr] of [[-28,-30,15],[-9,-43,14],[12,-43,14],[31,-29,15]]){ ctx.beginPath(); ctx.arc(tx,ty,tr,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
+    ctx.fillStyle=s.pad;
+    ctx.beginPath(); ctx.ellipse(0,22,25,30,0,0,Math.PI*2); ctx.fill();
+    for(const [tx,ty,tr] of [[-28,-30,7],[-9,-43,6],[12,-43,6],[31,-29,7]]){ ctx.beginPath(); ctx.arc(tx,ty,tr,0,Math.PI*2); ctx.fill(); }
+    ctx.fillStyle=a.color; roundRect(-54,65,108,22,9,a.color,null);
+    if(state.accessory==='starPatch'){ctx.fillStyle='#fff'; ctx.font='24px sans-serif'; ctx.fillText('★',-13,10)}
+    if(state.accessory==='flower'){ctx.fillStyle='#fff'; ctx.font='22px sans-serif'; ctx.fillText('✿',-12,81)}
+    ctx.restore();
+  }
+  function drawBall(x,y,r){
+    ctx.save(); ctx.translate(x,y); ctx.fillStyle='#ff7d54'; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#a94632'; ctx.lineWidth=3; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(-5,-4,r*0.55,0.2,2.6); ctx.stroke(); ctx.restore();
+  }
+  function drawEnemy(e){
+    if(e.dead && e.hitT>0.45) return;
+    ctx.save(); ctx.globalAlpha=e.dead?Math.max(0,1-e.hitT*2):1; ctx.translate(e.x,e.y-(e.dead?e.hitT*90:0));
+    ctx.fillStyle=e.color; ctx.strokeStyle='#5c3b30'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(0,0,e.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-13,-18,9,0,Math.PI*2); ctx.arc(13,-18,9,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#2b201d'; ctx.beginPath(); ctx.arc(-7,-3,2.5,0,Math.PI*2); ctx.arc(7,-3,2.5,0,Math.PI*2); ctx.fill();
+    ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText(e.dead?'탈락!':e.animal,0,36); ctx.restore();
+  }
+  function drawDefense(){
+    ctx.fillStyle='#d99b5c'; roundRect(W*0.08,H*0.18,W*0.84,H*0.54,22,'#f2bd76','#94613e');
+    ctx.strokeStyle='rgba(255,255,255,.65)'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(W*0.5,H*0.18);ctx.lineTo(W*0.5,H*0.72);ctx.stroke();
+    const z=state.catchZone;
+    if(z){ ctx.save(); ctx.globalAlpha=.7+Math.sin(performance.now()/100)*.15; ctx.strokeStyle='#fff'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(z.x,z.y,z.r,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='rgba(255,255,255,.14)';ctx.fill(); ctx.restore(); }
+    drawPaw(W*0.36,H*0.86,0.95); drawPaw(W*0.64,H*0.86,0.95);
+    if(state.ball) drawBall(state.ball.x,state.ball.y,state.ball.r);
+  }
+  function drawAttack(){
+    ctx.fillStyle='#d99b5c'; roundRect(W*0.07,H*0.15,W*0.86,H*0.68,22,'#f2bd76','#94613e');
+    ctx.strokeStyle='rgba(255,255,255,.72)'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(W*0.5,H*0.15);ctx.lineTo(W*0.5,H*0.83);ctx.stroke();
+    state.enemies.forEach(drawEnemy);
+    drawPaw(W*0.5,H*0.9,0.72);
+    if(state.ball) drawBall(state.ball.x,state.ball.y,state.ball.r);
+    if(state.aim && state.ball && state.ball.kind==='held'){
+      const held=state.pointer?Math.min(1,(performance.now()-state.pressStart)/1000):0;
+      ctx.strokeStyle='rgba(70,45,35,.65)'; ctx.lineWidth=3; ctx.setLineDash([7,6]);
+      ctx.beginPath(); ctx.moveTo(W/2,H*.78); ctx.lineTo(state.aim.x,state.aim.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='rgba(255,125,84,.25)'; ctx.beginPath(); ctx.arc(state.aim.x,state.aim.y,18+held*28,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function update(dt){
+    if(state.mode!=='play') return;
+    if(state.phase==='defense' && state.ball && state.ball.kind==='incoming'){
+      const b=state.ball; b.t += dt/b.dur; const u=Math.min(1,b.t); const ease=u*u*(3-2*u);
+      b.x=b.sx+(b.tx-b.sx)*ease; b.y=b.sy+(b.ty-b.sy)*ease; b.r=13+u*22;
+      if(u>=1) endGame(false);
+    }
+    if(state.phase==='attack'){
+      const bounds={l:W*.12,r:W*.88,t:H*.22,b:H*.62};
+      state.enemies.forEach(e=>{
+        if(e.dead){e.hitT+=dt; return;}
+        e.x+=e.vx*dt; e.y+=e.vy*dt;
+        if(e.x<bounds.l||e.x>bounds.r){e.vx*=-1;e.x=Math.max(bounds.l,Math.min(bounds.r,e.x));}
+        if(e.y<bounds.t||e.y>bounds.b){e.vy*=-1;e.y=Math.max(bounds.t,Math.min(bounds.b,e.y));}
+      });
+      if(state.ball && state.ball.kind==='thrown'){
+        const b=state.ball; b.life+=dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+        let hit = false;
+        for(const e of state.enemies){
+          if(!e.dead && Math.hypot(b.x-e.x,b.y-e.y)<b.r+e.r){ e.dead=true; e.hitT=0; state.ball=null; hit=true; showToast('명중!'); break; }
+        }
+        if(state.enemies.every(e=>e.dead)) endGame(true);
+        else if(hit) spawnIncomingBall();
+        else if(state.ball && (b.x<-50||b.x>W+50||b.y<-50||b.y>H+50||b.life>1.6)) spawnIncomingBall();
+      }
+    }
+    updateLabels();
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#fff6e8'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,.35)'; for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(W*(i/7),H*.1+Math.sin(i)*16,38,0,Math.PI*2);ctx.fill();}
+    if(state.mode==='play') state.phase==='defense'?drawDefense():drawAttack();
+    else { ctx.fillStyle='#f5c77f'; roundRect(W*.1,H*.2,W*.8,H*.55,24,'#f5c77f','#94613e'); drawPaw(W*.5,H*.7,1); }
+  }
+  function loop(t){ const dt=Math.min(.033,(t-state.lastTime)/1000||.016); state.lastTime=t; update(dt); draw(); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop); renderShop(); updateLabels();
+})();
+</script>
+</body>
+</html>
