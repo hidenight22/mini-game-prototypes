@@ -12,6 +12,24 @@ function ConvertTo-Title {
     return $name -replace "[-_]+", " "
 }
 
+function Get-PrototypeTitle {
+    param([System.IO.FileInfo]$File)
+
+    $fallback = ConvertTo-Title $File.Name
+    try {
+        $content = [System.IO.File]::ReadAllText($File.FullName, [System.Text.Encoding]::UTF8)
+        $match = [regex]::Match($content, "<title>\s*(.*?)\s*</title>", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Singleline)
+        if ($match.Success) {
+            $title = [System.Net.WebUtility]::HtmlDecode($match.Groups[1].Value.Trim())
+            if (-not [string]::IsNullOrWhiteSpace($title)) {
+                return $title
+            }
+        }
+    } catch {
+    }
+    return $fallback
+}
+
 $root = Split-Path -Parent $PSScriptRoot
 $prototypePath = Join-Path $root $PrototypeDir
 $outputFile = Join-Path $root $OutputPath
@@ -24,7 +42,7 @@ $games = @(Get-ChildItem -LiteralPath $prototypePath -Filter "*.html" -File |
     Sort-Object Name |
     ForEach-Object {
         [PSCustomObject]@{
-            Title = ConvertTo-Title $_.Name
+            Title = Get-PrototypeTitle $_
             Href = "./$PrototypeDir/$([System.Uri]::EscapeDataString($_.Name))"
         }
     })

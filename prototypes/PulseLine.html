@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>펄스 라인</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: #101b2d;
+      --panel-2: #14233a;
+      --line: #284461;
+      --text: #edf7ff;
+      --muted: #96a9bc;
+      --cyan: #25d9ff;
+      --lime: #8dfc7a;
+      --pink: #ff4d96;
+      --amber: #ffbd4a;
+      --danger: #ff315f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at 18% 14%, #173351 0, #09111f 38%, #050812 100%);
+      color: var(--text);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      min-height: min(780px, calc(100vh - 28px));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 12px;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 0;
+      aspect-ratio: 3 / 2;
+      border: 1px solid rgba(84, 151, 190, 0.42);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0b1626;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .hud {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(20, 35, 58, 0.96), rgba(13, 24, 40, 0.96));
+      border: 1px solid rgba(88, 145, 181, 0.35);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 31px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 58px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: rgba(8, 17, 29, 0.62);
+      border: 1px solid rgba(80, 132, 164, 0.32);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      font-size: 22px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-top: 8px;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--pink), var(--amber), var(--lime));
+      transition: width 130ms linear;
+    }
+
+    .controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid rgba(108, 179, 218, 0.42);
+      border-radius: 8px;
+      background: #132b45;
+      color: var(--text);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--cyan);
+      background: #173859;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #1378a1, #1aa4c7);
+      border-color: #30d7ff;
+    }
+
+    button.warn {
+      background: linear-gradient(135deg, #8e2a4a, #c53962);
+      border-color: #ff6b96;
+    }
+
+    button:disabled {
+      opacity: 0.42;
+      cursor: default;
+      transform: none;
+    }
+
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .chip {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      border: 1px dashed rgba(150, 190, 220, 0.34);
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .notice {
+      min-height: 104px;
+      line-height: 1.5;
+      color: #c7d9e9;
+      font-size: 14px;
+    }
+
+    .notice b {
+      color: white;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(5, 8, 18, 0.72);
+      backdrop-filter: blur(3px);
+    }
+
+    .modal {
+      width: min(590px, 100%);
+      background: rgba(16, 27, 45, 0.98);
+      border: 1px solid rgba(85, 159, 202, 0.5);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: clamp(32px, 6vw, 54px);
+      letter-spacing: 0;
+    }
+
+    .modal p {
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+
+    .modal .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 0;
+        place-items: stretch;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+        min-height: 100vh;
+        gap: 0;
+      }
+
+      .stage {
+        min-height: 0;
+        aspect-ratio: 3 / 2;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
+      canvas {
+        min-height: 0;
+        aspect-ratio: 3 / 2;
+      }
+
+      .hud {
+        padding: 10px;
+      }
+
+      .title-card {
+        display: none;
+      }
+
+      .controls {
+        order: -1;
+      }
+
+      .notice {
+        order: 0;
+      }
+
+      .stats {
+        order: 1;
+      }
+
+      .monetization-card {
+        order: 2;
+      }
+
+      .card {
+        padding: 10px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .stat {
+        min-height: 48px;
+        padding: 7px;
+      }
+
+      .stat strong {
+        font-size: 18px;
+      }
+
+      button {
+        min-height: 40px;
+      }
+
+      .notice {
+        min-height: 0;
+        max-height: 82px;
+        overflow: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage" aria-label="게임 화면">
+      <canvas id="game" width="960" height="640"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="modal">
+          <h2>펄스 라인</h2>
+          <p>손가락으로 전력선을 그려 펄스를 코어까지 보내세요. 회전 장벽, 게이트, 붕괴 구간을 피해 한 번에 연결하는 네온 회로 퍼즐입니다.</p>
+          <p>선을 그은 뒤 발사하면 펄스가 선을 따라 이동합니다. 짧고 안전한 선일수록 높은 등급을 받습니다.</p>
+          <div class="actions">
+            <button id="startBtn" class="primary">시작하기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="hud">
+      <section class="card title-card">
+        <h1>펄스 라인</h1>
+        <p>그어서 연결하고, 박동처럼 이동하는 펄스를 안전하게 배달하세요.</p>
+      </section>
+
+      <section class="card stats">
+        <div class="stat"><span>스테이지</span><strong id="stageText">-</strong></div>
+        <div class="stat"><span>남은 시간</span><strong id="timeText">-</strong></div>
+        <div class="stat"><span>점수</span><strong id="scoreText">0</strong></div>
+        <div class="stat"><span>등급</span><strong id="gradeText">-</strong></div>
+      </section>
+
+      <section class="card controls">
+        <button id="launchBtn" class="primary">펄스 발사</button>
+        <div class="button-row">
+          <button id="undoBtn">마지막 선 지우기</button>
+          <button id="clearBtn">전체 초기화</button>
+        </div>
+        <div class="button-row">
+          <button id="hintBtn">경로 힌트</button>
+          <button id="skinBtn">테마 변경</button>
+        </div>
+        <div class="bar" aria-hidden="true"><i id="energyBar"></i></div>
+      </section>
+
+      <section class="card monetization-card">
+        <div class="chips">
+          <div class="chip">이어하기<br>보상</div>
+          <div class="chip">회로<br>스킨</div>
+          <div class="chip">스테이지<br>팩</div>
+        </div>
+      </section>
+
+      <section id="notice" class="card notice">
+        <b>대기 중</b><br>시작하면 첫 회로가 켜집니다.
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const overlay = document.getElementById("overlay");
+      const startBtn = document.getElementById("startBtn");
+      const launchBtn = document.getElementById("launchBtn");
+      const undoBtn = document.getElementById("undoBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const hintBtn = document.getElementById("hintBtn");
+      const skinBtn = document.getElementById("skinBtn");
+      const stageText = document.getElementById("stageText");
+      const timeText = document.getElementById("timeText");
+      const scoreText = document.getElementById("scoreText");
+      const gradeText = document.getElementById("gradeText");
+      const energyBar = document.getElementById("energyBar");
+      const notice = document.getElementById("notice");
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const TAU = Math.PI * 2;
+
+      const levels = [
+        {
+          name: "튜토리얼 회로",
+          time: 52,
+          start: { x: 118, y: 510 },
+          goal: { x: 810, y: 132 },
+          gates: [{ x: 405, y: 315, r: 34 }],
+          hazards: [
+            { type: "rotor", x: 550, y: 250, r: 72, speed: 1.2, angle: 0 },
+            { type: "wall", x: 635, y: 422, w: 150, h: 22 }
+          ],
+          collapses: [{ x: 288, y: 200, r: 54, phase: 0.4 }],
+          par: 760,
+          hint: "<b>목표</b><br>시작 코어에서 게이트를 지나 도착 코어까지 선을 그으세요. 붉은 장벽과 보라색 붕괴장을 피하면 됩니다."
+        },
+        {
+          name: "이중 게이트",
+          time: 48,
+          start: { x: 112, y: 120 },
+          goal: { x: 835, y: 520 },
+          gates: [{ x: 330, y: 212, r: 31 }, { x: 602, y: 424, r: 31 }],
+          hazards: [
+            { type: "rotor", x: 510, y: 315, r: 92, speed: -1.5, angle: 0.8 },
+            { type: "wall", x: 180, y: 350, w: 180, h: 20 },
+            { type: "wall", x: 700, y: 240, w: 170, h: 20 }
+          ],
+          collapses: [{ x: 454, y: 142, r: 48, phase: 1.2 }, { x: 730, y: 390, r: 50, phase: 2.6 }],
+          par: 890,
+          hint: "<b>새 장치</b><br>두 게이트를 모두 지나야 도착 코어가 열립니다. 짧게 꺾는 선보다 안전한 우회가 높은 등급을 만듭니다."
+        },
+        {
+          name: "교차 전력망",
+          time: 46,
+          start: { x: 130, y: 330 },
+          goal: { x: 825, y: 330 },
+          gates: [{ x: 290, y: 150, r: 28 }, { x: 485, y: 495, r: 28 }, { x: 670, y: 170, r: 28 }],
+          hazards: [
+            { type: "rotor", x: 372, y: 312, r: 78, speed: 1.65, angle: 2.1 },
+            { type: "rotor", x: 650, y: 355, r: 82, speed: -1.3, angle: 0.6 },
+            { type: "wall", x: 498, y: 250, w: 180, h: 18 }
+          ],
+          collapses: [{ x: 214, y: 500, r: 48, phase: 2 }, { x: 775, y: 495, r: 45, phase: 0.6 }],
+          par: 980,
+          hint: "<b>고급 주문</b><br>세 게이트를 모두 통과해야 합니다. 선이 길수록 점수가 줄어들지만 안전을 우선하세요."
+        },
+        {
+          name: "과부하 코어",
+          time: 42,
+          start: { x: 115, y: 540 },
+          goal: { x: 835, y: 92 },
+          gates: [{ x: 278, y: 438, r: 27 }, { x: 485, y: 286, r: 27 }, { x: 710, y: 190, r: 27 }],
+          hazards: [
+            { type: "rotor", x: 250, y: 210, r: 70, speed: -1.8, angle: 0.3 },
+            { type: "rotor", x: 560, y: 420, r: 95, speed: 1.55, angle: 1.8 },
+            { type: "wall", x: 386, y: 132, w: 190, h: 18 },
+            { type: "wall", x: 690, y: 330, w: 175, h: 18 }
+          ],
+          collapses: [{ x: 380, y: 520, r: 46, phase: 0.2 }, { x: 675, y: 505, r: 56, phase: 1.5 }],
+          par: 1040,
+          hint: "<b>마지막 검증</b><br>게이트 순서는 자유지만 모두 켜야 합니다. 붕괴장은 깜빡일 때 반경이 커집니다."
+        }
+      ];
+
+      const state = {
+        mode: "intro",
+        level: 0,
+        score: 0,
+        totalStars: 0,
+        timeLeft: 0,
+        drawing: false,
+        path: [],
+        particles: [],
+        pulse: null,
+        visited: new Set(),
+        shake: 0,
+        lastTick: 0,
+        message: ""
+      };
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function level() {
+        return levels[state.level];
+      }
+
+      function distance(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function distToSegment(p, a, b) {
+        const vx = b.x - a.x;
+        const vy = b.y - a.y;
+        const wx = p.x - a.x;
+        const wy = p.y - a.y;
+        const len = vx * vx + vy * vy || 1;
+        const t = clamp((wx * vx + wy * vy) / len, 0, 1);
+        const x = a.x + vx * t;
+        const y = a.y + vy * t;
+        return Math.hypot(p.x - x, p.y - y);
+      }
+
+      function pathLength(path) {
+        let total = 0;
+        for (let i = 1; i < path.length; i++) total += distance(path[i - 1], path[i]);
+        return total;
+      }
+
+      function screenToCanvas(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * (canvas.width / rect.width),
+          y: (event.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      function setNotice(html) {
+        notice.innerHTML = html;
+      }
+
+      function resetLevel(index) {
+        state.level = index;
+        state.mode = "drawing";
+        state.timeLeft = level().time;
+        state.path = [];
+        state.pulse = null;
+        state.visited = new Set();
+        state.particles = [];
+        state.shake = 0;
+        overlay.classList.add("hidden");
+        setNotice(level().hint);
+        updateHud();
+      }
+
+      function startGame() {
+        state.score = 0;
+        state.totalStars = 0;
+        resetLevel(0);
+      }
+
+      function showModal(title, body, buttons) {
+        overlay.classList.remove("hidden");
+        overlay.innerHTML = "";
+        const modal = document.createElement("div");
+        modal.className = "modal";
+        const h2 = document.createElement("h2");
+        h2.textContent = title;
+        const p = document.createElement("p");
+        p.innerHTML = body;
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        buttons.forEach((button) => actions.appendChild(button));
+        modal.append(h2, p, actions);
+        overlay.appendChild(modal);
+      }
+
+      function makeButton(label, className, fn) {
+        const button = document.createElement("button");
+        button.textContent = label;
+        button.className = className || "";
+        button.addEventListener("click", fn);
+        return button;
+      }
+
+      function updateHud() {
+        const len = pathLength(state.path);
+        const energy = state.mode === "running" && state.pulse ? state.pulse.progress * 100 : clamp((len / Math.max(level().par, 1)) * 100, 0, 100);
+        stageText.textContent = state.mode === "intro" ? "-" : `${state.level + 1} / ${levels.length}`;
+        timeText.textContent = state.mode === "drawing" || state.mode === "running" ? Math.ceil(state.timeLeft).toString() : "-";
+        scoreText.textContent = state.score.toString();
+        gradeText.textContent = state.totalStars ? "★".repeat(Math.min(3, state.totalStars)) : "-";
+        energyBar.style.width = `${energy}%`;
+        launchBtn.disabled = !(state.mode === "drawing" && state.path.length > 3);
+        undoBtn.disabled = !(state.mode === "drawing" && state.path.length > 1);
+        clearBtn.disabled = !(state.mode === "drawing" && state.path.length > 0);
+      }
+
+      function nearestStart(pos) {
+        return distance(pos, level().start) <= 68;
+      }
+
+      function addPoint(pos) {
+        const last = state.path[state.path.length - 1];
+        if (!last || distance(pos, last) > 9) {
+          state.path.push({
+            x: clamp(pos.x, 24, W - 24),
+            y: clamp(pos.y, 24, H - 24)
+          });
+        }
+      }
+
+      function launch() {
+        if (state.mode !== "drawing" || state.path.length < 4) return;
+        if (distance(state.path[0], level().start) > 72) {
+          fail("시작 코어에서 선을 시작해야 합니다.");
+          return;
+        }
+        state.mode = "running";
+        state.pulse = { seg: 0, t: 0, speed: 260, progress: 0 };
+        state.visited = new Set();
+        burst(state.path[0].x, state.path[0].y, "#25d9ff", 18);
+        setNotice("<b>전송 중</b><br>펄스가 선을 따라 이동합니다. 게이트를 모두 켜고 도착 코어에 닿아야 합니다.");
+      }
+
+      function fail(reason) {
+        state.mode = "result";
+        state.shake = 14;
+        burst(currentPulsePos().x, currentPulsePos().y, "#ff315f", 32);
+        showModal("전송 실패", `${reason}<br>이어하기 보상 또는 즉시 재도전을 선택하는 흐름으로 확장할 수 있습니다.`, [
+          makeButton("다시 그리기", "primary", () => resetLevel(state.level)),
+          makeButton("처음부터", "", startGame)
+        ]);
+        setNotice(`<b>실패 원인</b><br>${reason}`);
+        updateHud();
+      }
+
+      function succeed() {
+        state.mode = "result";
+        const len = pathLength(state.path);
+        const timeBonus = Math.round(state.timeLeft * 8);
+        const lengthScore = Math.max(60, Math.round((level().par / Math.max(len, 1)) * 170));
+        const stars = len <= level().par * 0.85 ? 3 : len <= level().par * 1.08 ? 2 : 1;
+        const gained = lengthScore + timeBonus + stars * 60;
+        state.score += gained;
+        state.totalStars += stars;
+        burst(level().goal.x, level().goal.y, "#8dfc7a", 46);
+        const next = state.level + 1;
+        const body = `${level().name} 클리어. 등급 ${"★".repeat(stars)}, 획득 점수 ${gained}점입니다.`;
+        if (next < levels.length) {
+          showModal("회로 연결", body, [
+            makeButton("다음 스테이지", "primary", () => resetLevel(next)),
+            makeButton("현재 스테이지 재도전", "", () => resetLevel(state.level))
+          ]);
+        } else {
+          showModal("프로토타입 완료", `${body}<br>총점 ${state.score}점, 누적 별 ${state.totalStars}개입니다.`, [
+            makeButton("다시 시작", "primary", startGame)
+          ]);
+        }
+        setNotice("<b>성공</b><br>스테이지 팩, 스킨, 힌트형 광고로 확장 가능한 기본 루프가 확인됩니다.");
+        updateHud();
+      }
+
+      function currentPulsePos() {
+        if (!state.pulse || state.path.length === 0) return level().start;
+        const a = state.path[state.pulse.seg] || state.path[0];
+        const b = state.path[state.pulse.seg + 1] || a;
+        return {
+          x: a.x + (b.x - a.x) * state.pulse.t,
+          y: a.y + (b.y - a.y) * state.pulse.t
+        };
+      }
+
+      function updatePulse(dt) {
+        if (state.mode !== "running" || !state.pulse) return;
+        let remain = state.pulse.speed * dt;
+        while (remain > 0 && state.pulse.seg < state.path.length - 1) {
+          const a = state.path[state.pulse.seg];
+          const b = state.path[state.pulse.seg + 1];
+          const segLen = Math.max(distance(a, b), 1);
+          const segRemain = segLen * (1 - state.pulse.t);
+          if (remain < segRemain) {
+            state.pulse.t += remain / segLen;
+            remain = 0;
+          } else {
+            remain -= segRemain;
+            state.pulse.seg += 1;
+            state.pulse.t = 0;
+          }
+        }
+
+        const pos = currentPulsePos();
+        const total = Math.max(pathLength(state.path), 1);
+        let travelled = 0;
+        for (let i = 1; i <= state.pulse.seg; i++) travelled += distance(state.path[i - 1], state.path[i]);
+        if (state.pulse.seg < state.path.length - 1) travelled += distance(state.path[state.pulse.seg], pos);
+        state.pulse.progress = clamp(travelled / total, 0, 1);
+
+        for (let i = 0; i < level().gates.length; i++) {
+          if (!state.visited.has(i) && distance(pos, level().gates[i]) < level().gates[i].r + 16) {
+            state.visited.add(i);
+            burst(level().gates[i].x, level().gates[i].y, "#ffbd4a", 18);
+          }
+        }
+
+        if (hitHazard(pos)) {
+          fail("펄스가 위험 장치에 닿았습니다.");
+          return;
+        }
+
+        if (state.pulse.seg >= state.path.length - 1 && state.pulse.t >= 0) {
+          if (state.visited.size < level().gates.length) {
+            fail("켜지지 않은 게이트가 남았습니다.");
+          } else if (distance(pos, level().goal) > 70) {
+            fail("도착 코어에 닿기 전에 전송이 끝났습니다.");
+          } else {
+            succeed();
+          }
+        }
+      }
+
+      function hitHazard(pos) {
+        const now = performance.now() / 1000;
+        for (const h of level().hazards) {
+          if (h.type === "wall") {
+            if (Math.abs(pos.x - h.x) < h.w / 2 + 12 && Math.abs(pos.y - h.y) < h.h / 2 + 12) return true;
+          } else if (h.type === "rotor") {
+            const a = h.angle + now * h.speed;
+            const armA = { x: h.x + Math.cos(a) * h.r, y: h.y + Math.sin(a) * h.r };
+            const armB = { x: h.x - Math.cos(a) * h.r, y: h.y - Math.sin(a) * h.r };
+            if (distToSegment(pos, armA, armB) < 15) return true;
+          }
+        }
+        for (const c of level().collapses) {
+          const pulse = (Math.sin(now * 2.4 + c.phase) + 1) * 0.5;
+          if (distance(pos, c) < c.r * (0.62 + pulse * 0.5)) return true;
+        }
+        return false;
+      }
+
+      function burst(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * TAU;
+          const s = 50 + Math.random() * 160;
+          state.particles.push({
+            x, y,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s,
+            life: 0.45 + Math.random() * 0.45,
+            max: 0.9,
+            color
+          });
+        }
+      }
+
+      function updateParticles(dt) {
+        for (const p of state.particles) {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vx *= 0.94;
+          p.vy *= 0.94;
+          p.life -= dt;
+        }
+        state.particles = state.particles.filter(p => p.life > 0);
+      }
+
+      function drawBackground() {
+        const g = ctx.createLinearGradient(0, 0, W, H);
+        g.addColorStop(0, "#0d2238");
+        g.addColorStop(0.55, "#091425");
+        g.addColorStop(1, "#050812");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(65, 158, 210, 0.13)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 40) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, H);
+          ctx.stroke();
+        }
+        for (let y = 0; y < H; y += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawNode(node, label, color) {
+        ctx.save();
+        const glow = ctx.createRadialGradient(node.x, node.y, 4, node.x, node.y, 62);
+        glow.addColorStop(0, color);
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 64, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#07111f";
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 24, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = "800 13px Malgun Gothic, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, node.x, node.y + 50);
+        ctx.restore();
+      }
+
+      function drawHazards() {
+        const now = performance.now() / 1000;
+        ctx.save();
+        for (const c of level().collapses) {
+          const pulse = (Math.sin(now * 2.4 + c.phase) + 1) * 0.5;
+          const r = c.r * (0.62 + pulse * 0.5);
+          ctx.fillStyle = `rgba(131, 67, 255, ${0.12 + pulse * 0.18})`;
+          ctx.strokeStyle = `rgba(185, 132, 255, ${0.45 + pulse * 0.28})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, r, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        for (const h of level().hazards) {
+          if (h.type === "wall") {
+            ctx.fillStyle = "rgba(255, 49, 95, 0.18)";
+            ctx.strokeStyle = "rgba(255, 77, 150, 0.95)";
+            ctx.lineWidth = 3;
+            roundRect(h.x - h.w / 2, h.y - h.h / 2, h.w, h.h, 8, true, true);
+          } else if (h.type === "rotor") {
+            const a = h.angle + now * h.speed;
+            ctx.strokeStyle = "rgba(255, 77, 150, 0.96)";
+            ctx.lineWidth = 12;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(h.x + Math.cos(a) * h.r, h.y + Math.sin(a) * h.r);
+            ctx.lineTo(h.x - Math.cos(a) * h.r, h.y - Math.sin(a) * h.r);
+            ctx.stroke();
+            ctx.fillStyle = "#120815";
+            ctx.strokeStyle = "#ff7aad";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(h.x, h.y, 18, 0, TAU);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawGates() {
+        ctx.save();
+        level().gates.forEach((g, i) => {
+          const on = state.visited.has(i);
+          ctx.strokeStyle = on ? "#8dfc7a" : "#ffbd4a";
+          ctx.fillStyle = on ? "rgba(141, 252, 122, 0.14)" : "rgba(255, 189, 74, 0.10)";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(g.x, g.y, g.r, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = on ? "#8dfc7a" : "#ffbd4a";
+          ctx.font = "900 15px Malgun Gothic, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(String(i + 1), g.x, g.y + 5);
+        });
+        ctx.restore();
+      }
+
+      function drawPath() {
+        if (state.path.length < 2) return;
+        ctx.save();
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.shadowColor = "#25d9ff";
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = "rgba(37, 217, 255, 0.78)";
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(state.path[0].x, state.path[0].y);
+        for (let i = 1; i < state.path.length; i++) ctx.lineTo(state.path[i].x, state.path[i].y);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(237, 247, 255, 0.86)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawPulse() {
+        if (!state.pulse) return;
+        const pos = currentPulsePos();
+        ctx.save();
+        ctx.shadowColor = "#8dfc7a";
+        ctx.shadowBlur = 26;
+        ctx.fillStyle = "#d8ffd4";
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 13 + Math.sin(performance.now() / 80) * 3, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        ctx.save();
+        for (const p of state.particles) {
+          ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3.5, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawLabels() {
+        ctx.save();
+        ctx.fillStyle = "rgba(10, 19, 34, 0.78)";
+        ctx.strokeStyle = "rgba(88, 145, 181, 0.35)";
+        ctx.lineWidth = 1;
+        roundRect(22, 20, 330, 78, 8, true, true);
+        ctx.fillStyle = "#edf7ff";
+        ctx.font = "900 20px Malgun Gothic, sans-serif";
+        ctx.fillText(level().name, 42, 52);
+        ctx.fillStyle = "#96a9bc";
+        ctx.font = "14px Malgun Gothic, sans-serif";
+        ctx.fillText("드래그로 선을 그리고 펄스를 발사하세요.", 42, 78);
+        ctx.restore();
+      }
+
+      function roundRect(x, y, w, h, r, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      function draw() {
+        ctx.save();
+        if (state.shake > 0) {
+          ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
+        }
+        drawBackground();
+        if (state.mode !== "intro") {
+          drawHazards();
+          drawGates();
+          drawNode(level().start, "START", "#25d9ff");
+          drawNode(level().goal, "CORE", "#8dfc7a");
+          drawPath();
+          drawPulse();
+          drawParticles();
+          drawLabels();
+        } else {
+          drawNode({ x: 175, y: 480 }, "START", "#25d9ff");
+          drawNode({ x: 760, y: 160 }, "CORE", "#8dfc7a");
+          ctx.strokeStyle = "rgba(37, 217, 255, 0.55)";
+          ctx.lineWidth = 8;
+          ctx.setLineDash([20, 18]);
+          ctx.beginPath();
+          ctx.moveTo(175, 480);
+          ctx.bezierCurveTo(310, 270, 565, 430, 760, 160);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (state.mode !== "drawing") return;
+        const pos = screenToCanvas(event);
+        state.drawing = true;
+        if (state.path.length === 0 && !nearestStart(pos)) {
+          state.path = [level().start];
+          addPoint(pos);
+        } else if (state.path.length === 0) {
+          state.path = [level().start];
+        } else {
+          addPoint(pos);
+        }
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!state.drawing || state.mode !== "drawing") return;
+        addPoint(screenToCanvas(event));
+      });
+
+      function endDraw(event) {
+        state.drawing = false;
+        if (event && canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      }
+
+      canvas.addEventListener("pointerup", endDraw);
+      canvas.addEventListener("pointercancel", endDraw);
+
+      startBtn.addEventListener("click", startGame);
+      launchBtn.addEventListener("click", launch);
+      clearBtn.addEventListener("click", () => {
+        if (state.mode === "drawing") state.path = [];
+      });
+      undoBtn.addEventListener("click", () => {
+        if (state.mode === "drawing") state.path.splice(Math.max(1, state.path.length - 8));
+      });
+      hintBtn.addEventListener("click", () => {
+        setNotice("<b>경로 힌트</b><br>출시 버전에서는 보상 조건을 만족하면 안전 경로 일부를 보여줄 수 있습니다.");
+      });
+      skinBtn.addEventListener("click", () => {
+        setNotice("<b>테마 변경</b><br>출시 버전에서는 회로선 색상, 펄스 모양, 보드 테마를 보상이나 상품으로 제공할 수 있습니다.");
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && state.mode === "drawing") {
+          event.preventDefault();
+          launch();
+        } else if (event.key === "Escape" && state.mode === "drawing") {
+          event.preventDefault();
+          state.path = [];
+        }
+      });
+
+      function tick(now) {
+        const dt = Math.min((now - state.lastTick) / 1000 || 0, 0.08);
+        state.lastTick = now;
+        if (state.mode === "drawing" || state.mode === "running") {
+          state.timeLeft -= dt;
+          if (state.timeLeft <= 0) {
+            state.timeLeft = 0;
+            fail("제한 시간이 끝났습니다.");
+          }
+        }
+        updatePulse(dt);
+        updateParticles(dt);
+        state.shake = Math.max(0, state.shake - dt * 42);
+        draw();
+        updateHud();
+        requestAnimationFrame(tick);
+      }
+
+      updateHud();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
