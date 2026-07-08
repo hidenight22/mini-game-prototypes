@@ -1,3 +1,48 @@
+param(
+    [string]$PrototypeDir = "prototypes",
+    [string]$OutputPath = "index.html"
+)
+
+$ErrorActionPreference = "Stop"
+
+function ConvertTo-Title {
+    param([string]$FileName)
+
+    $name = [System.IO.Path]::GetFileNameWithoutExtension($FileName)
+    return $name -replace "[-_]+", " "
+}
+
+$root = Split-Path -Parent $PSScriptRoot
+$prototypePath = Join-Path $root $PrototypeDir
+$outputFile = Join-Path $root $OutputPath
+
+if (-not (Test-Path -LiteralPath $prototypePath)) {
+    New-Item -ItemType Directory -Path $prototypePath | Out-Null
+}
+
+$games = @(Get-ChildItem -LiteralPath $prototypePath -Filter "*.html" -File |
+    Sort-Object Name |
+    ForEach-Object {
+        [PSCustomObject]@{
+            Title = ConvertTo-Title $_.Name
+            Href = "./$PrototypeDir/$([System.Uri]::EscapeDataString($_.Name))"
+        }
+    })
+
+$items = if ($games.Count -gt 0) {
+    ($games | ForEach-Object {
+        @"
+    <a class="game-link" href="$($_.Href)">
+      <span>$([System.Net.WebUtility]::HtmlEncode($_.Title))</span>
+      <span>&#50676;&#44592;</span>
+    </a>
+"@
+    }) -join "`n"
+} else {
+    '    <p class="empty">&#50500;&#51649; &#46321;&#47197;&#46108; &#54532;&#47196;&#53664;&#53440;&#51077;&#51060; &#50630;&#49845;&#45768;&#45796;.</p>'
+}
+
+$html = @"
 <!doctype html>
 <html lang="ko">
 <head>
@@ -97,12 +142,13 @@
     <h1>&#48120;&#45768;&#44172;&#51076; &#54532;&#47196;&#53664;&#53440;&#51077;</h1>
     <p>&#47553;&#53356; &#53580;&#49828;&#53944;&#50857; &#44277;&#44060; &#54532;&#47196;&#53664;&#53440;&#51077; &#47785;&#47197;&#51077;&#45768;&#45796;.</p>
     <div class="list">
-    <a class="game-link" href="./prototypes/%EA%B7%B8%EB%A6%BC%EC%9E%90%EB%A5%BC%20%EB%B0%B0%EB%8B%AC%ED%95%A9%EB%8B%88%EB%8B%A4.html">
-      <span>그림자를 배달합니다</span>
-      <span>&#50676;&#44592;</span>
-    </a>
+$items
     </div>
     <small>&#49352; HTML &#54028;&#51068;&#51008; <code>prototypes/</code> &#54260;&#45908;&#50640; &#45347;&#44256; <code>tools/update-index.ps1</code>&#51012; &#49892;&#54665;&#54616;&#47732; &#47785;&#47197;&#50640; &#48152;&#50689;&#46121;&#45768;&#45796;.</small>
   </main>
 </body>
 </html>
+"@
+
+[System.IO.File]::WriteAllText($outputFile, $html, [System.Text.UTF8Encoding]::new($false))
+Write-Host "Updated $OutputPath with $($games.Count) prototype(s)."
