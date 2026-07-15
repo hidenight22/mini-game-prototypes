@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#031624">
+  <meta name="description" content="소나로 어둠 속 항로를 읽고 심해 표본을 회수하는 한 손 탐색 액션">
+  <title>심해의 메아리</title>
+  <style>
+    :root{color-scheme:dark;--deep:#031624;--panel:#082b3a;--cyan:#63f4e8;--mint:#adfff3;--coral:#ff6f7d;--gold:#ffd76a;--ink:#effffc;--muted:#8eb9bd}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020b12;color:var(--ink);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+    button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+    button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    #app{position:relative;width:min(100vw,560px);height:100vh;height:100dvh;margin:auto;overflow:hidden;background:radial-gradient(circle at 50% -10%,#0c5363 0,#062b3d 32%,#031421 68%,#020a11 100%);box-shadow:0 0 80px #000}
+    .screen{position:absolute;inset:0;display:none}
+    .screen.active{display:flex}
+    #startScreen{padding:max(22px,env(safe-area-inset-top)) 22px max(22px,env(safe-area-inset-bottom));flex-direction:column;justify-content:space-between;background:radial-gradient(circle at 50% 30%,rgba(40,174,180,.24),transparent 34%),linear-gradient(180deg,rgba(3,22,36,.15),rgba(2,10,17,.95))}
+    .bubbles{position:absolute;inset:0;pointer-events:none;opacity:.55;background-image:radial-gradient(circle,#9ffff0 0 1px,transparent 2px),radial-gradient(circle,#70d9df 0 2px,transparent 3px);background-size:73px 79px,121px 133px;background-position:12px 23px,44px 70px;animation:drift 14s linear infinite}
+    @keyframes drift{to{background-position:12px -135px,44px -196px}}
+    .top-row,.hud-row,.result-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .icon-btn{width:44px;height:44px;border:1px solid rgba(158,255,245,.28);border-radius:50%;background:rgba(4,30,43,.72);font-weight:900}
+    .brand{position:relative;text-align:center;margin-top:1vh}
+    .submarine-mark{width:108px;height:108px;margin:0 auto 12px;display:grid;place-items:center;border:1px solid rgba(99,244,232,.32);border-radius:50%;background:radial-gradient(circle,rgba(99,244,232,.17),transparent 66%);box-shadow:0 0 36px rgba(99,244,232,.18)}
+    .submarine-mark span{font-size:58px;filter:drop-shadow(0 6px 12px #000)}
+    h1{margin:0;font-size:clamp(34px,8vw,48px);letter-spacing:-2px;text-shadow:0 4px 20px #000}
+    .eyebrow{margin:8px 0 0;color:var(--cyan);font-size:12px;letter-spacing:4px;font-weight:900}
+    .tagline{margin:9px auto 0;color:#b8d9db;font-size:14px;line-height:1.5}
+    .mission-panel{position:relative;padding:15px;border:1px solid rgba(137,230,226,.22);border-radius:22px;background:rgba(3,25,38,.82);backdrop-filter:blur(10px)}
+    .progress-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px;color:#cbe7e7;font-size:12px;font-weight:800}
+    .progress-head strong{color:var(--gold);font-size:16px}
+    .stage-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+    .stage-btn{min-height:58px;padding:7px 2px;border:1px solid rgba(145,218,216,.18);border-radius:14px;background:#082b3a;color:#7aa1a5;font-size:11px;font-weight:900}
+    .stage-btn span{display:block;font-size:18px;margin-bottom:4px;color:#b9dddd}
+    .stage-btn.selected{color:#06242e;background:var(--cyan);box-shadow:0 0 22px rgba(99,244,232,.22)}
+    .stage-btn.locked{opacity:.43}
+    .abyss-card{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px;padding:11px 13px;border-radius:15px;background:linear-gradient(110deg,rgba(77,38,110,.6),rgba(5,29,49,.88));border:1px solid rgba(196,136,255,.28)}
+    .abyss-card strong{display:block;font-size:13px}.abyss-card small{color:#bda9d4;font-size:11px}
+    .abyss-card button{padding:9px 12px;border-radius:10px;background:#7a4fa5;font-size:12px;font-weight:900}
+    .abyss-card button:disabled{opacity:.45}
+    .primary{width:100%;min-height:58px;border-radius:18px;background:linear-gradient(135deg,var(--cyan),#55c6ff);color:#03222c;font-size:18px;font-weight:1000;box-shadow:0 14px 30px rgba(44,207,210,.2)}
+    .primary:active,.sonar-btn:active{transform:scale(.97)}
+    .tip{text-align:center;margin:9px 0 0;color:#779da1;font-size:11px}
+    #gameScreen{flex-direction:column;background:#020d16}
+    .game-top{position:absolute;z-index:5;top:0;left:0;right:0;padding:max(10px,env(safe-area-inset-top)) 12px 8px;background:linear-gradient(#03131fe8,#03131fa8,transparent);pointer-events:none}
+    .game-top button{pointer-events:auto}
+    .hud-chip{min-width:75px;padding:7px 10px;border:1px solid rgba(133,230,225,.2);border-radius:13px;background:rgba(3,25,38,.72);text-align:center;font-size:11px;color:#99babc}
+    .hud-chip strong{display:block;margin-top:2px;color:#effffc;font-size:17px}
+    .oxygen-wrap{height:7px;margin-top:8px;border-radius:99px;background:#152f38;overflow:hidden}
+    #oxygenBar{height:100%;width:100%;background:linear-gradient(90deg,var(--coral),var(--gold),var(--cyan));transition:width .15s}
+    #ocean{display:block;width:100%;height:100%;touch-action:none;background:#03121d}
+    .game-bottom{position:absolute;z-index:6;left:0;right:0;bottom:0;padding:12px 15px max(14px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(2,11,18,.88) 24%,#020b12 58%)}
+    .sonar-meter{height:7px;margin:0 58px 9px;border-radius:99px;background:#12303a;overflow:hidden}
+    #sonarBar{height:100%;width:100%;background:linear-gradient(90deg,#2d8b9b,var(--cyan));box-shadow:0 0 12px var(--cyan)}
+    .control-row{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:12px}
+    .small-control{height:52px;border:1px solid rgba(154,240,234,.24);border-radius:16px;background:#092a38;font-size:19px;font-weight:900}
+    .small-control.used{opacity:.36}
+    .sonar-btn{position:relative;height:66px;border-radius:22px;background:radial-gradient(circle,var(--mint),var(--cyan) 45%,#24a7bd);color:#03202a;font-size:19px;font-weight:1000;letter-spacing:2px;box-shadow:0 0 28px rgba(99,244,232,.3)}
+    .sonar-btn:disabled{filter:saturate(.25);opacity:.6}
+    .sonar-cost{display:block;font-size:10px;letter-spacing:0;opacity:.68}
+    #toast{position:absolute;z-index:20;left:50%;top:24%;max-width:82%;padding:10px 14px;border:1px solid rgba(151,255,244,.28);border-radius:99px;background:rgba(2,15,24,.88);font-size:13px;font-weight:900;text-align:center;transform:translate(-50%,-10px);opacity:0;pointer-events:none;transition:.24s}
+    #toast.show{transform:translate(-50%,0);opacity:1}
+    .overlay{position:absolute;z-index:30;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,8,13,.78);backdrop-filter:blur(8px)}
+    .overlay.open{display:flex}
+    .card{width:min(100%,420px);padding:24px;border:1px solid rgba(149,239,233,.24);border-radius:26px;background:linear-gradient(160deg,#0a3443,#041b29);box-shadow:0 30px 80px #000;text-align:center}
+    .result-icon{font-size:60px}.card h2{margin:7px 0 5px;font-size:28px}.card p{margin:0;color:#a9cbcd;line-height:1.55;font-size:14px}
+    .stars{margin:13px 0;color:#4f6970;font-size:34px;letter-spacing:5px}.stars .on{color:var(--gold);text-shadow:0 0 16px rgba(255,215,106,.5)}
+    .result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0}
+    .result-stats div{padding:10px 4px;border-radius:13px;background:#062532;color:#8eb8ba;font-size:10px}.result-stats strong{display:block;margin-top:3px;color:white;font-size:17px}
+    .result-actions{flex-direction:column}.secondary{width:100%;min-height:48px;border:1px solid rgba(143,225,222,.25);border-radius:15px;background:#0a3341;font-weight:900}
+    .reward{background:linear-gradient(135deg,#6f3e91,#3f6f9f);border-color:#a879cf}
+    .help-card{text-align:left}.help-card h2{margin-top:0;text-align:center}.help-list{display:grid;gap:12px;margin:18px 0}.help-item{display:grid;grid-template-columns:44px 1fr;gap:11px;align-items:center}.help-item span{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#0b3c4a;font-size:21px}.help-item strong{display:block}.help-item small{color:#96b8ba;line-height:1.4}
+    .close-help{margin-top:4px}
+    #announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    @media (max-height:700px){.submarine-mark{width:76px;height:76px}.submarine-mark span{font-size:40px}.brand{margin-top:0}h1{font-size:32px}.tagline{display:none}.stage-btn{min-height:50px}.mission-panel{padding:12px}.primary{min-height:52px}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<main id="app">
+  <section id="startScreen" class="screen active" aria-label="시작 화면">
+    <div class="bubbles"></div>
+    <div class="top-row" style="position:relative">
+      <button class="icon-btn" id="soundBtn" aria-label="소리 켜기 또는 끄기">♪</button>
+      <button class="icon-btn" id="helpBtn" aria-label="도움말 열기">?</button>
+    </div>
+    <div class="brand">
+      <div class="submarine-mark"><span>◉</span></div>
+      <h1>심해의 메아리</h1>
+      <p class="eyebrow">ECHO DIVER</p>
+      <p class="tagline">보이지 않는 바다를 듣고, 흔적을 회수해 귀환하세요.</p>
+    </div>
+    <div class="mission-panel">
+      <div class="progress-head"><span>탐사 기록</span><strong id="totalStars">★ 0</strong></div>
+      <div class="stage-strip" id="stageStrip"></div>
+      <div class="abyss-card">
+        <div><strong>심연 모드</strong><small id="abyssNote">별 6개로 잠금 해제</small></div>
+        <button id="abyssBtn" disabled>잠김</button>
+      </div>
+    </div>
+    <div style="position:relative">
+      <button class="primary" id="startBtn">다이브 시작</button>
+      <p class="tip">화면을 끌어 이동 · 소나로만 목표가 보입니다</p>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="screen" aria-label="게임 화면">
+    <canvas id="ocean" width="1000" height="1400" aria-label="심해 탐사 구역"></canvas>
+    <div class="game-top">
+      <div class="hud-row">
+        <button class="icon-btn" id="homeBtn" aria-label="탐사 중단">×</button>
+        <div class="hud-chip">다이브<strong id="stageLabel">1</strong></div>
+        <div class="hud-chip">표본<strong id="targetLabel">0 / 3</strong></div>
+        <div class="hud-chip">점수<strong id="scoreLabel">0</strong></div>
+        <button class="icon-btn" id="gameSoundBtn" aria-label="소리 켜기 또는 끄기">♪</button>
+      </div>
+      <div class="oxygen-wrap" aria-label="산소"><div id="oxygenBar"></div></div>
+    </div>
+    <div id="toast"></div>
+    <div class="game-bottom">
+      <div class="sonar-meter"><div id="sonarBar"></div></div>
+      <div class="control-row">
+        <button class="small-control" id="boostBtn" aria-label="보상형 증폭 소나">⚡</button>
+        <button class="sonar-btn" id="sonarBtn">소나 발사<span class="sonar-cost">에너지 34</span></button>
+        <button class="small-control" id="gameHelpBtn" aria-label="도움말 열기">?</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="resultOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="card">
+      <div class="result-icon" id="resultIcon">◆</div>
+      <h2 id="resultTitle">탐사 완료</h2>
+      <p id="resultText"></p>
+      <div class="stars" id="resultStars">★★★</div>
+      <div class="result-stats">
+        <div>점수<strong id="resultScore">0</strong></div>
+        <div>소나<strong id="resultSonar">0</strong></div>
+        <div>충돌<strong id="resultHits">0</strong></div>
+      </div>
+      <div class="result-actions">
+        <button class="primary" id="nextBtn">다음 다이브</button>
+        <button class="secondary reward" id="continueBtn">보상형 긴급 산소</button>
+        <button class="secondary" id="retryBtn">다시 탐사</button>
+        <button class="secondary" id="resultHomeBtn">탐사 기지로</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="card help-card">
+      <h2 id="helpTitle">잠수 안내</h2>
+      <div class="help-list">
+        <div class="help-item"><span>☝</span><div><strong>끌어서 이동</strong><small>바다를 누르고 끌면 잠수정이 그 방향으로 전진합니다.</small></div></div>
+        <div class="help-item"><span>◎</span><div><strong>소나로 발견</strong><small>파동이 닿은 표본과 위험만 잠시 보입니다. 포식자도 소리를 듣습니다.</small></div></div>
+        <div class="help-item"><span>⌂</span><div><strong>회수 후 귀환</strong><small>빛나는 표본 3개를 모은 뒤 나타나는 상단 출구로 돌아오세요.</small></div></div>
+      </div>
+      <button class="primary close-help" id="closeHelpBtn">다이브 준비 완료</button>
+    </div>
+  </div>
+  <div id="announcement" aria-live="polite"></div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var W=1000,H=1400,SONAR_COST=34;
+  var stages=[
+    {name:'첫 울림',time:52,current:0,hunters:0,decoys:0,walls:[]},
+    {name:'흐르는 숲',time:55,current:24,hunters:0,decoys:0,walls:[]},
+    {name:'사냥꾼의 귀',time:57,current:8,hunters:1,decoys:0,walls:[]},
+    {name:'거짓 메아리',time:60,current:13,hunters:1,decoys:3,walls:[]},
+    {name:'갈라진 해구',time:64,current:18,hunters:2,decoys:2,walls:[{x:190,y:540,w:420,h:80},{x:520,y:900,w:320,h:80}]},
+    {name:'무저갱',time:67,current:28,hunters:3,decoys:4,walls:[{x:120,y:470,w:360,h:72},{x:530,y:700,w:350,h:72},{x:210,y:980,w:430,h:72}],abyss:true}
+  ];
+  var ui={};
+  ['startScreen','gameScreen','stageStrip','totalStars','abyssBtn','abyssNote','startBtn','soundBtn','helpBtn','ocean','homeBtn','gameSoundBtn','stageLabel','targetLabel','scoreLabel','oxygenBar','sonarBar','boostBtn','sonarBtn','gameHelpBtn','toast','resultOverlay','resultIcon','resultTitle','resultText','resultStars','resultScore','resultSonar','resultHits','nextBtn','continueBtn','retryBtn','resultHomeBtn','helpOverlay','closeHelpBtn','announcement'].forEach(function(id){ui[id]=document.getElementById(id);});
+  var ctx=ui.ocean.getContext('2d');
+  var view={scale:1,ox:0,oy:0,dpr:1};
+  var save=loadSave();
+  var selected=Math.min(save.unlocked,4);
+  var state=null,last=performance.now(),audio=null,muted=save.muted;
+  var particles=Array.from({length:70},function(){return{x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,s:4+Math.random()*12,a:.08+Math.random()*.18};});
+
+  function loadSave(){
+    try{var v=JSON.parse(localStorage.getItem('echoDiverSave')||'{}');return{stars:Array.isArray(v.stars)?v.stars.slice(0,5):[0,0,0,0,0],unlocked:Math.max(0,Math.min(4,v.unlocked||0)),best:v.best||0,muted:!!v.muted};}
+    catch(e){return{stars:[0,0,0,0,0],unlocked:0,best:0,muted:false};}
+  }
+  function persist(){try{save.muted=muted;localStorage.setItem('echoDiverSave',JSON.stringify(save));}catch(e){}}
+  function totalStars(){return save.stars.reduce(function(a,b){return a+(b||0);},0);}
+  function renderStart(){
+    ui.stageStrip.innerHTML='';
+    stages.slice(0,5).forEach(function(s,i){
+      var b=document.createElement('button');b.className='stage-btn'+(i===selected?' selected':'')+(i>save.unlocked?' locked':'');b.disabled=i>save.unlocked;
+      b.innerHTML='<span>'+(i>save.unlocked?'⌁':(save.stars[i]?'★'.repeat(save.stars[i]):'·'))+'</span>'+(i+1);
+      b.setAttribute('aria-label',(i+1)+'단계 '+s.name+(i>save.unlocked?' 잠김':''));
+      b.addEventListener('click',function(){selected=i;renderStart();});ui.stageStrip.appendChild(b);
+    });
+    var t=totalStars();ui.totalStars.textContent='★ '+t;
+    var open=t>=6;ui.abyssBtn.disabled=!open;ui.abyssBtn.textContent=open?'도전':'잠김';ui.abyssNote.textContent=open?'변칙 심연 · 최고 '+save.best:'별 '+Math.max(0,6-t)+'개 더 필요';
+    ui.startBtn.textContent=(selected+1)+' 다이브 · '+stages[selected].name;
+    ui.soundBtn.textContent=muted?'♩':'♪';ui.gameSoundBtn.textContent=muted?'♩':'♪';
+  }
+  function showScreen(name){ui.startScreen.classList.toggle('active',name==='start');ui.gameScreen.classList.toggle('active',name==='game');}
+  function buildRun(index){
+    var cfg=stages[index],targets=[],decoys=[],hunters=[];
+    var spots=[[220,390],[770,380],[180,820],[790,820],[340,1110],[680,1130]];
+    shuffle(spots);
+    for(var i=0;i<3;i++)targets.push({x:spots[i][0]+rand(-45,45),y:spots[i][1]+rand(-35,35),r:26,reveal:0,collected:false,kind:i});
+    for(i=0;i<cfg.decoys;i++){var p=spots[(i+3)%spots.length];decoys.push({x:p[0]+rand(-55,55),y:p[1]+rand(-40,40),r:22,reveal:0});}
+    for(i=0;i<cfg.hunters;i++)hunters.push({x:i%2?850:150,y:540+i*260,vx:0,vy:0,reveal:0,alert:0,phase:Math.random()*6.2});
+    return{index:index,cfg:cfg,status:'playing',player:{x:500,y:190,vx:0,vy:0,angle:Math.PI/2},pointer:{active:false,x:500,y:300},targets:targets,decoys:decoys,hunters:hunters,pulses:[],oxygen:100,energy:100,score:0,sonars:0,hits:0,collected:0,elapsed:0,invuln:0,boostUsed:false,continueUsed:false,exit:{x:500,y:145,reveal:0},keys:{},toastTimer:0};
+  }
+  function startRun(index){
+    state=buildRun(index);selected=Math.min(index,4);showScreen('game');ui.resultOverlay.classList.remove('open');ui.helpOverlay.classList.remove('open');ui.boostBtn.classList.remove('used');ui.boostBtn.disabled=false;ui.boostBtn.textContent='⚡';resize();toast('소나로 표본 3개를 찾으세요');announce(stages[index].name+' 탐사를 시작합니다');tone(220,.08);last=performance.now();
+  }
+  function resize(){
+    var r=ui.ocean.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),s=Math.min(r.width/W,r.height/H);
+    view={scale:s,ox:(r.width-W*s)/2,oy:(r.height-H*s)/2,dpr:d};
+    ui.ocean.width=Math.max(1,Math.floor(r.width*d));ui.ocean.height=Math.max(1,Math.floor(r.height*d));
+    ctx.setTransform(d*s,0,0,d*s,d*view.ox,d*view.oy);
+  }
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y);}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function circleHitsRect(p,r,o){var x=clamp(p.x,o.x,o.x+o.w),y=clamp(p.y,o.y,o.y+o.h),dx=p.x-x,dy=p.y-y;return dx*dx+dy*dy<r*r;}
+  function validMove(p,n){if(n.x<32||n.x>W-32||n.y<115||n.y>H-120)return false;return !state.cfg.walls.some(function(w){return circleHitsRect(n,26,w);});}
+  function update(dt){
+    if(!state||state.status!=='playing')return;
+    state.elapsed+=dt;state.invuln=Math.max(0,state.invuln-dt);state.oxygen-=dt*(100/state.cfg.time);state.energy=Math.min(100,state.energy+dt*9.5);
+    var p=state.player,dx=0,dy=0;
+    if(state.pointer.active){dx=state.pointer.x-p.x;dy=state.pointer.y-p.y;}
+    if(state.keys.ArrowLeft||state.keys.a)dx-=180;if(state.keys.ArrowRight||state.keys.d)dx+=180;if(state.keys.ArrowUp||state.keys.w)dy-=180;if(state.keys.ArrowDown||state.keys.s)dy+=180;
+    var len=Math.sqrt(dx*dx+dy*dy),speed=220;if(len>20){p.vx+=(dx/len*speed-p.vx)*Math.min(1,dt*5);p.vy+=(dy/len*speed-p.vy)*Math.min(1,dt*5);p.angle=Math.atan2(p.vy,p.vx);}else{p.vx*=Math.max(0,1-dt*4);p.vy*=Math.max(0,1-dt*4);}
+    var current=state.cfg.current*Math.sin(state.elapsed*.65+p.y*.005);var np={x:p.x+(p.vx+current)*dt,y:p.y+p.vy*dt};
+    if(validMove(p,np)){p.x=np.x;p.y=np.y;}else{p.vx*=-.25;p.vy*=-.25;}
+    state.pulses.forEach(function(q){q.r+=q.speed*dt;q.life-=dt;[state.targets,state.decoys,state.hunters].forEach(function(group){group.forEach(function(e){if(Math.abs(dist(q,e)-q.r)<38)e.reveal=Math.max(e.reveal,q.power);});});});
+    state.pulses=state.pulses.filter(function(q){return q.life>0;});
+    state.targets.forEach(function(t){t.reveal=Math.max(0,t.reveal-dt);if(!t.collected&&t.reveal>0&&dist(p,t)<48){t.collected=true;state.collected++;state.score+=500+Math.round(state.oxygen*3);burst(t.x,t.y);tone(520,.12);vibrate([25,20,35]);toast('표본 회수 '+state.collected+' / 3');if(state.collected===3){state.exit.reveal=999;toast('귀환 신호가 열렸습니다');tone(740,.18);}}});
+    state.decoys.forEach(function(t){t.reveal=Math.max(0,t.reveal-dt);});
+    state.hunters.forEach(function(h){
+      h.reveal=Math.max(0,h.reveal-dt);h.alert=Math.max(0,h.alert-dt);h.phase+=dt;
+      var hx,hy,hs;if(h.alert>0){hx=p.x-h.x;hy=p.y-h.y;hs=105;}else{hx=Math.cos(h.phase)*100;hy=Math.sin(h.phase*.8)*80;hs=42;}
+      var hl=Math.max(1,Math.sqrt(hx*hx+hy*hy));h.vx+=(hx/hl*hs-h.vx)*Math.min(1,dt*2);h.vy+=(hy/hl*hs-h.vy)*Math.min(1,dt*2);h.x=clamp(h.x+h.vx*dt,45,W-45);h.y=clamp(h.y+h.vy*dt,150,H-150);
+      if(dist(p,h)<55&&state.invuln<=0){state.hits++;state.oxygen-=13;state.invuln=1.25;p.vx*=-2;p.vy*=-2;h.alert=0;tone(110,.2);vibrate([80,40,80]);toast('충돌! 산소가 샜습니다');}
+    });
+    if(state.collected===3&&dist(p,state.exit)<66)finish(true,'모든 표본과 함께 귀환했습니다.');
+    if(state.oxygen<=0)finish(false,'산소가 모두 소진되었습니다.');
+    updateHud();
+  }
+  function useSonar(power){
+    if(!state||state.status!=='playing'||state.energy<SONAR_COST)return;
+    state.energy-=SONAR_COST;state.sonars++;state.pulses.push({x:state.player.x,y:state.player.y,r:15,speed:power?650:490,life:power?1.7:1.55,power:power?3.4:2.25,strong:!!power});
+    state.hunters.forEach(function(h){h.alert=power?7:4.5;h.reveal=Math.max(h.reveal,.45);});
+    tone(power?440:310,.13);vibrate(20);toast(state.hunters.length?'파동을 들은 포식자가 다가옵니다':'에코를 읽는 중…');
+  }
+  function useBoost(){if(!state||state.status!=='playing'||state.boostUsed)return;state.boostUsed=true;state.energy=100;ui.boostBtn.classList.add('used');ui.boostBtn.disabled=true;ui.boostBtn.textContent='✓';useSonar(true);toast('보상형 샘플 · 증폭 소나 발사');}
+  function calcStars(){if(!state||state.status!=='won')return 0;var n=1;if(state.oxygen>=32)n++;if(state.hits===0&&state.sonars<=7)n++;return n;}
+  function finish(ok,message){
+    if(!state||state.status!=='playing')return;state.status=ok?'won':'lost';state.oxygen=Math.max(0,state.oxygen);
+    var stars=calcStars();if(ok){state.score+=Math.round(state.oxygen*20)+Math.max(0,900-state.sonars*70);if(state.index<5){save.stars[state.index]=Math.max(save.stars[state.index]||0,stars);save.unlocked=Math.max(save.unlocked,Math.min(4,state.index+1));}else save.best=Math.max(save.best,state.score);persist();tone(660,.14);setTimeout(function(){tone(880,.22);},130);}else tone(95,.35);
+    ui.resultIcon.textContent=ok?'◆':'◌';ui.resultTitle.textContent=ok?'탐사 완료':'탐사 중단';ui.resultText.textContent=message;ui.resultStars.style.display=ok?'block':'none';ui.resultStars.innerHTML=[0,1,2].map(function(i){return'<span class="'+(i<stars?'on':'')+'">★</span>';}).join('');
+    ui.resultScore.textContent=state.score;ui.resultSonar.textContent=state.sonars;ui.resultHits.textContent=state.hits;
+    ui.nextBtn.style.display=ok?'block':'none';ui.nextBtn.textContent=state.index<4?'다음 다이브':(totalStars()>=6?'심연 모드 도전':'탐사 기지로');
+    ui.continueBtn.style.display=(!ok&&!state.continueUsed)?'block':'none';ui.retryBtn.style.display='block';ui.resultOverlay.classList.add('open');announce(ok?'탐사 성공, 별 '+stars+'개':'탐사 실패');
+  }
+  function emergencyContinue(){if(!state||state.status!=='lost'||state.continueUsed)return;state.continueUsed=true;state.status='playing';state.oxygen=38;state.invuln=2;ui.resultOverlay.classList.remove('open');updateHud();toast('보상형 샘플 · 긴급 산소 38%');tone(500,.18);}
+  function updateHud(){if(!state)return;ui.stageLabel.textContent=state.index===5?'∞':(state.index+1);ui.targetLabel.textContent=state.collected+' / 3';ui.scoreLabel.textContent=state.score;ui.oxygenBar.style.width=clamp(state.oxygen,0,100)+'%';ui.sonarBar.style.width=state.energy+'%';ui.sonarBtn.disabled=state.energy<SONAR_COST;}
+  function draw(){
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,ui.ocean.width,ui.ocean.height);ctx.fillStyle='#020d16';ctx.fillRect(0,0,ui.ocean.width,ui.ocean.height);ctx.restore();
+    var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#073347');g.addColorStop(.45,'#031b2a');g.addColorStop(1,'#020b14');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    var now=performance.now()/1000;particles.forEach(function(b){b.y-=b.s*.016;if(b.y<-10)b.y=H+10;ctx.globalAlpha=b.a;ctx.fillStyle='#b4fff5';ctx.beginPath();ctx.arc(b.x+Math.sin(now+b.y)*5,b.y,b.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+    if(!state)return;
+    drawTerrain(now);drawPulses();drawEntities(now);drawPlayer(now);drawCompass();
+  }
+  function drawTerrain(now){
+    ctx.fillStyle='#062432';ctx.beginPath();ctx.moveTo(0,H);for(var x=0;x<=W;x+=55)ctx.lineTo(x,H-90-Math.sin(x*.022)*24-Math.sin(x*.006)*30);ctx.lineTo(W,H);ctx.fill();
+    state.cfg.walls.forEach(function(w){var gr=ctx.createLinearGradient(w.x,w.y,w.x,w.y+w.h);gr.addColorStop(0,'#163e45');gr.addColorStop(1,'#071e29');roundRect(w.x,w.y,w.w,w.h,28);ctx.fillStyle=gr;ctx.fill();ctx.strokeStyle='#2a6767';ctx.lineWidth=4;ctx.stroke();});
+    if(state.cfg.current){ctx.save();ctx.globalAlpha=.16;ctx.strokeStyle='#6be8e1';ctx.lineWidth=3;for(var y=360;y<H-150;y+=190){ctx.beginPath();for(var x=0;x<=W;x+=40){var yy=y+Math.sin(x*.012+now)*14;if(x===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);}ctx.stroke();}ctx.restore();}
+  }
+  function drawPulses(){state.pulses.forEach(function(q){ctx.save();ctx.globalAlpha=Math.max(0,q.life/1.55)*.9;ctx.strokeStyle=q.strong?'#fff1a8':'#63f4e8';ctx.lineWidth=q.strong?13:8;ctx.shadowBlur=24;ctx.shadowColor=ctx.strokeStyle;ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);ctx.stroke();ctx.restore();});}
+  function drawEntities(now){
+    state.targets.forEach(function(t){if(t.collected)return;var a=clamp(t.reveal,0,1);if(a<=.01)return;ctx.save();ctx.globalAlpha=a;ctx.translate(t.x,t.y);ctx.rotate(now*.35+t.kind);ctx.fillStyle='#ffd76a';ctx.shadowBlur=25;ctx.shadowColor='#ffe8a0';diamond(0,0,23);ctx.fill();ctx.strokeStyle='#fff5c9';ctx.lineWidth=4;ctx.stroke();ctx.restore();});
+    state.decoys.forEach(function(t){var a=clamp(t.reveal,0,.8);if(a<=.01)return;ctx.save();ctx.globalAlpha=a;ctx.strokeStyle='#70b2b7';ctx.lineWidth=5;ctx.setLineDash([9,9]);ctx.beginPath();ctx.arc(t.x,t.y,t.r+Math.sin(now*4)*5,0,Math.PI*2);ctx.stroke();ctx.restore();});
+    state.hunters.forEach(function(h){var a=clamp(h.reveal+(h.alert>0?.12:0),0,1);if(a<=.01)return;ctx.save();ctx.globalAlpha=a;ctx.translate(h.x,h.y);ctx.rotate(Math.atan2(h.vy,h.vx));ctx.fillStyle=h.alert>0?'#ff6f7d':'#3a7782';ctx.shadowBlur=h.alert>0?25:5;ctx.shadowColor='#ff6f7d';ctx.beginPath();ctx.moveTo(34,0);ctx.quadraticCurveTo(-2,-28,-34,-18);ctx.lineTo(-20,0);ctx.lineTo(-34,18);ctx.quadraticCurveTo(-2,28,34,0);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(12,-6,4,0,Math.PI*2);ctx.fill();ctx.restore();});
+    if(state.collected===3){ctx.save();ctx.translate(state.exit.x,state.exit.y);ctx.globalAlpha=.75+.25*Math.sin(now*6);ctx.strokeStyle='#63f4e8';ctx.lineWidth=8;ctx.shadowBlur=28;ctx.shadowColor='#63f4e8';ctx.beginPath();ctx.arc(0,0,46+Math.sin(now*4)*8,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#effffc';ctx.font='900 24px system-ui';ctx.textAlign='center';ctx.fillText('귀환',0,8);ctx.restore();}
+  }
+  function drawPlayer(now){var p=state.player;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);if(state.invuln>0)ctx.globalAlpha=.35+.35*Math.sin(now*20);ctx.shadowBlur=24;ctx.shadowColor='#63f4e8';ctx.fillStyle='#71e9df';ctx.beginPath();ctx.ellipse(0,0,34,23,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e7fff9';ctx.beginPath();ctx.arc(10,-5,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#277d8d';ctx.fillRect(-40,-6,18,12);ctx.beginPath();ctx.moveTo(-25,-10);ctx.lineTo(-42,-26);ctx.lineTo(-36,-2);ctx.fill();ctx.restore();}
+  function drawCompass(){if(state.collected>=3)return;var hidden=state.targets.filter(function(t){return!t.collected;});if(!hidden.length)return;var nearest=hidden.sort(function(a,b){return dist(state.player,a)-dist(state.player,b);})[0],ang=Math.atan2(nearest.y-state.player.y,nearest.x-state.player.x);ctx.save();ctx.translate(W-70,180);ctx.rotate(ang);ctx.globalAlpha=.55;ctx.fillStyle='#ffd76a';ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-14,-10);ctx.lineTo(-8,0);ctx.lineTo(-14,10);ctx.closePath();ctx.fill();ctx.restore();}
+  function diamond(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();}
+  function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+  function burst(x,y){for(var i=0;i<8;i++){state.pulses.push({x:x,y:y,r:i*5,speed:170+i*18,life:.45+i*.025,power:.3,strong:true});}}
+  function point(e){var r=ui.ocean.getBoundingClientRect();return{x:clamp((e.clientX-r.left-view.ox)/view.scale,0,W),y:clamp((e.clientY-r.top-view.oy)/view.scale,0,H)};}
+  function toast(msg){ui.toast.textContent=msg;ui.toast.classList.add('show');if(state){clearTimeout(state.toastTimer);state.toastTimer=setTimeout(function(){ui.toast.classList.remove('show');},1700);}}
+  function announce(msg){ui.announcement.textContent=msg;}
+  function vibrate(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern);}catch(e){}}
+  function ensureAudio(){if(muted)return null;try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio;}catch(e){return null;}}
+  function tone(freq,dur){var a=ensureAudio();if(!a)return;var o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(.08,a.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur+.02);}
+  function toggleSound(){muted=!muted;persist();renderStart();if(!muted)tone(420,.08);}
+  function openHelp(){ui.helpOverlay.classList.add('open');}
+  function closeHelp(){ui.helpOverlay.classList.remove('open');}
+  function goHome(){if(state)state.status='paused';ui.resultOverlay.classList.remove('open');showScreen('start');renderStart();}
+
+  ui.startBtn.addEventListener('click',function(){startRun(selected);});
+  ui.abyssBtn.addEventListener('click',function(){if(totalStars()>=6)startRun(5);});
+  ui.soundBtn.addEventListener('click',toggleSound);ui.gameSoundBtn.addEventListener('click',toggleSound);
+  ui.helpBtn.addEventListener('click',openHelp);ui.gameHelpBtn.addEventListener('click',openHelp);ui.closeHelpBtn.addEventListener('click',closeHelp);
+  ui.homeBtn.addEventListener('click',goHome);ui.resultHomeBtn.addEventListener('click',goHome);
+  ui.sonarBtn.addEventListener('click',function(){useSonar(false);});ui.boostBtn.addEventListener('click',useBoost);ui.continueBtn.addEventListener('click',emergencyContinue);
+  ui.retryBtn.addEventListener('click',function(){startRun(state.index);});
+  ui.nextBtn.addEventListener('click',function(){if(state.index<4)startRun(state.index+1);else if(totalStars()>=6)startRun(5);else goHome();});
+  ui.ocean.addEventListener('pointerdown',function(e){if(!state)return;ui.ocean.setPointerCapture(e.pointerId);state.pointer.active=true;Object.assign(state.pointer,point(e));});
+  ui.ocean.addEventListener('pointermove',function(e){if(state&&state.pointer.active)Object.assign(state.pointer,point(e));});
+  function endPointer(){if(state)state.pointer.active=false;}ui.ocean.addEventListener('pointerup',endPointer);ui.ocean.addEventListener('pointercancel',endPointer);
+  window.addEventListener('keydown',function(e){if(!state)return;state.keys[e.key]=true;if(e.key===' ')useSonar(false);});window.addEventListener('keyup',function(e){if(state)state.keys[e.key]=false;});
+  window.addEventListener('resize',resize);document.addEventListener('visibilitychange',function(){last=performance.now();});
+  function frame(t){var dt=Math.min(.035,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(frame);}renderStart();resize();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
