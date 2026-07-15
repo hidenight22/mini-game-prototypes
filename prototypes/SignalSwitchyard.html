@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>신호 분기장</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17232d;
+      --soft: #5e6d73;
+      --paper: #f2f6f1;
+      --panel: #fbfdf8;
+      --line: #9bad9a;
+      --rail: #526371;
+      --blue: #2979c8;
+      --green: #2f9a66;
+      --amber: #d78b1f;
+      --red: #d4514b;
+      --violet: #7557bd;
+      --shadow: rgba(22, 35, 45, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(90deg, rgba(82, 99, 113, 0.10) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(82, 99, 113, 0.08) 1px, transparent 1px),
+        var(--paper);
+      background-size: 28px 28px;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .app {
+      position: relative;
+      width: min(1120px, 100%);
+      min-height: min(760px, calc(100dvh - 16px));
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(251, 253, 248, 0.94);
+      box-shadow: 0 18px 46px var(--shadow);
+      overflow: hidden;
+    }
+
+    .night {
+      --ink: #e9f1ec;
+      --soft: #a8b8b5;
+      --paper: #111a22;
+      --panel: #17232c;
+      --line: #506476;
+      --rail: #a7b7c0;
+      --shadow: rgba(0, 0, 0, 0.34);
+      background:
+        radial-gradient(circle at 20% 12%, rgba(117, 87, 189, 0.22), transparent 24%),
+        radial-gradient(circle at 86% 22%, rgba(41, 121, 200, 0.20), transparent 28%),
+        #111a22;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3.1vw, 34px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 3px;
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .icon-btn,
+    .small-btn {
+      min-width: 40px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 3px 0 rgba(82, 99, 113, 0.18);
+      font-weight: 900;
+    }
+
+    .night .icon-btn,
+    .night .small-btn {
+      background: #22303a;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .meter {
+      min-height: 54px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.76);
+      display: grid;
+      align-content: center;
+      gap: 2px;
+    }
+
+    .night .meter {
+      background: rgba(27, 42, 52, 0.84);
+    }
+
+    .label {
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .value {
+      font-size: clamp(15px, 2.6vw, 22px);
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 224px;
+      gap: 10px;
+    }
+
+    .board-wrap {
+      position: relative;
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(247, 251, 245, 0.92), rgba(220, 232, 225, 0.92)),
+        var(--panel);
+      overflow: hidden;
+    }
+
+    .night .board-wrap {
+      background:
+        linear-gradient(135deg, rgba(24, 39, 50, 0.98), rgba(14, 24, 34, 0.98)),
+        var(--panel);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 390px;
+    }
+
+    .side {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .dispatch,
+    .brief,
+    .upgrade {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      padding: 10px;
+    }
+
+    .night .dispatch,
+    .night .brief,
+    .night .upgrade {
+      background: rgba(28, 43, 55, 0.88);
+    }
+
+    .queue-title,
+    .brief h2,
+    .upgrade h2 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 1000;
+    }
+
+    .queue {
+      display: grid;
+      gap: 6px;
+    }
+
+    .queue-item {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      align-items: center;
+      gap: 7px;
+      padding: 7px;
+      border: 1px solid rgba(82, 99, 113, 0.22);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.58);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .brief p,
+    .upgrade p {
+      margin: 0;
+      color: var(--soft);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .control-deck {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .switch {
+      min-height: 76px;
+      border: 1px solid #839895;
+      border-radius: 8px;
+      background: #ffffff;
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      box-shadow: 0 4px 0 rgba(82, 99, 113, 0.18);
+      text-align: left;
+    }
+
+    .night .switch {
+      background: #20303a;
+      border-color: #596d76;
+    }
+
+    .switch:active,
+    .switch.active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(82, 99, 113, 0.18);
+    }
+
+    .switch.locked {
+      opacity: 0.56;
+    }
+
+    .lever {
+      width: 36px;
+      height: 54px;
+      border-radius: 18px;
+      border: 2px solid #536772;
+      background:
+        linear-gradient(0deg, transparent 45%, #536772 45% 55%, transparent 55%),
+        #dfe8e3;
+      position: relative;
+    }
+
+    .lever::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--amber);
+      left: 7px;
+      top: var(--knob, 5px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .switch[data-route="bottom"] .lever {
+      --knob: 31px;
+    }
+
+    .switch[data-route="straight"] .lever {
+      --knob: 18px;
+    }
+
+    .switch-title {
+      font-size: 14px;
+      font-weight: 1000;
+      line-height: 1.1;
+    }
+
+    .switch-route {
+      margin-top: 4px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .primary,
+    .secondary,
+    .reward {
+      min-height: 46px;
+      border-radius: 8px;
+      padding: 0 15px;
+      font-weight: 1000;
+      box-shadow: 0 4px 0 rgba(82, 99, 113, 0.18);
+    }
+
+    .primary {
+      background: #1f6f8b;
+      color: #fff;
+    }
+
+    .secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .reward {
+      background: #ffd36d;
+      color: #38290b;
+    }
+
+    .night .secondary {
+      background: #23323d;
+    }
+
+    .screen,
+    .modal {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      padding: 14px;
+      background: rgba(242, 246, 241, 0.90);
+    }
+
+    .night .screen,
+    .night .modal {
+      background: rgba(12, 20, 28, 0.88);
+    }
+
+    .screen.show,
+    .modal.show {
+      display: grid;
+    }
+
+    .panel {
+      width: min(680px, 100%);
+      max-height: calc(100dvh - 36px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 18px;
+      box-shadow: 0 18px 52px var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 5vw, 42px);
+      letter-spacing: 0;
+    }
+
+    .panel p {
+      margin: 0 0 14px;
+      color: var(--soft);
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .mission-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0 14px;
+    }
+
+    .mission {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.60);
+    }
+
+    .night .mission {
+      background: rgba(30, 47, 58, 0.86);
+    }
+
+    .mission strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .mission span {
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 104px;
+      transform: translateX(-50%);
+      z-index: 9;
+      min-width: min(320px, calc(100% - 22px));
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(23, 35, 45, 0.92);
+      color: #fff;
+      text-align: center;
+      font-weight: 900;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -4px);
+    }
+
+    @media (max-width: 820px) {
+      body {
+        display: block;
+        padding: 0;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr auto;
+      }
+
+      .hud {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .meter {
+        min-height: 47px;
+        padding: 6px;
+      }
+
+      .label {
+        font-size: 10px;
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(290px, 1fr) auto;
+      }
+
+      canvas {
+        min-height: 0;
+        height: 100%;
+      }
+
+      .side {
+        display: none;
+      }
+
+      .control-deck {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .switch {
+        min-height: 66px;
+      }
+
+      .mission-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .app {
+        gap: 7px;
+        padding: 7px;
+      }
+
+      .toolbar {
+        gap: 5px;
+      }
+
+      .icon-btn,
+      .small-btn {
+        min-width: 36px;
+        min-height: 36px;
+      }
+
+      .hud {
+        gap: 5px;
+      }
+
+      .meter {
+        min-height: 43px;
+      }
+
+      .value {
+        font-size: 14px;
+      }
+
+      .switch-title {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>신호 분기장</h1>
+        <div class="subtitle" id="subtitle">색상 화물을 맞는 출구로 보내세요</div>
+      </div>
+      <div class="toolbar">
+        <button class="small-btn" id="assistBtn" type="button" title="감속 지원">⚡</button>
+        <button class="small-btn" id="themeBtn" type="button" title="테마 전환">◐</button>
+        <button class="icon-btn" id="helpBtn" type="button" title="도움말">?</button>
+      </div>
+    </header>
+
+    <section class="hud" aria-label="운행 정보">
+      <div class="meter"><span class="label">근무</span><span class="value" id="levelText">1/5</span></div>
+      <div class="meter"><span class="label">점수</span><span class="value" id="scoreText">0</span></div>
+      <div class="meter"><span class="label">정확</span><span class="value" id="comboText">0</span></div>
+      <div class="meter"><span class="label">사고</span><span class="value" id="missText">0/4</span></div>
+      <div class="meter"><span class="label">지원</span><span class="value" id="assistText">1</span></div>
+    </section>
+
+    <section class="stage">
+      <div class="board-wrap">
+        <canvas id="board" width="860" height="560" aria-label="신호 분기장 게임판"></canvas>
+        <div class="toast" id="toast">정확한 분기입니다</div>
+      </div>
+
+      <aside class="side">
+        <div class="dispatch">
+          <div class="queue-title">도착 예정</div>
+          <div class="queue" id="queue"></div>
+        </div>
+        <div class="brief">
+          <h2 id="briefTitle">초기 배차</h2>
+          <p id="briefText">분기기를 탭해 위, 직진, 아래 출구를 바꿉니다.</p>
+        </div>
+        <div class="upgrade">
+          <h2>확장 샘플</h2>
+          <p id="upgradeText">3근무 이상 클리어하면 야간 테마가 실제로 잠금 해제됩니다.</p>
+        </div>
+      </aside>
+    </section>
+
+    <nav class="control-deck" id="switchDeck" aria-label="분기기 조작"></nav>
+
+    <section class="screen show" id="startScreen">
+      <div class="panel">
+        <h2>Signal Switchyard</h2>
+        <p>짧은 관제 퍼즐입니다. 다가오는 화물 색상을 보고 분기기를 미리 바꿔 목표 출구로 보내세요. 근무가 올라가면 고속 화물, 잠금 분기, 보너스 화물이 섞입니다.</p>
+        <div class="mission-grid">
+          <div class="mission"><strong>4개 이상 근무</strong><span>튜토리얼부터 급행, 잠금, 보너스까지 규칙이 확장됩니다.</span></div>
+          <div class="mission"><strong>출시형 흐름</strong><span>시작, 플레이, 실패, 결과, 다음 근무, 재시작을 포함합니다.</span></div>
+          <div class="mission"><strong>보상형 지원</strong><span>모의 관제 지원을 보면 감속권이 실제로 1회 지급됩니다.</span></div>
+          <div class="mission"><strong>잠금 해제</strong><span>3근무를 넘기면 야간 관제 테마가 열립니다.</span></div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="startBtn" type="button">근무 시작</button>
+          <button class="secondary" id="practiceBtn" type="button">연습 배차</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="resultScreen">
+      <div class="panel">
+        <h2 id="resultTitle">근무 종료</h2>
+        <p id="resultText">결과를 집계 중입니다.</p>
+        <div class="mission-grid" id="resultGrid"></div>
+        <div class="actions">
+          <button class="primary" id="nextBtn" type="button">다음 근무</button>
+          <button class="secondary" id="restartBtn" type="button">처음부터</button>
+          <button class="reward" id="rewardBtn" type="button">관제 지원 받기</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal" id="helpModal">
+      <div class="panel">
+        <h2>관제 규칙</h2>
+        <p>화물 색상은 목표 출구 색상과 같습니다. 분기기를 탭하면 위, 직진, 아래 순서로 바뀝니다. 화물이 분기점에 도착하기 전에 방향을 맞추면 점수와 콤보가 오릅니다.</p>
+        <p>잠금 표시가 있는 분기기는 다음 화물이 지나갈 때까지 조작할 수 없습니다. 급행은 더 빠르고, 별표 화물은 맞추면 추가 보상을 줍니다.</p>
+        <div class="actions">
+          <button class="primary" id="closeHelpBtn" type="button">닫기</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal" id="adModal">
+      <div class="panel">
+        <h2>관제 지원 연결</h2>
+        <p id="adText">보상형 광고 샘플입니다. 외부 광고 SDK 없이 3초 뒤 감속권 1개가 지급됩니다.</p>
+        <div class="actions">
+          <button class="secondary" id="skipAdBtn" type="button">닫기</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("board");
+      const ctx = canvas.getContext("2d");
+      const app = document.getElementById("app");
+      const startScreen = document.getElementById("startScreen");
+      const resultScreen = document.getElementById("resultScreen");
+      const helpModal = document.getElementById("helpModal");
+      const adModal = document.getElementById("adModal");
+      const switchDeck = document.getElementById("switchDeck");
+      const toast = document.getElementById("toast");
+
+      const colors = {
+        blue: "#2979c8",
+        green: "#2f9a66",
+        amber: "#d78b1f",
+        red: "#d4514b",
+        violet: "#7557bd"
+      };
+
+      const exits = [
+        { id: "top", label: "상단", color: "blue", x: 0.84, y: 0.16 },
+        { id: "straight", label: "중앙", color: "green", x: 0.91, y: 0.50 },
+        { id: "bottom", label: "하단", color: "amber", x: 0.84, y: 0.84 }
+      ];
+
+      const levels = [
+        {
+          name: "초기 배차",
+          subtitle: "기본 색상 화물 9개",
+          brief: "색상과 같은 출구로 보내면 됩니다. 분기기는 언제든 탭할 수 있습니다.",
+          cargo: 9,
+          spawn: 1.35,
+          speed: 0.25,
+          target: 6,
+          rules: {}
+        },
+        {
+          name: "급행 혼입",
+          subtitle: "빠른 화물과 일반 화물이 섞입니다",
+          brief: "번개 표시 화물은 더 빠릅니다. 도착 예정 목록을 먼저 보고 분기기를 준비하세요.",
+          cargo: 12,
+          spawn: 1.1,
+          speed: 0.3,
+          target: 8,
+          rules: { expressEvery: 4 }
+        },
+        {
+          name: "잠금 분기",
+          subtitle: "일부 분기기는 지나간 뒤에만 풀립니다",
+          brief: "자물쇠가 뜬 분기기는 다음 화물이 지나갈 때까지 조작 불가입니다.",
+          cargo: 13,
+          spawn: 1.0,
+          speed: 0.32,
+          target: 9,
+          rules: { lockEvery: 5, expressEvery: 4 },
+          unlockNight: true
+        },
+        {
+          name: "보너스 배차",
+          subtitle: "별표 화물로 고득점을 노립니다",
+          brief: "별표 화물은 맞추면 감점 회복과 추가 점수를 줍니다. 놓치면 사고 2회입니다.",
+          cargo: 14,
+          spawn: 0.92,
+          speed: 0.34,
+          target: 10,
+          rules: { expressEvery: 3, lockEvery: 5, bonusEvery: 4 }
+        },
+        {
+          name: "야간 총력전",
+          subtitle: "급행, 잠금, 보너스가 모두 등장합니다",
+          brief: "모든 규칙이 동시에 나옵니다. 감속 지원은 위기 때만 쓰는 것이 좋습니다.",
+          cargo: 16,
+          spawn: 0.82,
+          speed: 0.37,
+          target: 12,
+          rules: { expressEvery: 3, lockEvery: 4, bonusEvery: 5 }
+        }
+      ];
+
+      const state = {
+        running: false,
+        level: 0,
+        score: 0,
+        combo: 0,
+        bestCombo: 0,
+        miss: 0,
+        assists: 1,
+        delivered: 0,
+        cargoMade: 0,
+        cargo: [],
+        spawnTimer: 0,
+        slowTimer: 0,
+        nightUnlocked: false,
+        routes: ["straight", "straight", "straight", "straight"],
+        locked: [-1, -1, -1, -1],
+        practice: false,
+        lastTime: 0,
+        toastTimer: 0
+      };
+
+      const switches = [
+        { x: 0.28, y: 0.22 },
+        { x: 0.44, y: 0.41 },
+        { x: 0.58, y: 0.59 },
+        { x: 0.72, y: 0.78 }
+      ];
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value;
+      }
+
+      function levelData() {
+        return levels[state.level];
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(260, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function boardPoint(point) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: point.x * rect.width, y: point.y * rect.height };
+      }
+
+      function routeLabel(route) {
+        if (route === "top") return "위";
+        if (route === "bottom") return "아래";
+        return "직진";
+      }
+
+      function routeNext(route) {
+        return route === "top" ? "straight" : route === "straight" ? "bottom" : "top";
+      }
+
+      function targetForIndex(index) {
+        const order = ["blue", "green", "amber", "green", "blue", "amber", "violet", "red"];
+        const color = order[(index + state.level) % order.length];
+        if (color === "violet") return state.level >= 3 ? "top" : "green";
+        if (color === "red") return state.level >= 4 ? "bottom" : "amber";
+        if (color === "blue") return "top";
+        if (color === "amber") return "bottom";
+        return "straight";
+      }
+
+      function colorForTarget(target, index) {
+        if (target === "top") return (state.level >= 3 && index % 5 === 0) ? "violet" : "blue";
+        if (target === "bottom") return (state.level >= 4 && index % 4 === 0) ? "red" : "amber";
+        return "green";
+      }
+
+      function makeCargo() {
+        const data = levelData();
+        const index = state.cargoMade + 1;
+        const target = targetForIndex(index);
+        const color = colorForTarget(target, index);
+        const express = Boolean(data.rules.expressEvery && index % data.rules.expressEvery === 0);
+        const bonus = Boolean(data.rules.bonusEvery && index % data.rules.bonusEvery === 0);
+        const lock = data.rules.lockEvery && index % data.rules.lockEvery === 0 ? (index + state.level) % switches.length : -1;
+        state.cargoMade += 1;
+        return {
+          id: Date.now() + Math.random(),
+          index,
+          target,
+          color,
+          express,
+          bonus,
+          lock,
+          progress: 0,
+          speed: data.speed * (express ? 1.42 : 1),
+          switchIndex: 0,
+          path: "straight",
+          passed: {},
+          lockApplied: false
+        };
+      }
+
+      function resetRun(practice = false) {
+        state.running = true;
+        state.practice = practice;
+        state.score = practice ? 0 : state.score;
+        state.combo = 0;
+        state.bestCombo = 0;
+        state.miss = 0;
+        state.delivered = 0;
+        state.cargoMade = 0;
+        state.cargo = [];
+        state.spawnTimer = 0.2;
+        state.slowTimer = 0;
+        state.routes = ["straight", "straight", "straight", "straight"];
+        state.locked = [-1, -1, -1, -1];
+        startScreen.classList.remove("show");
+        resultScreen.classList.remove("show");
+        updateHud();
+        updateBrief();
+        renderSwitches();
+        renderQueue();
+      }
+
+      function updateHud() {
+        setText("levelText", `${state.level + 1}/${levels.length}`);
+        setText("scoreText", String(state.score));
+        setText("comboText", String(state.combo));
+        setText("missText", `${state.miss}/4`);
+        setText("assistText", String(state.assists));
+        setText("subtitle", levelData().subtitle);
+      }
+
+      function updateBrief() {
+        const data = levelData();
+        setText("briefTitle", data.name);
+        setText("briefText", data.brief);
+        setText("upgradeText", state.nightUnlocked ? "야간 관제 테마가 해제되었습니다. 우측 상단 ◐ 버튼으로 전환할 수 있습니다." : "3근무 이상 클리어하면 야간 테마가 실제로 잠금 해제됩니다.");
+      }
+
+      function renderSwitches() {
+        switchDeck.innerHTML = "";
+        state.routes.forEach((route, index) => {
+          const locked = state.locked[index] > 0;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `switch${locked ? " locked" : ""}`;
+          btn.dataset.route = route;
+          btn.disabled = locked;
+          btn.innerHTML = `
+            <span class="lever"></span>
+            <span>
+              <span class="switch-title">분기 ${index + 1}${locked ? " 잠금" : ""}</span>
+              <span class="switch-route">${routeLabel(route)} 출구</span>
+            </span>
+          `;
+          btn.addEventListener("click", () => toggleSwitch(index));
+          switchDeck.appendChild(btn);
+        });
+      }
+
+      function renderQueue() {
+        const queue = document.getElementById("queue");
+        const incoming = state.cargo.slice(0, 4);
+        queue.innerHTML = "";
+        if (!incoming.length) {
+          const empty = document.createElement("div");
+          empty.className = "queue-item";
+          empty.innerHTML = `<span class="dot" style="background:#9bad9a"></span><span>대기 중</span><span>-</span>`;
+          queue.appendChild(empty);
+          return;
+        }
+        incoming.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "queue-item";
+          row.innerHTML = `<span class="dot" style="background:${colors[item.color] || colors.green}"></span><span>${item.express ? "급행" : "일반"} ${item.bonus ? "보너스" : "화물"}</span><span>${routeLabel(item.target)}</span>`;
+          queue.appendChild(row);
+        });
+      }
+
+      function toggleSwitch(index) {
+        if (state.locked[index] > 0) {
+          showToast("잠긴 분기입니다");
+          return;
+        }
+        state.routes[index] = routeNext(state.routes[index]);
+        const btn = switchDeck.children[index];
+        if (btn) {
+          btn.classList.add("active");
+          setTimeout(() => btn.classList.remove("active"), 120);
+        }
+        renderSwitches();
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        state.toastTimer = 1.2;
+      }
+
+      function update(dt) {
+        if (!state.running) return;
+        const data = levelData();
+        const slowFactor = state.slowTimer > 0 ? 0.48 : 1;
+        if (state.slowTimer > 0) state.slowTimer -= dt;
+
+        state.spawnTimer -= dt;
+        if (state.spawnTimer <= 0 && state.cargoMade < data.cargo) {
+          state.cargo.push(makeCargo());
+          state.spawnTimer = data.spawn;
+          renderQueue();
+        }
+
+        state.locked = state.locked.map((value) => Math.max(-1, value - dt));
+        state.cargo.forEach((item) => {
+          item.progress += item.speed * dt * slowFactor;
+          for (let i = 0; i < switches.length; i += 1) {
+            const threshold = (i + 1) / (switches.length + 1);
+            if (!item.passed[i] && item.progress >= threshold) {
+              item.passed[i] = true;
+              item.switchIndex = i;
+              item.path = state.routes[i];
+            }
+          }
+          if (!item.lockApplied && item.lock >= 0 && item.progress >= 0.24) {
+            item.lockApplied = true;
+            if (item.lock >= 0 && item.lock < state.locked.length) {
+              state.locked[item.lock] = 1.9;
+              showToast(`분기 ${item.lock + 1} 잠금`);
+            }
+          }
+        });
+
+        const remaining = [];
+        state.cargo.forEach((item) => {
+          if (item.progress >= 1.06) {
+            settleCargo(item);
+          } else {
+            remaining.push(item);
+          }
+        });
+        if (remaining.length !== state.cargo.length) renderQueue();
+        state.cargo = remaining;
+
+        if (state.toastTimer > 0) {
+          state.toastTimer -= dt;
+          if (state.toastTimer <= 0) toast.classList.remove("show");
+        }
+
+        if ((state.delivered + state.miss >= data.cargo || state.miss >= 4) && state.cargo.length === 0 && state.cargoMade >= data.cargo) {
+          finishLevel();
+        }
+
+        updateHud();
+        renderSwitches();
+      }
+
+      function settleCargo(item) {
+        if (item.path === item.target) {
+          state.delivered += 1;
+          state.combo += 1;
+          state.bestCombo = Math.max(state.bestCombo, state.combo);
+          state.score += 90 + state.combo * 8 + (item.express ? 35 : 0) + (item.bonus ? 80 : 0);
+          if (item.bonus && state.miss > 0) state.miss -= 1;
+          showToast(item.bonus ? "보너스 분기 성공" : "정확한 분기");
+        } else {
+          state.miss += item.bonus ? 2 : 1;
+          state.combo = 0;
+          showToast("출구 사고 발생");
+        }
+      }
+
+      function finishLevel() {
+        state.running = false;
+        const data = levelData();
+        const passed = state.delivered >= data.target && state.miss < 4;
+        if (passed && data.unlockNight) {
+          state.nightUnlocked = true;
+        }
+        const grade = state.miss === 0 && state.delivered >= data.cargo - 1 ? "S" : passed ? "A" : "C";
+        document.getElementById("resultTitle").textContent = passed ? `${data.name} 완료` : `${data.name} 실패`;
+        document.getElementById("resultText").textContent = passed
+          ? `평가 ${grade}. ${state.delivered}개를 처리했고 최고 콤보는 ${state.bestCombo}입니다.`
+          : `목표 ${data.target}개 중 ${state.delivered}개 처리했습니다. 분기 타이밍을 늦추면 사고가 늘어납니다.`;
+        document.getElementById("resultGrid").innerHTML = `
+          <div class="mission"><strong>처리</strong><span>${state.delivered}/${data.cargo}개</span></div>
+          <div class="mission"><strong>사고</strong><span>${state.miss}회</span></div>
+          <div class="mission"><strong>최고 콤보</strong><span>${state.bestCombo}</span></div>
+          <div class="mission"><strong>해금</strong><span>${state.nightUnlocked ? "야간 테마 사용 가능" : "3근무 클리어 필요"}</span></div>
+        `;
+        document.getElementById("nextBtn").style.display = passed && state.level < levels.length - 1 ? "" : "none";
+        resultScreen.classList.add("show");
+        updateBrief();
+      }
+
+      function draw() {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+        drawGrid(w, h);
+        drawRails(w, h);
+        drawSwitches(w, h);
+        state.cargo.forEach((item) => drawCargo(item, w, h));
+      }
+
+      function drawGrid(w, h) {
+        ctx.fillStyle = app.classList.contains("night") ? "#17232c" : "#f8fbf5";
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = app.classList.contains("night") ? "rgba(167,183,192,0.12)" : "rgba(82,99,113,0.10)";
+        ctx.lineWidth = 1;
+        for (let x = 18; x < w; x += 32) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        for (let y = 18; y < h; y += 32) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+      }
+
+      function drawRails(w, h) {
+        const start = { x: w * 0.08, y: h * 0.5 };
+        const end = { x: w * 0.9, y: h * 0.5 };
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = getComputedStyle(app).getPropertyValue("--rail").trim();
+        ctx.lineWidth = 11;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        switches.forEach((s) => {
+          const p = boardPoint(s);
+          ctx.lineTo(p.x, p.y);
+        });
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+        exits.forEach((exit) => {
+          const last = boardPoint(switches[switches.length - 1]);
+          const target = boardPoint(exit);
+          ctx.strokeStyle = colors[exit.color];
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(last.x, last.y);
+          ctx.quadraticCurveTo(w * 0.82, h * 0.5, target.x, target.y);
+          ctx.stroke();
+          ctx.fillStyle = colors[exit.color];
+          ctx.beginPath();
+          ctx.roundRect(target.x - 38, target.y - 22, 76, 44, 8);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.font = "900 15px Malgun Gothic, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(exit.label, target.x, target.y);
+        });
+      }
+
+      function drawSwitches(w, h) {
+        switches.forEach((s, index) => {
+          const p = boardPoint(s);
+          ctx.fillStyle = state.locked[index] > 0 ? "#d4514b" : "#fff";
+          ctx.strokeStyle = "#536772";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 19, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = state.locked[index] > 0 ? "#fff" : "#17232d";
+          ctx.font = "900 14px Malgun Gothic, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(String(index + 1), p.x, p.y);
+          ctx.fillStyle = colors[state.routes[index] === "top" ? "blue" : state.routes[index] === "bottom" ? "amber" : "green"];
+          ctx.fillRect(p.x - 18, p.y + 24, 36, 5);
+        });
+      }
+
+      function drawCargo(item, w, h) {
+        const start = { x: w * 0.08, y: h * 0.5 };
+        const last = boardPoint(switches[switches.length - 1]);
+        const t = Math.min(1, item.progress);
+        let x;
+        let y;
+        if (t < 0.82) {
+          const pathIndex = t / 0.82 * switches.length;
+          const fromIndex = Math.floor(pathIndex);
+          const local = pathIndex - fromIndex;
+          const from = fromIndex === 0 ? start : boardPoint(switches[fromIndex - 1]);
+          const to = fromIndex >= switches.length ? last : boardPoint(switches[fromIndex]);
+          x = from.x + (to.x - from.x) * local;
+          y = from.y + (to.y - from.y) * local;
+        } else {
+          const exit = exits.find((e) => e.id === item.path) || exits[1];
+          const to = boardPoint(exit);
+          const local = (t - 0.82) / 0.18;
+          x = last.x + (to.x - last.x) * local;
+          y = last.y + (to.y - last.y) * local;
+        }
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = colors[item.color] || colors.green;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(-17, -13, 34, 26, 7);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#fff";
+        ctx.font = "900 14px Malgun Gothic, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(item.bonus ? "★" : item.express ? "!" : "", 0, 1);
+        ctx.restore();
+      }
+
+      function loop(now) {
+        const time = now / 1000;
+        const dt = state.lastTime ? Math.min(0.05, time - state.lastTime) : 0;
+        state.lastTime = time;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function useAssist() {
+        if (state.assists <= 0) {
+          showReward();
+          return;
+        }
+        state.assists -= 1;
+        state.slowTimer = 5;
+        showToast("5초 감속 지원");
+        updateHud();
+      }
+
+      function showReward() {
+        let count = 3;
+        adModal.classList.add("show");
+        const adText = document.getElementById("adText");
+        adText.textContent = `보상형 광고 샘플입니다. ${count}초 뒤 감속권 1개가 지급됩니다.`;
+        const timer = setInterval(() => {
+          count -= 1;
+          if (count <= 0) {
+            clearInterval(timer);
+            state.assists += 1;
+            adText.textContent = "감속권 1개가 지급되었습니다.";
+            updateHud();
+            setTimeout(() => adModal.classList.remove("show"), 700);
+          } else {
+            adText.textContent = `보상형 광고 샘플입니다. ${count}초 뒤 감속권 1개가 지급됩니다.`;
+          }
+        }, 1000);
+      }
+
+      function nextLevel() {
+        if (state.level < levels.length - 1) {
+          state.level += 1;
+        }
+        resetRun(false);
+      }
+
+      document.getElementById("startBtn").addEventListener("click", () => {
+        state.level = 0;
+        state.score = 0;
+        state.assists = 1;
+        resetRun(false);
+      });
+      document.getElementById("practiceBtn").addEventListener("click", () => {
+        state.level = 0;
+        state.score = 0;
+        state.assists = 1;
+        resetRun(true);
+      });
+      document.getElementById("nextBtn").addEventListener("click", nextLevel);
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        state.level = 0;
+        state.score = 0;
+        state.assists = 1;
+        resetRun(false);
+      });
+      document.getElementById("rewardBtn").addEventListener("click", showReward);
+      document.getElementById("assistBtn").addEventListener("click", useAssist);
+      document.getElementById("helpBtn").addEventListener("click", () => helpModal.classList.add("show"));
+      document.getElementById("closeHelpBtn").addEventListener("click", () => helpModal.classList.remove("show"));
+      document.getElementById("skipAdBtn").addEventListener("click", () => adModal.classList.remove("show"));
+      document.getElementById("themeBtn").addEventListener("click", () => {
+        if (!state.nightUnlocked) {
+          showToast("3근무 클리어 후 해금");
+          return;
+        }
+        app.classList.toggle("night");
+      });
+      window.addEventListener("resize", resizeCanvas);
+
+      resizeCanvas();
+      updateHud();
+      updateBrief();
+      renderSwitches();
+      renderQueue();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

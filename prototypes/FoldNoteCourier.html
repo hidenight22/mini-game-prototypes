@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>접는 편지 배달부</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20232a;
+      --muted: #68717d;
+      --paper: #fff8df;
+      --paper-line: #d7caa7;
+      --red: #d64b43;
+      --blue: #246b9f;
+      --green: #258d63;
+      --gold: #d49a24;
+      --bg: #dfe9e7;
+      --panel: #fbfaf4;
+      --shadow: rgba(34, 39, 45, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      touch-action: none;
+      user-select: none;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background:
+        linear-gradient(90deg, rgba(32, 35, 42, 0.08) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(0deg, rgba(32, 35, 42, 0.05) 1px, transparent 1px) 0 0 / 24px 24px,
+        radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.9), transparent 34%),
+        var(--bg);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: max(12px, env(safe-area-inset-top)) 14px 8px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand strong {
+      font-size: 19px;
+      line-height: 1.08;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand span,
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 5px 14px rgba(32, 35, 42, 0.14);
+      font-weight: 900;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 0 14px 8px;
+    }
+
+    .stat {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      padding: 8px 9px;
+      border: 1px solid rgba(32, 35, 42, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 5px 12px rgba(32, 35, 42, 0.08);
+    }
+
+    .stat strong {
+      font-size: 16px;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      padding: 4px 12px 8px;
+    }
+
+    .desk {
+      position: relative;
+      width: min(96vw, 520px);
+      height: min(70dvh, 560px);
+      min-height: 380px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.74), rgba(255,255,255,0.16)),
+        #b8d0cf;
+      box-shadow: inset 0 0 0 1px rgba(32, 35, 42, 0.15), 0 18px 42px var(--shadow);
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .mission {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .mission-text {
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 6px 14px rgba(32, 35, 42, 0.12);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .badge {
+      min-width: 64px;
+      padding: 8px 9px;
+      border-radius: 8px;
+      background: #20232a;
+      color: #fff;
+      text-align: center;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: 0 6px 14px rgba(32, 35, 42, 0.2);
+    }
+
+    .controls {
+      padding: 9px 14px max(14px, env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      background: rgba(251, 250, 244, 0.94);
+      border-top: 1px solid rgba(32, 35, 42, 0.12);
+    }
+
+    .fold-pad {
+      width: 126px;
+      height: 126px;
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(3, 42px);
+      justify-content: center;
+      align-content: center;
+      gap: 0;
+    }
+
+    .fold-btn,
+    .wide-btn {
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 5px 12px rgba(32, 35, 42, 0.13);
+      font-weight: 900;
+    }
+
+    .fold-btn {
+      width: 40px;
+      height: 40px;
+      margin: 1px;
+      font-size: 18px;
+    }
+
+    .fold-btn:disabled,
+    .wide-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .fold-up { grid-column: 2; grid-row: 1; }
+    .fold-left { grid-column: 1; grid-row: 2; }
+    .fold-right { grid-column: 3; grid-row: 2; }
+    .fold-down { grid-column: 2; grid-row: 3; }
+
+    .wide-btn {
+      width: 100%;
+      min-height: 52px;
+      padding: 10px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      line-height: 1.15;
+      background: #20232a;
+      color: #fff;
+    }
+
+    .wide-btn.secondary {
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .wide-btn.reward {
+      background: #eac44a;
+      color: #2d2410;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(23, 28, 34, 0.42);
+      z-index: 10;
+    }
+
+    .overlay.show {
+      display: grid;
+    }
+
+    .modal {
+      width: min(430px, 100%);
+      max-height: min(86dvh, 640px);
+      overflow: auto;
+      touch-action: pan-y;
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+      border: 1px solid rgba(32, 35, 42, 0.12);
+      padding: 18px;
+    }
+
+    .modal h1,
+    .modal h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .modal p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .modal-grid {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(32, 35, 42, 0.13);
+      background: #fff;
+      text-align: left;
+    }
+
+    .choice strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .choice span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .pill {
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: #e9f0ee;
+      color: #2f4544;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .result-score {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .result-score div {
+      min-height: 64px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(32, 35, 42, 0.1);
+      font-weight: 900;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .ad-count {
+      height: 9px;
+      border-radius: 999px;
+      background: #d8dedc;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .ad-count i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--gold);
+      transition: width 0.25s linear;
+    }
+
+    @media (max-width: 430px) {
+      .hud {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .desk {
+        width: calc(100vw - 18px);
+        height: min(63dvh, 520px);
+      }
+
+      .controls {
+        grid-template-columns: 1fr 118px 1fr;
+        gap: 7px;
+        padding-left: 9px;
+        padding-right: 9px;
+      }
+
+      .fold-pad {
+        width: 118px;
+        height: 118px;
+        grid-template-columns: repeat(3, 39px);
+        grid-template-rows: repeat(3, 39px);
+      }
+
+      .fold-btn {
+        width: 37px;
+        height: 37px;
+      }
+
+      .wide-btn {
+        min-height: 48px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" aria-label="접는 편지 배달부 게임">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <strong>접는 편지 배달부</strong>
+          <span id="subtitle">우표와 주소를 겹치게 접어 배달하세요</span>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" id="helpBtn" aria-label="도움말">?</button>
+          <button class="icon-btn" id="restartBtn" aria-label="다시 시작">↻</button>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="stat"><span>스테이지</span><strong id="levelText">1/5</strong></div>
+        <div class="stat"><span>접기</span><strong id="foldText">0/3</strong></div>
+        <div class="stat"><span>시간</span><strong id="timeText">45</strong></div>
+        <div class="stat"><span>점수</span><strong id="scoreText">0</strong></div>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="desk">
+        <canvas id="board" width="760" height="760"></canvas>
+        <div class="mission">
+          <div class="mission-text" id="missionText">우표와 주소를 같은 칸에 맞추세요.</div>
+          <div class="badge" id="modeBadge">일반</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="controls">
+      <button class="wide-btn secondary" id="undoBtn">되돌리기</button>
+      <div class="fold-pad" aria-label="접기 방향">
+        <button class="fold-btn fold-up" data-dir="up" aria-label="위쪽 접기">↑</button>
+        <button class="fold-btn fold-left" data-dir="left" aria-label="왼쪽 접기">←</button>
+        <button class="fold-btn fold-right" data-dir="right" aria-label="오른쪽 접기">→</button>
+        <button class="fold-btn fold-down" data-dir="down" aria-label="아래쪽 접기">↓</button>
+      </div>
+      <button class="wide-btn reward" id="rewardBtn">광고 힌트</button>
+    </footer>
+  </div>
+
+  <div class="overlay show" id="startOverlay">
+    <section class="modal">
+      <h1>접는 편지 배달부</h1>
+      <p>종이의 한쪽을 접으면 그 영역의 도장이 반대편으로 겹쳐집니다. 우표와 주소를 같은 칸에 맞추되, 먹물 번짐 칸과 겹치지 않게 배달하세요.</p>
+      <div class="modal-grid" id="levelList"></div>
+      <button class="wide-btn" id="startBtn">첫 배달 시작</button>
+    </section>
+  </div>
+
+  <div class="overlay" id="helpOverlay">
+    <section class="modal">
+      <h2>도움말</h2>
+      <p>화살표 버튼으로 위, 아래, 왼쪽, 오른쪽 절반을 접습니다. 우표와 주소가 겹치면 자동 배달됩니다. 먹물, 빗물, 금지 도장과 겹치면 실패합니다.</p>
+      <p>스테이지마다 접을 수 있는 방향, 제한 횟수, 시간이 다릅니다. 보상형 힌트는 현재 스테이지의 위험 칸을 잠시 밝히거나 실패 후 마지막 접기를 한 번 되돌립니다.</p>
+      <button class="wide-btn" id="closeHelpBtn">닫기</button>
+    </section>
+  </div>
+
+  <div class="overlay" id="resultOverlay">
+    <section class="modal">
+      <h2 id="resultTitle">배달 완료</h2>
+      <p id="resultCopy">정확히 접었습니다.</p>
+      <div class="result-score">
+        <div id="resultStars">★★★</div>
+        <div id="resultTime">시간 0</div>
+        <div id="resultScore">점수 0</div>
+      </div>
+      <div class="modal-grid">
+        <button class="wide-btn" id="nextBtn">다음 배달</button>
+        <button class="wide-btn secondary" id="retryBtn">다시 접기</button>
+        <button class="wide-btn reward" id="continueBtn">광고 보고 한 번 펼치기</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="adOverlay">
+    <section class="modal">
+      <h2>우체국 후원 힌트</h2>
+      <p id="adCopy">짧은 안내 후 위험 도장이 표시됩니다.</p>
+      <div class="ad-count"><i id="adBar"></i></div>
+      <button class="wide-btn secondary" id="skipAdBtn" disabled>보상 적용 중</button>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("board");
+      const ctx = canvas.getContext("2d");
+      const ui = {
+        subtitle: document.getElementById("subtitle"),
+        levelText: document.getElementById("levelText"),
+        foldText: document.getElementById("foldText"),
+        timeText: document.getElementById("timeText"),
+        scoreText: document.getElementById("scoreText"),
+        missionText: document.getElementById("missionText"),
+        modeBadge: document.getElementById("modeBadge"),
+        undoBtn: document.getElementById("undoBtn"),
+        rewardBtn: document.getElementById("rewardBtn"),
+        restartBtn: document.getElementById("restartBtn"),
+        helpBtn: document.getElementById("helpBtn"),
+        levelList: document.getElementById("levelList"),
+        startOverlay: document.getElementById("startOverlay"),
+        helpOverlay: document.getElementById("helpOverlay"),
+        resultOverlay: document.getElementById("resultOverlay"),
+        adOverlay: document.getElementById("adOverlay"),
+        startBtn: document.getElementById("startBtn"),
+        closeHelpBtn: document.getElementById("closeHelpBtn"),
+        resultTitle: document.getElementById("resultTitle"),
+        resultCopy: document.getElementById("resultCopy"),
+        resultStars: document.getElementById("resultStars"),
+        resultTime: document.getElementById("resultTime"),
+        resultScore: document.getElementById("resultScore"),
+        nextBtn: document.getElementById("nextBtn"),
+        retryBtn: document.getElementById("retryBtn"),
+        continueBtn: document.getElementById("continueBtn"),
+        adCopy: document.getElementById("adCopy"),
+        adBar: document.getElementById("adBar"),
+        skipAdBtn: document.getElementById("skipAdBtn")
+      };
+
+      const levels = [
+        {
+          name: "첫 우편",
+          badge: "일반",
+          mission: "우표와 주소를 같은 칸에 맞추세요.",
+          maxFolds: 3,
+          time: 50,
+          allowed: ["up", "down", "left", "right"],
+          items: [
+            { id: "stamp", type: "stamp", x: 1, y: 1, text: "우" },
+            { id: "address", type: "address", x: 4, y: 4, text: "집" },
+            { id: "ink1", type: "ink", x: 2, y: 4, text: "먹" }
+          ]
+        },
+        {
+          name: "금지 도장",
+          badge: "주의",
+          mission: "금지 도장을 피해서 우표를 주소에 겹치세요.",
+          maxFolds: 4,
+          time: 55,
+          allowed: ["up", "left", "right"],
+          items: [
+            { id: "stamp", type: "stamp", x: 0, y: 2, text: "우" },
+            { id: "address", type: "address", x: 5, y: 3, text: "집" },
+            { id: "ink1", type: "ink", x: 2, y: 2, text: "금" },
+            { id: "coin", type: "bonus", x: 4, y: 0, text: "속" }
+          ]
+        },
+        {
+          name: "반투명 봉투",
+          badge: "뒷면",
+          mission: "뒷면 단서까지 맞추면 추가 점수를 받습니다.",
+          maxFolds: 4,
+          time: 60,
+          allowed: ["down", "left", "right"],
+          items: [
+            { id: "stamp", type: "stamp", x: 5, y: 0, text: "우" },
+            { id: "address", type: "address", x: 1, y: 5, text: "집" },
+            { id: "ink1", type: "ink", x: 3, y: 4, text: "먹" },
+            { id: "seal", type: "bonus", x: 0, y: 3, text: "별" },
+            { id: "back", type: "back", x: 4, y: 5, text: "뒤" }
+          ]
+        },
+        {
+          name: "번지는 잉크",
+          badge: "시간",
+          mission: "시간이 줄수록 먹물 범위가 넓어집니다.",
+          maxFolds: 5,
+          time: 62,
+          spreadAt: 34,
+          allowed: ["up", "down", "left", "right"],
+          items: [
+            { id: "stamp", type: "stamp", x: 2, y: 0, text: "우" },
+            { id: "address", type: "address", x: 3, y: 5, text: "집" },
+            { id: "ink1", type: "ink", x: 0, y: 4, text: "먹" },
+            { id: "ink2", type: "ink", x: 5, y: 1, text: "먹" },
+            { id: "coin", type: "bonus", x: 1, y: 2, text: "속" }
+          ]
+        },
+        {
+          name: "비 오는 엽서팩",
+          badge: "보너스",
+          mission: "빗물 도장을 피하고 보너스 별까지 접어 넣으세요.",
+          maxFolds: 5,
+          time: 64,
+          lockedUntil: 2,
+          spreadAt: 42,
+          allowed: ["up", "down", "left", "right"],
+          items: [
+            { id: "stamp", type: "stamp", x: 0, y: 5, text: "우" },
+            { id: "address", type: "address", x: 5, y: 0, text: "집" },
+            { id: "rain1", type: "ink", x: 1, y: 1, text: "비" },
+            { id: "rain2", type: "ink", x: 4, y: 4, text: "비" },
+            { id: "seal", type: "bonus", x: 2, y: 3, text: "별" },
+            { id: "back", type: "back", x: 3, y: 2, text: "뒤" }
+          ]
+        }
+      ];
+
+      const colors = {
+        stamp: "#d64b43",
+        address: "#246b9f",
+        ink: "#32313a",
+        bonus: "#d49a24",
+        back: "#258d63"
+      };
+
+      let state = {
+        levelIndex: 0,
+        items: [],
+        folds: [],
+        timeLeft: 0,
+        score: 0,
+        totalStars: 0,
+        status: "intro",
+        hintUntil: 0,
+        tickId: 0,
+        adTimer: 0,
+        continueReady: false
+      };
+
+      function cloneItems(items) {
+        return items.map(item => ({ ...item, layer: item.layer || 0 }));
+      }
+
+      function currentLevel() {
+        return levels[state.levelIndex];
+      }
+
+      function startLevel(index) {
+        const level = levels[index];
+        if (level.lockedUntil && state.totalStars < level.lockedUntil) {
+          flashMessage("보너스 엽서팩은 최고 별 2개 이상 기록 후 열립니다.");
+          return;
+        }
+        state.levelIndex = index;
+        state.items = cloneItems(level.items);
+        state.folds = [];
+        state.timeLeft = level.time;
+        state.status = "playing";
+        state.hintUntil = 0;
+        state.continueReady = false;
+        ui.startOverlay.classList.remove("show");
+        ui.resultOverlay.classList.remove("show");
+        updateUi();
+      }
+
+      function resetLevel() {
+        startLevel(state.levelIndex);
+      }
+
+      function updateUi() {
+        const level = currentLevel();
+        ui.subtitle.textContent = level.name;
+        ui.levelText.textContent = `${state.levelIndex + 1}/${levels.length}`;
+        ui.foldText.textContent = `${state.folds.length}/${level.maxFolds}`;
+        ui.timeText.textContent = Math.max(0, Math.ceil(state.timeLeft));
+        ui.scoreText.textContent = state.score;
+        ui.missionText.textContent = level.mission;
+        ui.modeBadge.textContent = level.badge;
+        ui.undoBtn.disabled = state.folds.length === 0 || state.status !== "playing";
+        ui.rewardBtn.disabled = state.status !== "playing";
+        document.querySelectorAll(".fold-btn").forEach(btn => {
+          const dir = btn.dataset.dir;
+          btn.disabled = state.status !== "playing" || !level.allowed.includes(dir) || state.folds.length >= level.maxFolds;
+        });
+        renderLevelList();
+      }
+
+      function renderLevelList() {
+        ui.levelList.innerHTML = "";
+        levels.forEach((level, index) => {
+          const locked = level.lockedUntil && state.totalStars < level.lockedUntil;
+          const button = document.createElement("button");
+          button.className = "choice";
+          button.disabled = locked;
+          button.innerHTML = `<span><strong>${index + 1}. ${level.name}</strong><span>${level.mission}</span></span><b class="pill">${locked ? "잠김" : level.badge}</b>`;
+          button.addEventListener("click", () => startLevel(index));
+          ui.levelList.appendChild(button);
+        });
+      }
+
+      function cellAfterFold(item, dir) {
+        const next = { ...item, layer: item.layer + 1 };
+        if (dir === "left" && item.x < 3) next.x = 5 - item.x;
+        if (dir === "right" && item.x > 2) next.x = 5 - item.x;
+        if (dir === "up" && item.y < 3) next.y = 5 - item.y;
+        if (dir === "down" && item.y > 2) next.y = 5 - item.y;
+        return next;
+      }
+
+      function fold(dir) {
+        const level = currentLevel();
+        if (state.status !== "playing" || !level.allowed.includes(dir) || state.folds.length >= level.maxFolds) return;
+        state.folds.push({ dir, items: cloneItems(state.items), timeLeft: state.timeLeft });
+        state.items = state.items.map(item => cellAfterFold(item, dir));
+        state.score += 18;
+        pulseFold(dir);
+        evaluate();
+        updateUi();
+      }
+
+      function undo() {
+        const last = state.folds.pop();
+        if (!last) return;
+        state.items = cloneItems(last.items);
+        state.timeLeft = last.timeLeft;
+        state.status = "playing";
+        state.score = Math.max(0, state.score - 12);
+        ui.resultOverlay.classList.remove("show");
+        updateUi();
+      }
+
+      function keyOf(item) {
+        return `${item.x},${item.y}`;
+      }
+
+      function evaluate() {
+        const stamp = state.items.find(item => item.type === "stamp");
+        const address = state.items.find(item => item.type === "address");
+        const same = stamp && address && keyOf(stamp) === keyOf(address);
+        const danger = state.items.some(item => item.type === "ink" && keyOf(item) === keyOf(stamp));
+        if (danger) {
+          finish(false, "먹물 번짐과 겹쳤습니다.");
+          return;
+        }
+        if (same) {
+          finish(true, "우표와 주소가 정확히 겹쳤습니다.");
+          return;
+        }
+        if (state.folds.length >= currentLevel().maxFolds) {
+          finish(false, "접기 횟수를 모두 사용했습니다.");
+        }
+      }
+
+      function calcStars(success) {
+        if (!success) return 0;
+        let stars = 1;
+        if (state.timeLeft > currentLevel().time * 0.35) stars += 1;
+        if (state.folds.length <= currentLevel().maxFolds - 1) stars += 1;
+        return stars;
+      }
+
+      function finish(success, message) {
+        if (state.status !== "playing") return;
+        state.status = success ? "success" : "failed";
+        const bonus = state.items.filter(item => item.type === "bonus").some(item => {
+          const stamp = state.items.find(target => target.type === "stamp");
+          return stamp && keyOf(item) === keyOf(stamp);
+        });
+        const stars = calcStars(success);
+        if (success) {
+          const earned = 260 + Math.round(state.timeLeft * 7) + stars * 90 + (bonus ? 140 : 0);
+          state.score += earned;
+          state.totalStars = Math.max(state.totalStars, stars);
+        }
+        ui.resultTitle.textContent = success ? "배달 완료" : "배달 실패";
+        ui.resultCopy.textContent = bonus && success ? `${message} 보너스 별까지 회수했습니다.` : message;
+        ui.resultStars.textContent = success ? "★".repeat(stars) + "☆".repeat(3 - stars) : "☆☆☆";
+        ui.resultTime.textContent = `시간 ${Math.max(0, Math.ceil(state.timeLeft))}`;
+        ui.resultScore.textContent = `점수 ${state.score}`;
+        ui.nextBtn.style.display = success ? "grid" : "none";
+        ui.continueBtn.style.display = success ? "none" : "grid";
+        ui.resultOverlay.classList.add("show");
+        updateUi();
+      }
+
+      function nextLevel() {
+        const next = (state.levelIndex + 1) % levels.length;
+        startLevel(next);
+      }
+
+      function runReward(kind) {
+        if (state.status !== "playing" && kind !== "continue") return;
+        clearInterval(state.adTimer);
+        ui.adBar.style.width = "0";
+        ui.skipAdBtn.disabled = true;
+        ui.adCopy.textContent = kind === "continue" ? "안내 후 마지막 접기 1회를 펼칩니다." : "안내 후 위험 칸과 추천 접기 방향을 표시합니다.";
+        ui.adOverlay.classList.add("show");
+        let progress = 0;
+        state.adTimer = setInterval(() => {
+          progress += 20;
+          ui.adBar.style.width = `${progress}%`;
+          if (progress >= 100) {
+            applyReward(kind);
+          }
+        }, 300);
+      }
+
+      function applyReward(kind) {
+        clearInterval(state.adTimer);
+        ui.adOverlay.classList.remove("show");
+        ui.skipAdBtn.disabled = true;
+        if (kind === "continue") {
+          undo();
+          state.timeLeft = Math.max(state.timeLeft, 12);
+          state.score = Math.max(0, state.score - 25);
+          return;
+        }
+        state.hintUntil = performance.now() + 5200;
+        state.score = Math.max(0, state.score - 10);
+        flashMessage("위험 칸이 잠시 강조됩니다.");
+      }
+
+      function flashMessage(text) {
+        const old = ui.missionText.textContent;
+        ui.missionText.textContent = text;
+        setTimeout(() => {
+          if (state.status === "playing") ui.missionText.textContent = currentLevel().mission;
+        }, 1600);
+      }
+
+      function pulseFold(dir) {
+        ui.modeBadge.textContent = dir === "up" ? "위 접기" : dir === "down" ? "아래 접기" : dir === "left" ? "왼쪽 접기" : "오른쪽 접기";
+        setTimeout(() => {
+          if (state.status === "playing") ui.modeBadge.textContent = currentLevel().badge;
+        }, 550);
+      }
+
+      function spreadInk() {
+        const level = currentLevel();
+        if (!level.spreadAt || state.timeLeft > level.spreadAt) return;
+        if (state.items.some(item => item.id === "spread")) return;
+        const ink = state.items.find(item => item.type === "ink");
+        if (ink) {
+          state.items.push({ id: "spread", type: "ink", x: Math.min(5, ink.x + 1), y: ink.y, text: "번", layer: ink.layer + 1 });
+          flashMessage("잉크가 한 칸 번졌습니다.");
+        }
+      }
+
+      function tick() {
+        if (state.status === "playing") {
+          state.timeLeft -= 1 / 30;
+          spreadInk();
+          if (state.timeLeft <= 0) {
+            state.timeLeft = 0;
+            finish(false, "배달 시간이 끝났습니다.");
+          }
+          updateUi();
+        }
+        draw();
+        state.tickId = requestAnimationFrame(tick);
+      }
+
+      function paperRect() {
+        const size = Math.min(canvas.width, canvas.height) * 0.72;
+        return {
+          x: (canvas.width - size) / 2,
+          y: (canvas.height - size) / 2 + 22,
+          size,
+          cell: size / 6
+        };
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawDesk();
+        drawPaper();
+        drawItems();
+        drawHint();
+      }
+
+      function drawDesk() {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.fillStyle = "#b8d0cf";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(255,255,255,0.24)";
+        for (let i = -h; i < w; i += 38) {
+          ctx.fillRect(i, 0, 10, h);
+        }
+        ctx.save();
+        ctx.translate(w - 130, h - 116);
+        ctx.rotate(-0.12);
+        ctx.fillStyle = "#f3f0e5";
+        roundRect(-84, -38, 150, 72, 8, true);
+        ctx.fillStyle = "#c84e4d";
+        ctx.font = "bold 20px Malgun Gothic, sans-serif";
+        ctx.fillText("AIR MAIL", -62, 4);
+        ctx.restore();
+      }
+
+      function drawPaper() {
+        const r = paperRect();
+        ctx.save();
+        ctx.shadowColor = "rgba(32,35,42,0.26)";
+        ctx.shadowBlur = 22;
+        ctx.shadowOffsetY = 14;
+        ctx.fillStyle = "#fff8df";
+        roundRect(r.x, r.y, r.size, r.size, 8, true);
+        ctx.restore();
+        ctx.strokeStyle = "#d7caa7";
+        ctx.lineWidth = 2;
+        roundRect(r.x, r.y, r.size, r.size, 8, false);
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 6; i++) {
+          const p = r.x + i * r.cell;
+          ctx.strokeStyle = i === 3 ? "rgba(68,77,83,0.52)" : "rgba(169,151,108,0.34)";
+          ctx.beginPath();
+          ctx.moveTo(p, r.y);
+          ctx.lineTo(p, r.y + r.size);
+          ctx.stroke();
+          const q = r.y + i * r.cell;
+          ctx.beginPath();
+          ctx.moveTo(r.x, q);
+          ctx.lineTo(r.x + r.size, q);
+          ctx.stroke();
+        }
+        drawFoldHistory(r);
+      }
+
+      function drawFoldHistory(r) {
+        state.folds.forEach((fold, index) => {
+          ctx.save();
+          ctx.globalAlpha = 0.12 + index * 0.035;
+          ctx.fillStyle = fold.dir === "left" || fold.dir === "right" ? "#246b9f" : "#d64b43";
+          if (fold.dir === "left") ctx.fillRect(r.x + r.size / 2, r.y, r.size / 2, r.size);
+          if (fold.dir === "right") ctx.fillRect(r.x, r.y, r.size / 2, r.size);
+          if (fold.dir === "up") ctx.fillRect(r.x, r.y + r.size / 2, r.size, r.size / 2);
+          if (fold.dir === "down") ctx.fillRect(r.x, r.y, r.size, r.size / 2);
+          ctx.restore();
+        });
+      }
+
+      function drawItems() {
+        const r = paperRect();
+        const sorted = [...state.items].sort((a, b) => a.layer - b.layer);
+        sorted.forEach(item => {
+          const cx = r.x + item.x * r.cell + r.cell / 2;
+          const cy = r.y + item.y * r.cell + r.cell / 2;
+          const radius = r.cell * 0.32;
+          ctx.save();
+          ctx.globalAlpha = item.type === "back" ? 0.72 : 0.96;
+          ctx.fillStyle = colors[item.type];
+          if (item.type === "address") {
+            roundRect(cx - radius, cy - radius * 0.72, radius * 2, radius * 1.44, 6, true);
+          } else if (item.type === "ink") {
+            splat(cx, cy, radius);
+          } else {
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = "#fff";
+          ctx.font = `900 ${Math.max(18, r.cell * 0.22)}px Malgun Gothic, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(item.text, cx, cy + 1);
+          if (item.layer > 0) {
+            ctx.fillStyle = "rgba(32,35,42,0.72)";
+            ctx.font = `900 ${Math.max(11, r.cell * 0.13)}px system-ui`;
+            ctx.fillText(`x${item.layer + 1}`, cx + radius * 0.66, cy - radius * 0.66);
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawHint() {
+        if (performance.now() > state.hintUntil) return;
+        const r = paperRect();
+        state.items.filter(item => item.type === "ink").forEach(item => {
+          ctx.save();
+          ctx.strokeStyle = "#ffcf3d";
+          ctx.lineWidth = 5;
+          ctx.setLineDash([10, 7]);
+          ctx.strokeRect(r.x + item.x * r.cell + 7, r.y + item.y * r.cell + 7, r.cell - 14, r.cell - 14);
+          ctx.restore();
+        });
+        ctx.save();
+        ctx.fillStyle = "rgba(32,35,42,0.82)";
+        ctx.font = "900 20px Malgun Gothic, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("위험 칸 표시 중", canvas.width / 2, 58);
+        ctx.restore();
+      }
+
+      function roundRect(x, y, w, h, radius, fill) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        if (fill) ctx.fill();
+        else ctx.stroke();
+      }
+
+      function splat(cx, cy, r) {
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const a = (Math.PI * 2 * i) / 10;
+          const rr = i % 2 ? r * 0.72 : r * 1.08;
+          const x = cx + Math.cos(a) * rr;
+          const y = cy + Math.sin(a) * rr;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      document.querySelectorAll(".fold-btn").forEach(btn => {
+        btn.addEventListener("click", () => fold(btn.dataset.dir));
+      });
+      ui.undoBtn.addEventListener("click", undo);
+      ui.rewardBtn.addEventListener("click", () => runReward("hint"));
+      ui.restartBtn.addEventListener("click", resetLevel);
+      ui.helpBtn.addEventListener("click", () => ui.helpOverlay.classList.add("show"));
+      ui.closeHelpBtn.addEventListener("click", () => ui.helpOverlay.classList.remove("show"));
+      ui.startBtn.addEventListener("click", () => startLevel(0));
+      ui.retryBtn.addEventListener("click", resetLevel);
+      ui.nextBtn.addEventListener("click", nextLevel);
+      ui.continueBtn.addEventListener("click", () => runReward("continue"));
+
+      window.addEventListener("keydown", event => {
+        const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+        if (map[event.key]) fold(map[event.key]);
+        if (event.key.toLowerCase() === "z") undo();
+      });
+
+      renderLevelList();
+      updateUi();
+      tick();
+    })();
+  </script>
+</body>
+</html>

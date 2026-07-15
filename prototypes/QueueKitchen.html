@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>대기열 주방장</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182127;
+      --muted: #5d6870;
+      --paper: #f4f0e7;
+      --tile: #fffaf0;
+      --steel: #d7e1df;
+      --line: #94a6a0;
+      --char: #2f6f73;
+      --tomato: #df5347;
+      --leaf: #3f9365;
+      --egg: #e9b93e;
+      --berry: #8263bd;
+      --pan: #2e3b45;
+      --warn: #d46b2f;
+      --ok: #237b58;
+      --shadow: rgba(35, 45, 50, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(90deg, rgba(47, 111, 115, 0.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(47, 111, 115, 0.10) 1px, transparent 1px),
+        var(--paper);
+      background-size: 24px 24px;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: min(1080px, 100%);
+      min-height: min(760px, calc(100dvh - 20px));
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #879b93;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 250, 240, 0.95), rgba(226, 237, 233, 0.95)),
+        var(--tile);
+      box-shadow: 0 18px 52px var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .icon-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .icon-btn,
+    .primary,
+    .lane-btn,
+    .mode-btn {
+      min-height: 42px;
+      border-radius: 8px;
+      font-weight: 900;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .icon-btn {
+      width: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #8ba09a;
+      background: #f9fcf9;
+    }
+
+    .icon-btn:active,
+    .primary:active,
+    .lane-btn:active,
+    .mode-btn:active {
+      transform: translateY(1px);
+    }
+
+    .screen {
+      min-height: 0;
+      display: none;
+    }
+
+    .screen.active {
+      display: grid;
+    }
+
+    .menu {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .kitchen-hero {
+      min-height: 430px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: 14px;
+      border: 2px solid #6f8780;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, #fff7dd 0 22%, transparent 22% 100%),
+        repeating-linear-gradient(90deg, #2f6f73 0 44px, #f4f0e7 44px 58px, #df5347 58px 102px, #f4f0e7 102px 116px);
+      overflow: hidden;
+    }
+
+    .hero-title {
+      width: fit-content;
+      padding: 8px 10px;
+      border: 2px solid #223540;
+      border-radius: 8px;
+      background: #fffaf0;
+      box-shadow: 5px 5px 0 #223540;
+      font-weight: 900;
+      font-size: 30px;
+      line-height: 1.05;
+    }
+
+    .order-rack {
+      align-self: end;
+      display: grid;
+      gap: 8px;
+      max-width: 560px;
+    }
+
+    .rack-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .demo-ticket {
+      min-height: 52px;
+      border: 2px solid #223540;
+      border-radius: 8px;
+      background: #fffaf0;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      box-shadow: 3px 3px 0 rgba(34, 53, 64, 0.25);
+    }
+
+    .start-panel {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      min-height: 430px;
+    }
+
+    .brief {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf0;
+      padding: 12px;
+      line-height: 1.5;
+      color: #34434b;
+      font-size: 14px;
+    }
+
+    .shift-list {
+      display: grid;
+      gap: 8px;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .shift {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f9fcf9;
+    }
+
+    .shift-number {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--pan);
+      color: #fffaf0;
+      font-weight: 900;
+    }
+
+    .shift strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .shift small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .badge {
+      min-width: 58px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      background: #e9f3f0;
+      color: #275c60;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .primary {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--char);
+      color: #fff;
+    }
+
+    .play {
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .meter {
+      min-height: 52px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf0;
+    }
+
+    .meter span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .meter b {
+      display: block;
+      margin-top: 2px;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .board {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(182px, 0.36fr);
+      gap: 8px;
+    }
+
+    .line-zone,
+    .side-zone {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf0;
+      overflow: hidden;
+    }
+
+    .line-zone {
+      display: grid;
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+    }
+
+    .lane {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 62px minmax(0, 1fr);
+      border-bottom: 1px solid #d3ded9;
+    }
+
+    .lane:last-child {
+      border-bottom: 0;
+    }
+
+    .lane-btn {
+      margin: 7px;
+      background: var(--pan);
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .queue {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 7px 7px 0;
+      overflow: hidden;
+    }
+
+    .ticket {
+      position: relative;
+      flex: 0 0 auto;
+      width: clamp(35px, 6vw, 54px);
+      height: clamp(43px, 7vw, 64px);
+      display: grid;
+      place-items: center;
+      border: 2px solid #253641;
+      border-radius: 8px;
+      background: var(--ticket-bg, #fff);
+      box-shadow: 2px 2px 0 rgba(34, 53, 64, 0.2);
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 900;
+    }
+
+    .ticket::after {
+      content: attr(data-tag);
+      position: absolute;
+      top: -7px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #223540;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      opacity: var(--tag-opacity, 0);
+    }
+
+    .ticket.vip {
+      outline: 3px solid #e9b93e;
+    }
+
+    .ticket.burn {
+      animation: heat 0.7s infinite alternate;
+    }
+
+    .ticket.ice {
+      outline: 3px solid #5ca4c7;
+    }
+
+    @keyframes heat {
+      from { transform: rotate(-1deg); }
+      to { transform: rotate(1deg) translateY(-1px); }
+    }
+
+    .side-zone {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .next-ticket {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 9px;
+      align-items: center;
+      min-height: 86px;
+      padding: 9px;
+      border-radius: 8px;
+      background: #eaf2ee;
+      border: 1px solid #bed0ca;
+    }
+
+    .next-ticket .ticket {
+      width: 60px;
+      height: 70px;
+      font-size: 30px;
+    }
+
+    .next-copy strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .next-copy small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 11px;
+    }
+
+    .combo-log {
+      min-height: 68px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #263640;
+      color: #f8f4e8;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow: hidden;
+    }
+
+    .mini-tasks {
+      min-height: 0;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+      overflow: auto;
+    }
+
+    .task {
+      padding: 8px;
+      border: 1px solid #c4d2ce;
+      border-radius: 8px;
+      background: #f9fcf9;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .task.done {
+      border-color: #80b49a;
+      background: #e7f5ea;
+      color: #22583e;
+      font-weight: 900;
+    }
+
+    .side-actions {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      width: 100%;
+      padding: 10px;
+      background: #fff1c8;
+      border: 1px solid #d6b85d;
+      color: #453816;
+    }
+
+    .mode-btn[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toast {
+      min-height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: #223540;
+      color: #fffaf0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: none;
+      place-items: center;
+      padding: 16px;
+      background: rgba(24, 33, 39, 0.46);
+    }
+
+    .overlay.active {
+      display: grid;
+    }
+
+    .modal {
+      width: min(520px, 100%);
+      max-height: min(680px, calc(100dvh - 30px));
+      display: grid;
+      gap: 10px;
+      overflow: auto;
+      border: 2px solid #223540;
+      border-radius: 8px;
+      background: #fffaf0;
+      padding: 14px;
+      box-shadow: 8px 8px 0 rgba(34, 53, 64, 0.28);
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .modal p {
+      margin: 0;
+      color: #3f4e55;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .result-cell {
+      padding: 9px;
+      border-radius: 8px;
+      background: #eaf2ee;
+      text-align: center;
+    }
+
+    .result-cell span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .result-cell b {
+      display: block;
+      margin-top: 3px;
+      font-size: 18px;
+    }
+
+    .ad-count {
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #263640;
+      color: #fffaf0;
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 0;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+        padding: 8px;
+      }
+
+      .menu {
+        grid-template-columns: 1fr;
+        overflow: auto;
+      }
+
+      .kitchen-hero,
+      .start-panel {
+        min-height: 0;
+      }
+
+      .kitchen-hero {
+        grid-template-rows: auto minmax(112px, 1fr) auto;
+      }
+
+      .hero-title {
+        font-size: 24px;
+        box-shadow: 4px 4px 0 #223540;
+      }
+
+      .rack-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .demo-ticket {
+        min-height: 42px;
+        font-size: 21px;
+      }
+
+      .board {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(310px, 1fr) auto;
+      }
+
+      .side-zone {
+        grid-template-columns: minmax(0, 1fr) minmax(130px, 0.55fr);
+        grid-template-rows: auto auto;
+      }
+
+      .next-ticket,
+      .combo-log,
+      .mini-tasks,
+      .side-actions {
+        min-height: 0;
+      }
+
+      .next-ticket {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+      }
+
+      .combo-log {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .mini-tasks {
+        display: none;
+      }
+
+      .side-actions {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .topbar {
+        grid-template-columns: 1fr auto;
+      }
+
+      .icon-btn {
+        width: 38px;
+        min-height: 38px;
+      }
+
+      .meter {
+        min-height: 46px;
+        padding: 7px;
+      }
+
+      .meter b {
+        font-size: 16px;
+      }
+
+      .lane {
+        grid-template-columns: 52px minmax(0, 1fr);
+      }
+
+      .lane-btn {
+        margin: 6px;
+      }
+
+      .queue {
+        gap: 5px;
+        padding: 6px 6px 6px 0;
+      }
+
+      .ticket {
+        width: 34px;
+        height: 44px;
+        font-size: 18px;
+      }
+
+      .side-zone {
+        padding: 7px;
+        gap: 6px;
+      }
+
+      .next-ticket {
+        grid-template-columns: 56px 1fr;
+        min-height: 74px;
+        padding: 7px;
+      }
+
+      .next-ticket .ticket {
+        width: 48px;
+        height: 58px;
+        font-size: 24px;
+      }
+
+      .combo-log {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="대기열 주방장">
+    <header class="topbar">
+      <div>
+        <h1>대기열 주방장</h1>
+        <div class="subtitle" id="subtitle">주문을 끼워 넣고 3장 이상 묶어 서빙</div>
+      </div>
+      <div class="icon-row">
+        <button class="icon-btn" id="helpBtn" title="도움말" aria-label="도움말">?</button>
+        <button class="icon-btn" id="soundBtn" title="효과음" aria-label="효과음">♪</button>
+      </div>
+    </header>
+
+    <section class="screen menu active" id="menuScreen">
+      <div class="kitchen-hero" aria-hidden="true">
+        <div class="hero-title">QUEUE<br>KITCHEN</div>
+        <div></div>
+        <div class="order-rack">
+          <div class="rack-row">
+            <div class="demo-ticket">라</div><div class="demo-ticket">라</div><div class="demo-ticket">라</div><div class="demo-ticket">서</div><div class="demo-ticket">초</div><div class="demo-ticket">초</div>
+          </div>
+          <div class="rack-row">
+            <div class="demo-ticket">★</div><div class="demo-ticket">빙</div><div class="demo-ticket">불</div><div class="demo-ticket">초</div><div class="demo-ticket">초</div><div class="demo-ticket">초</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="start-panel">
+        <div class="brief">
+          들어온 주문표를 네 줄 중 하나에 끼워 넣습니다. 같은 메뉴가 3장 이상 이어지면 즉시 서빙되고, 줄이 넘치면 평판이 떨어집니다.
+        </div>
+        <div class="shift-list" id="shiftList"></div>
+        <button class="primary" id="startBtn">첫 근무 시작</button>
+      </div>
+    </section>
+
+    <section class="screen play" id="playScreen">
+      <div class="hud">
+        <div class="meter"><span>근무</span><b id="stageLabel">1/4</b></div>
+        <div class="meter"><span>서빙 점수</span><b id="scoreLabel">0</b></div>
+        <div class="meter"><span>목표</span><b id="goalLabel">12</b></div>
+        <div class="meter"><span>남은 주문</span><b id="moveLabel">20</b></div>
+      </div>
+      <div class="board">
+        <div class="line-zone" id="lineZone" aria-label="주문 대기열"></div>
+        <aside class="side-zone">
+          <div class="next-ticket">
+            <div id="nextToken"></div>
+            <div class="next-copy">
+              <strong id="nextName">라멘</strong>
+              <small id="nextHint">줄 버튼을 눌러 끼워 넣으세요.</small>
+            </div>
+          </div>
+          <div class="combo-log" id="comboLog">첫 주문을 받을 준비가 됐습니다.</div>
+          <div class="mini-tasks" id="taskList"></div>
+          <div class="side-actions">
+            <button class="mode-btn" id="adBtn">보상 휴식 +5주문</button>
+            <button class="mode-btn" id="pauseBtn">메뉴</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="toast" id="toast">오늘의 신메뉴: 빠른 판단과 줄 관리</div>
+  </main>
+
+  <div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal">
+      <h2 id="helpTitle">조작</h2>
+      <p>줄 번호를 누르면 현재 주문표가 그 줄 끝에 들어갑니다. 같은 메뉴 3장 이상이 이어지면 서빙되어 점수를 얻습니다.</p>
+      <p>VIP는 콤보 점수를 두 배로 만들고, 불 주문은 오래 두면 평판을 깎습니다. 빙 주문은 줄 하나를 식혀 불 위험을 지웁니다.</p>
+      <button class="primary" id="closeHelpBtn">닫기</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="resultOverlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal">
+      <h2 id="resultTitle">근무 종료</h2>
+      <p id="resultCopy">결과를 정산 중입니다.</p>
+      <div class="result-grid">
+        <div class="result-cell"><span>점수</span><b id="resultScore">0</b></div>
+        <div class="result-cell"><span>최고 콤보</span><b id="resultCombo">0</b></div>
+        <div class="result-cell"><span>등급</span><b id="resultGrade">C</b></div>
+      </div>
+      <button class="primary" id="nextBtn">다음 근무</button>
+      <button class="mode-btn" id="retryBtn">다시 도전</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="adOverlay" role="dialog" aria-modal="true" aria-labelledby="adTitle">
+    <div class="modal">
+      <h2 id="adTitle">보상 휴식</h2>
+      <p>짧은 정리 시간을 보낸 뒤 주문 5개를 추가합니다.</p>
+      <div class="ad-count" id="adCount">3</div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const dishes = [
+      { id: "ramen", label: "라", name: "라멘", bg: "#ffe3a3" },
+      { id: "salad", label: "샐", name: "샐러드", bg: "#bde9ba" },
+      { id: "tea", label: "차", name: "차", bg: "#b8d7ec" },
+      { id: "rice", label: "밥", name: "밥", bg: "#f8e8d9" },
+      { id: "cake", label: "케", name: "케이크", bg: "#e7c5ef" }
+    ];
+
+    const shifts = [
+      {
+        name: "런치 라인",
+        rule: "기본 3연속 서빙",
+        goal: 16,
+        moves: 22,
+        dishCount: 3,
+        heat: 0,
+        ice: 0,
+        vipEvery: 0
+      },
+      {
+        name: "불맛 러시",
+        rule: "불 주문 등장",
+        goal: 24,
+        moves: 26,
+        dishCount: 4,
+        heat: 0.16,
+        ice: 0,
+        vipEvery: 0
+      },
+      {
+        name: "VIP 예약석",
+        rule: "VIP 콤보 2배",
+        goal: 34,
+        moves: 30,
+        dishCount: 4,
+        heat: 0.12,
+        ice: 0.08,
+        vipEvery: 5
+      },
+      {
+        name: "냉장 야간반",
+        rule: "빙 주문으로 위험 제거",
+        goal: 46,
+        moves: 34,
+        dishCount: 5,
+        heat: 0.16,
+        ice: 0.16,
+        vipEvery: 4
+      },
+      {
+        name: "심야 챌린지",
+        rule: "잠금 해제 보너스 근무",
+        goal: 58,
+        moves: 36,
+        dishCount: 5,
+        heat: 0.2,
+        ice: 0.18,
+        vipEvery: 3,
+        bonus: true
+      }
+    ];
+
+    const state = {
+      screen: "menu",
+      stage: 0,
+      unlocked: 0,
+      lines: [[], [], [], []],
+      next: null,
+      score: 0,
+      moves: 0,
+      served: 0,
+      bestCombo: 0,
+      streak: 0,
+      mistakes: 0,
+      adsUsed: 0,
+      sound: true,
+      bonusUnlocked: false,
+      started: false
+    };
+
+    const menuScreen = document.getElementById("menuScreen");
+    const playScreen = document.getElementById("playScreen");
+    const lineZone = document.getElementById("lineZone");
+    const shiftList = document.getElementById("shiftList");
+    const stageLabel = document.getElementById("stageLabel");
+    const scoreLabel = document.getElementById("scoreLabel");
+    const goalLabel = document.getElementById("goalLabel");
+    const moveLabel = document.getElementById("moveLabel");
+    const nextToken = document.getElementById("nextToken");
+    const nextName = document.getElementById("nextName");
+    const nextHint = document.getElementById("nextHint");
+    const comboLog = document.getElementById("comboLog");
+    const taskList = document.getElementById("taskList");
+    const toast = document.getElementById("toast");
+    const adBtn = document.getElementById("adBtn");
+    const resultOverlay = document.getElementById("resultOverlay");
+    const helpOverlay = document.getElementById("helpOverlay");
+    const adOverlay = document.getElementById("adOverlay");
+
+    function tokenMarkup(token) {
+      const tag = token.vip ? "★" : token.burn ? "불" : token.ice ? "빙" : "";
+      const classes = ["ticket", token.vip ? "vip" : "", token.burn ? "burn" : "", token.ice ? "ice" : ""].join(" ");
+      return `<div class="${classes}" data-tag="${tag}" style="--ticket-bg:${token.bg};--tag-opacity:${tag ? 1 : 0}">${token.label}</div>`;
+    }
+
+    function makeToken() {
+      const shift = shifts[state.stage];
+      const base = dishes[Math.floor(Math.random() * shift.dishCount)];
+      const token = { ...base, vip: false, burn: false, ice: false, age: 0 };
+      if (shift.vipEvery && (state.served + state.moves) % shift.vipEvery === shift.vipEvery - 1) {
+        token.vip = true;
+      } else if (Math.random() < shift.ice) {
+        token.ice = true;
+      } else if (Math.random() < shift.heat) {
+        token.burn = true;
+      }
+      return token;
+    }
+
+    function renderShiftList() {
+      shiftList.innerHTML = shifts.map((shift, index) => {
+        const locked = index > state.unlocked && !(shift.bonus && state.bonusUnlocked);
+        const current = index === state.stage && state.started;
+        const status = locked ? "잠김" : current ? "진행" : shift.bonus ? "보너스" : "선택";
+        return `
+          <button class="shift" data-shift="${index}" ${locked ? "disabled" : ""}>
+            <span class="shift-number">${index + 1}</span>
+            <span><strong>${shift.name}</strong><small>${shift.rule} · 목표 ${shift.goal}</small></span>
+            <span class="badge">${status}</span>
+          </button>
+        `;
+      }).join("");
+      shiftList.querySelectorAll(".shift").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.shift);
+          if (!button.disabled) {
+            state.stage = index;
+            startShift(index);
+          }
+        });
+      });
+    }
+
+    function switchScreen(next) {
+      state.screen = next;
+      menuScreen.classList.toggle("active", next === "menu");
+      playScreen.classList.toggle("active", next === "play");
+    }
+
+    function startShift(index) {
+      const shift = shifts[index];
+      state.stage = index;
+      state.lines = [[], [], [], []];
+      state.score = 0;
+      state.moves = shift.moves;
+      state.served = 0;
+      state.bestCombo = 0;
+      state.streak = 0;
+      state.mistakes = 0;
+      state.adsUsed = 0;
+      state.next = makeToken();
+      state.started = true;
+      comboLog.textContent = `${shift.name} 시작. ${shift.rule}`;
+      switchScreen("play");
+      render();
+    }
+
+    function render() {
+      const shift = shifts[state.stage];
+      stageLabel.textContent = `${state.stage + 1}/${state.bonusUnlocked ? 5 : 4}`;
+      scoreLabel.textContent = state.score;
+      goalLabel.textContent = shift.goal;
+      moveLabel.textContent = state.moves;
+      nextToken.innerHTML = tokenMarkup(state.next);
+      nextName.textContent = `${state.next.vip ? "VIP " : ""}${state.next.burn ? "불 " : ""}${state.next.ice ? "빙 " : ""}${state.next.name}`;
+      nextHint.textContent = state.next.ice ? "넣은 줄의 불 위험을 지웁니다." : state.next.vip ? "콤보에 넣으면 점수 2배입니다." : "줄 버튼을 눌러 끼워 넣으세요.";
+      adBtn.disabled = state.adsUsed > 0 || state.moves > 7;
+      adBtn.textContent = state.adsUsed ? "보상 사용 완료" : "보상 휴식 +5주문";
+
+      lineZone.innerHTML = state.lines.map((line, index) => `
+        <div class="lane">
+          <button class="lane-btn" data-lane="${index}" aria-label="${index + 1}번 줄에 넣기">${index + 1}</button>
+          <div class="queue">${line.map(tokenMarkup).join("")}</div>
+        </div>
+      `).join("");
+      lineZone.querySelectorAll(".lane-btn").forEach((button) => {
+        button.addEventListener("click", () => placeToken(Number(button.dataset.lane)));
+      });
+
+      taskList.innerHTML = [
+        { label: `서빙 ${state.served} / ${Math.ceil(shift.goal / 3)}회`, done: state.served >= Math.ceil(shift.goal / 3) },
+        { label: `최고 콤보 ${state.bestCombo} / 4`, done: state.bestCombo >= 4 },
+        { label: `실수 ${state.mistakes} / 3 이하`, done: state.mistakes <= 3 },
+        { label: state.bonusUnlocked ? "심야 챌린지 해금" : "3근무 완료 시 보너스 해금", done: state.bonusUnlocked }
+      ].map((task) => `<div class="task ${task.done ? "done" : ""}">${task.done ? "✓ " : ""}${task.label}</div>`).join("");
+    }
+
+    function placeToken(laneIndex) {
+      const line = state.lines[laneIndex];
+      const token = state.next;
+      line.push(token);
+      if (token.ice) {
+        line.forEach((item) => { item.burn = false; item.age = 0; });
+        comboLog.textContent = `${laneIndex + 1}번 줄을 식혔습니다.`;
+      }
+      state.moves -= 1;
+      ageBurningOrders();
+      resolveLine(laneIndex);
+      if (line.length > 7) {
+        line.shift();
+        state.mistakes += 1;
+        state.streak = 0;
+        comboLog.textContent = "줄이 넘쳐 평판이 흔들렸습니다.";
+        pulse("초과 주문 발생");
+      }
+      state.next = makeToken();
+      checkEnd();
+      render();
+    }
+
+    function ageBurningOrders() {
+      state.lines.forEach((line) => {
+        line.forEach((token) => {
+          if (token.burn) {
+            token.age += 1;
+            if (token.age > 2) {
+              token.burn = false;
+              state.mistakes += 1;
+              state.streak = 0;
+              comboLog.textContent = "불 주문이 늦어져 평판이 깎였습니다.";
+            }
+          }
+        });
+      });
+    }
+
+    function resolveLine(laneIndex) {
+      const line = state.lines[laneIndex];
+      let start = 0;
+      while (start < line.length) {
+        let end = start + 1;
+        while (end < line.length && line[end].id === line[start].id) {
+          end += 1;
+        }
+        const length = end - start;
+        if (length >= 3) {
+          const served = line.splice(start, length);
+          const vip = served.some((item) => item.vip);
+          const burn = served.some((item) => item.burn);
+          const ice = served.some((item) => item.ice);
+          state.streak += 1;
+          state.bestCombo = Math.max(state.bestCombo, length + state.streak - 1);
+          let gain = length * 4 + state.streak * 2;
+          if (vip) gain *= 2;
+          if (burn) gain += 5;
+          if (ice) gain += 3;
+          state.score += gain;
+          state.served += 1;
+          comboLog.textContent = `${served[0].name} ${length}장 서빙 +${gain}`;
+          pulse(vip ? "VIP 콤보!" : `${length}연속 서빙`);
+          start = Math.max(0, start - 1);
+        } else {
+          start = end;
+        }
+      }
+    }
+
+    function checkEnd() {
+      const shift = shifts[state.stage];
+      if (state.score >= shift.goal) {
+        if (state.stage >= state.unlocked && state.stage < 3) {
+          state.unlocked = state.stage + 1;
+        }
+        if (state.stage >= 2) {
+          state.bonusUnlocked = true;
+        }
+        showResult(true);
+      } else if (state.moves <= 0 || state.mistakes >= 6) {
+        showResult(false);
+      }
+    }
+
+    function showResult(clear) {
+      const shift = shifts[state.stage];
+      const grade = state.score >= shift.goal + 18 ? "S" : state.score >= shift.goal ? "A" : state.score >= Math.floor(shift.goal * 0.75) ? "B" : "C";
+      document.getElementById("resultTitle").textContent = clear ? "근무 성공" : "근무 실패";
+      document.getElementById("resultCopy").textContent = clear ? `${shift.name} 목표를 달성했습니다.` : "주문 흐름을 다시 정리해야 합니다.";
+      document.getElementById("resultScore").textContent = state.score;
+      document.getElementById("resultCombo").textContent = state.bestCombo;
+      document.getElementById("resultGrade").textContent = grade;
+      const nextBtn = document.getElementById("nextBtn");
+      nextBtn.textContent = clear ? (state.stage < 3 ? "다음 근무" : state.stage === 3 && state.bonusUnlocked ? "심야 챌린지" : "메뉴") : "메뉴";
+      resultOverlay.classList.add("active");
+    }
+
+    function pulse(message) {
+      toast.textContent = message;
+      if (!state.sound) return;
+      try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.frequency.value = message.includes("VIP") ? 680 : 440;
+        gain.gain.setValueAtTime(0.0001, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.06, audio.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.12);
+        osc.connect(gain).connect(audio.destination);
+        osc.start();
+        osc.stop(audio.currentTime + 0.13);
+      } catch (error) {
+        state.sound = false;
+      }
+    }
+
+    function runRewardBreak() {
+      if (state.adsUsed > 0 || state.moves > 7) return;
+      state.adsUsed = 1;
+      adOverlay.classList.add("active");
+      let count = 3;
+      const adCount = document.getElementById("adCount");
+      adCount.textContent = count;
+      const timer = setInterval(() => {
+        count -= 1;
+        adCount.textContent = count > 0 ? count : "정리 완료";
+        if (count <= 0) {
+          clearInterval(timer);
+          state.moves += 5;
+          adOverlay.classList.remove("active");
+          comboLog.textContent = "보상 휴식으로 주문 5개를 추가했습니다.";
+          render();
+        }
+      }, 650);
+    }
+
+    document.getElementById("startBtn").addEventListener("click", () => startShift(state.stage));
+    document.getElementById("helpBtn").addEventListener("click", () => helpOverlay.classList.add("active"));
+    document.getElementById("closeHelpBtn").addEventListener("click", () => helpOverlay.classList.remove("active"));
+    document.getElementById("soundBtn").addEventListener("click", () => {
+      state.sound = !state.sound;
+      document.getElementById("soundBtn").textContent = state.sound ? "♪" : "×";
+    });
+    document.getElementById("pauseBtn").addEventListener("click", () => {
+      state.started = false;
+      switchScreen("menu");
+      renderShiftList();
+    });
+    document.getElementById("adBtn").addEventListener("click", runRewardBreak);
+    document.getElementById("retryBtn").addEventListener("click", () => {
+      resultOverlay.classList.remove("active");
+      startShift(state.stage);
+    });
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      resultOverlay.classList.remove("active");
+      if (state.score >= shifts[state.stage].goal && state.stage < 3) {
+        startShift(state.stage + 1);
+      } else if (state.score >= shifts[state.stage].goal && state.stage === 3 && state.bonusUnlocked) {
+        startShift(4);
+      } else {
+        state.started = false;
+        switchScreen("menu");
+        renderShiftList();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (state.screen !== "play") return;
+      const lane = Number(event.key) - 1;
+      if (lane >= 0 && lane < 4) {
+        placeToken(lane);
+      }
+    });
+
+    state.next = makeToken();
+    renderShiftList();
+    render();
+  </script>
+</body>
+</html>
