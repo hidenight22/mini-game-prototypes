@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#061b2d">
+  <title>파도병 구조대 | Tideglass Rescue</title>
+  <style>
+    :root{--deep:#041522;--navy:#08283d;--glass:#0c3f56;--aqua:#56e5df;--foam:#d8ffff;--coral:#ff806f;--gold:#ffd66b;--ink:#eaffff;--muted:#91b9c6}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02101b;color:var(--ink);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;touch-action:manipulation}
+    body{display:grid;place-items:center;background:radial-gradient(circle at 50% -15%,#17607a 0,#08293e 38%,#020e18 78%)}
+    button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+    button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+    #app{position:relative;width:min(100vw,480px);height:100svh;max-height:920px;min-height:460px;overflow:hidden;background:
+      radial-gradient(circle at 15% 20%,rgba(86,229,223,.10),transparent 28%),
+      linear-gradient(180deg,#082f45 0%,#061b2d 55%,#03121e 100%);box-shadow:0 0 40px #0008;isolation:isolate}
+    #app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;background-image:radial-gradient(circle,#b8ffff 0 1px,transparent 1.5px);background-size:31px 31px;animation:drift 14s linear infinite}
+    @keyframes drift{to{background-position:31px -62px}}
+    .screen{position:absolute;inset:0;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));display:none;z-index:1}
+    .screen.active{display:flex}
+    .icon-btn{width:38px;height:38px;border-radius:13px;background:#dfffff16;border:1px solid #baffff2c;display:grid;place-items:center;font-weight:900}
+    .primary{min-height:48px;border-radius:16px;padding:0 22px;background:linear-gradient(135deg,var(--gold),#ff9f62);color:#132532;font-weight:900;box-shadow:0 8px 22px #0005,0 2px 0 #fff8 inset;letter-spacing:-.02em}
+    .secondary{min-height:42px;border-radius:14px;padding:0 17px;background:#dfffff12;border:1px solid #9ef7f03b;font-weight:800}
+    .eyebrow{font-size:11px;letter-spacing:.19em;color:var(--aqua);font-weight:900;text-transform:uppercase}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid #bbffff2a;border-radius:999px;background:#dfffff0b;font-size:11px;color:#bce7ed;font-weight:800}
+
+    /* start */
+    #start{flex-direction:column;gap:10px}
+    .start-top{display:flex;justify-content:space-between;align-items:center}
+    .hero{text-align:center;padding:8px 4px 0}
+    .logo{position:relative;width:88px;height:88px;margin:0 auto 6px;border:2px solid #b7ffff88;border-radius:50% 50% 44% 44%;background:linear-gradient(180deg,#a5ffff19,#2ad8e14a);box-shadow:0 0 32px #41efff3a inset,0 8px 30px #0007}
+    .logo::before{content:"";position:absolute;left:14px;right:14px;bottom:12px;height:44px;border-radius:45% 45% 42% 42%;background:linear-gradient(#5be9e6,#0aa8c7);box-shadow:0 -4px 0 #dfffff88 inset}
+    .logo::after{content:"✦";position:absolute;inset:15px;display:grid;place-items:center;color:#fff4b1;font-size:34px;filter:drop-shadow(0 0 8px #fff)}
+    h1{font-size:clamp(29px,8vw,42px);line-height:1;margin:0;letter-spacing:-.07em;text-shadow:0 5px 18px #0008}
+    .sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .mission-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 1px 5px;scroll-snap-type:x mandatory;min-height:112px}
+    .mission-strip::-webkit-scrollbar{display:none}
+    .mission-card{flex:0 0 132px;min-height:102px;padding:11px;border-radius:17px;text-align:left;background:linear-gradient(145deg,#ffffff14,#5eeeff09);border:1px solid #a9ffff25;scroll-snap-align:start;box-shadow:0 6px 15px #0003}
+    .mission-card.selected{border-color:var(--gold);background:linear-gradient(145deg,#ffd66b26,#48dbe31a);transform:translateY(-1px)}
+    .mission-card b{display:block;font-size:13px;margin:5px 0 2px}
+    .mission-card small{display:block;color:#9ac2cc;font-size:10px;line-height:1.35}
+    .stars{color:var(--gold);font-size:12px;letter-spacing:1px}
+    .start-actions{margin-top:auto;display:grid;grid-template-columns:1fr auto;gap:8px}
+    .start-actions .primary{width:100%}
+    .unlock{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:15px;background:#02141d91;border:1px solid #8ff5ef20;font-size:11px;color:#a7ccd4}
+    #skinBtn[hidden]{display:none}
+
+    /* game */
+    #game{flex-direction:column;gap:7px}
+    .game-head{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:8px;min-height:38px}
+    .mission-title{text-align:center;min-width:0}
+    .mission-title b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mission-title small{display:block;color:var(--aqua);font-size:10px;font-weight:800}
+    .hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .meter{height:38px;padding:6px 8px;border-radius:12px;background:#00131f99;border:1px solid #9afff51c}
+    .meter-row{display:flex;justify-content:space-between;font-size:9px;font-weight:800;color:#a5cbd3;margin-bottom:4px}
+    .bar{height:7px;background:#0008;border-radius:999px;overflow:hidden}
+    .bar i{display:block;height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,var(--aqua),#7effb6);transition:width .15s}
+    #hullBar{background:linear-gradient(90deg,var(--coral),var(--gold))}
+    #timeBar{background:linear-gradient(90deg,#ba9cff,#6ee7ff)}
+    #sceneWrap{position:relative;flex:1;min-height:214px;border-radius:22px;overflow:hidden;background:linear-gradient(#0a354c,#061a2b);border:1px solid #a9ffff33;box-shadow:0 14px 30px #0006,0 0 40px #32e1e118 inset}
+    canvas{display:block;width:100%;height:100%}
+    .toast{position:absolute;left:50%;top:12px;transform:translate(-50%,-10px);padding:7px 12px;border-radius:999px;background:#031622e8;border:1px solid #7ff9ed5c;font-size:11px;font-weight:900;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .lock-note{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);font-size:10px;color:#fff6b3;background:#00131dcf;border-radius:8px;padding:4px 8px;display:none}
+    .lock-note.show{display:block}
+    .valves{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .valve{position:relative;height:69px;border-radius:17px;background:linear-gradient(#123c4d,#082230);border:1px solid #a9ffff2d;overflow:hidden;box-shadow:0 5px 12px #0004}
+    .valve.overheat{border-color:#ff806f;animation:hot .45s infinite alternate}
+    @keyframes hot{to{box-shadow:0 0 18px #ff5c4f66}}
+    .valve-name{position:absolute;left:0;right:0;top:5px;text-align:center;font-size:10px;font-weight:900;color:#c5e5e9;pointer-events:none}
+    .valve-controls{position:absolute;inset:22px 0 0;display:grid;grid-template-columns:1fr 1fr}
+    .valve-controls span{display:grid;place-items:center;font-size:21px;font-weight:700}
+    .valve-controls span:first-child{border-right:1px solid #baffff1f;color:#79c7d4}
+    .valve-controls span:last-child{color:var(--aqua)}
+    .heat{position:absolute;left:10px;right:10px;bottom:5px;height:3px;border-radius:99px;background:#0009;overflow:hidden;pointer-events:none}
+    .heat i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--coral));width:0}
+    .micro-hint{text-align:center;font-size:10px;color:#83acb7;height:13px}
+
+    /* result */
+    #result{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:13px;background:radial-gradient(circle at 50% 25%,#136074,#071c2d 62%,#020d16)}
+    .result-orb{width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#4ee1df3b,#001723);border:2px solid #aaffff69;box-shadow:0 0 42px #42f4e74d inset,0 18px 30px #0006;font-size:50px}
+    #result h2{margin:0;font-size:29px;letter-spacing:-.05em}
+    #resultMsg{margin:0;color:#accbd1;font-size:13px;max-width:300px}
+    .score-line{font-size:30px;font-weight:950;color:var(--gold)}
+    .result-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .reward{padding:11px 13px;border-radius:15px;background:#ffcf6720;border:1px solid #ffd66b55;color:#ffe7a3;font-size:12px;font-weight:800}
+    #supportBtn[hidden],#nextBtn[hidden]{display:none}
+
+    /* modals */
+    .modal{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;padding:20px;background:#00101bd9;backdrop-filter:blur(8px)}
+    .modal.show{display:flex}
+    .panel{width:min(100%,360px);max-height:90%;overflow:auto;border-radius:23px;padding:20px;background:linear-gradient(160deg,#103d50,#071d2c);border:1px solid #a7ffff42;box-shadow:0 20px 50px #0009}
+    .panel h3{margin:0 0 8px;font-size:22px}
+    .panel p,.panel li{font-size:13px;line-height:1.55;color:#b9d6dc}
+    .panel ul{padding-left:20px}
+    .panel .primary{width:100%;margin-top:9px}
+    .ad-panel{text-align:center}
+    .ad-ring{width:92px;height:92px;margin:15px auto;border-radius:50%;display:grid;place-items:center;border:7px solid #5be3dc2c;border-top-color:var(--gold);font-size:34px;font-weight:950;animation:spin 1s linear infinite}
+    .ad-ring span{animation:unspin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}} @keyframes unspin{to{transform:rotate(-360deg)}}
+    .ad-panel small{color:#86adb6}
+    .flash{animation:flash .35s ease}
+    @keyframes flash{50%{filter:brightness(1.8)}}
+    .shake{animation:shake .25s linear}
+    @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+    @media(max-height:610px){
+      .screen{padding-top:calc(7px + env(safe-area-inset-top));padding-bottom:calc(7px + env(safe-area-inset-bottom))}
+      #start{gap:5px}.hero{padding:0}.logo{width:57px;height:57px;margin-bottom:3px}.logo::before{left:10px;right:10px;bottom:8px;height:29px}.logo::after{inset:10px;font-size:23px}h1{font-size:27px}.sub{font-size:11px;margin-top:3px}.mission-strip{min-height:92px}.mission-card{min-height:84px;padding:8px}.mission-card small{font-size:9px}.unlock{padding:6px 10px}.primary{min-height:43px}
+      #game{gap:4px}.game-head{min-height:34px}.icon-btn{height:34px;width:36px}.hud{gap:4px}.meter{height:31px;padding:4px 6px}.meter-row{margin-bottom:2px}.bar{height:5px}#sceneWrap{min-height:177px;border-radius:18px}.valve{height:57px}.valve-controls{inset:19px 0 0}.valve-name{top:3px}.heat{bottom:3px}.micro-hint{font-size:9px;height:10px}
+      .result-orb{width:82px;height:82px;font-size:38px}#result{gap:8px}#result h2{font-size:25px}.score-line{font-size:25px}
+    }
+  </style>
+</head>
+<body>
+<main id="app">
+  <section id="start" class="screen active" aria-label="시작 화면">
+    <div class="start-top"><span class="eyebrow">TIDEGLASS RESCUE</span><button class="icon-btn help-open" aria-label="도움말">?</button></div>
+    <div class="hero">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>파도병 구조대</h1>
+      <p class="sub">세 수조의 수위를 맞춰 구조 캡슐을 인도하세요.</p>
+    </div>
+    <div><span class="pill" id="progressPill">구조 기록 0 / 5</span></div>
+    <div class="mission-strip" id="missionStrip" aria-label="챌린지 선택"></div>
+    <div class="unlock"><span id="unlockText">5개 구조 완료 시 산호 구조선 해금</span><button id="skinBtn" class="secondary" hidden>기본 선체</button></div>
+    <div class="start-actions"><button id="startBtn" class="primary">1구역 출동</button><button class="icon-btn help-open" aria-label="도움말">i</button></div>
+  </section>
+
+  <section id="game" class="screen" aria-label="게임 화면">
+    <header class="game-head"><button id="homeBtn" class="icon-btn" aria-label="임무 포기">‹</button><div class="mission-title"><b id="gameTitle">임무</b><small id="gameRule">규칙</small></div><button class="icon-btn help-open" aria-label="도움말">?</button></header>
+    <div class="hud">
+      <div class="meter"><div class="meter-row"><span>산소</span><span id="oxygenText">100</span></div><div class="bar"><i id="oxygenBar"></i></div></div>
+      <div class="meter"><div class="meter-row"><span>선체</span><span id="hullText">100</span></div><div class="bar"><i id="hullBar"></i></div></div>
+      <div class="meter"><div class="meter-row"><span>시간</span><span id="timeText">30</span></div><div class="bar"><i id="timeBar"></i></div></div>
+    </div>
+    <div id="sceneWrap"><canvas id="scene" aria-label="세 수조와 구조 캡슐"></canvas><div id="toast" class="toast"></div><div id="lockNote" class="lock-note">잠금문: 양쪽 수위차를 10 이하로!</div></div>
+    <div class="valves" id="valves"></div>
+    <div class="micro-hint">밸브 왼쪽은 배수 − · 오른쪽은 급수 ＋</div>
+  </section>
+
+  <section id="result" class="screen" aria-label="결과 화면">
+    <div class="eyebrow">RESCUE REPORT</div><div class="result-orb" id="resultOrb">✦</div><h2 id="resultTitle">구조 성공</h2><div class="score-line" id="resultScore">0점</div><div class="stars" id="resultStars">☆☆☆</div><p id="resultMsg"></p><div id="rewardNote" class="reward"></div>
+    <div class="result-actions"><button id="supportBtn" class="primary" hidden>3초 지원 받고 이어하기</button><button id="retryBtn" class="secondary">다시 출동</button><button id="nextBtn" class="primary" hidden>다음 구역</button><button id="resultHomeBtn" class="secondary">기지로</button></div>
+  </section>
+
+  <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-label="도움말"><div class="panel"><span class="eyebrow">FIELD MANUAL</span><h3>구조 요령</h3><ul><li>캡슐이 있는 수조를 목표선 높이에 맞추면 안전하게 전진합니다.</li><li>밸브 왼쪽은 배수, 오른쪽은 급수입니다. 과열된 밸브는 잠시 멈춥니다.</li><li>잠금문에서는 이웃 수조의 수위차를 10 이하로 맞추세요.</li><li>선체나 산소가 0이 되기 전에 출구에 도달하면 구조 성공입니다.</li></ul><button id="helpClose" class="primary">현장 복귀</button></div></div>
+  <div id="adModal" class="modal show-ad" role="dialog" aria-modal="true" aria-label="보상형 지원" style="display:none"><div class="panel ad-panel"><span class="eyebrow">REWARDED SUPPORT SAMPLE</span><h3>구조선 긴급 지원</h3><div class="ad-ring"><span id="adCount">3</span></div><p>지원 신호를 확인 중입니다.<br>완료하면 산소·선체·밸브가 복구됩니다.</p><small>프로토타입용 3초 보상형 흐름</small></div></div>
+  <div id="announce" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const missions = [
+    {name:'기본 수위',desc:'목표선을 따라 세 수조를 통과',targets:[46,66,53],time:38,drain:[1.6,1.4,1.5],rules:'목표 수위 유지',speed:.031},
+    {name:'압력 균형',desc:'과열 밸브와 압력차를 관리',targets:[70,44,68],time:42,drain:[2.0,1.8,2.2],rules:'밸브 과열 · 압력차',speed:.028,heat:true,pressure:true},
+    {name:'시간차 잠금문',desc:'문 앞에서 이웃 수위를 동기화',targets:[58,58,70],time:47,drain:[1.7,2.1,1.5],rules:'2중 잠금문 · 수위 동기화',speed:.027,locks:true},
+    {name:'누수와 산소',desc:'빠지는 물과 산소를 동시에 방어',targets:[74,55,64],time:49,drain:[4.2,3.4,4.8],rules:'지속 누수 · 산소 감소',speed:.026,heat:true,leak:true},
+    {name:'역류 파도',desc:'주기적인 역류를 읽고 복구',targets:[40,72,57],time:62,drain:[2.3,2.0,2.7],rules:'역류 파도 · 과열 · 잠금문',speed:.026,heat:true,backflow:true,locks:true}
+  ];
+  const HEAT_LIMIT=70;
+  const $ = s => document.querySelector(s);
+  const screens = {start:$('#start'),game:$('#game'),result:$('#result')};
+  const canvas=$('#scene'), ctx=canvas.getContext('2d');
+  let selected=0, state=null, raf=0, last=0, toastTimer=0, adTimer=0;
+  let save={completed:{},stars:{},coral:false};
+  try{save=Object.assign(save,JSON.parse(localStorage.getItem('tideglass-save')||'{}'))}catch(_e){}
+  const persist=()=>{try{localStorage.setItem('tideglass-save',JSON.stringify(save))}catch(_e){}};
+  const completedCount=()=>missions.reduce((n,_m,i)=>n+(save.completed[i]?1:0),0);
+  function showScreen(name){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[name].classList.add('active')}
+  function renderMissionCards(){
+    const strip=$('#missionStrip');strip.innerHTML='';
+    missions.forEach((m,i)=>{const b=document.createElement('button');b.className='mission-card'+(selected===i?' selected':'');b.innerHTML=`<span class="eyebrow">0${i+1}</span><b>${m.name}</b><small>${m.desc}</small><span class="stars">${'★'.repeat(save.stars[i]||0)}${'☆'.repeat(3-(save.stars[i]||0))}</span>`;b.onclick=()=>{selected=i;renderMissionCards();$('#startBtn').textContent=`${i+1}구역 출동`};strip.appendChild(b)});
+    const count=completedCount();$('#progressPill').textContent=`구조 기록 ${count} / 5`;
+    if(count===5&&!save.coral){save.coral=true;persist();}
+    $('#skinBtn').hidden=!save.coral;
+    $('#unlockText').textContent=save.coral?'산호 구조선 해금 완료 · 출동 전환 가능':'5개 구조 완료 시 산호 구조선 해금';
+    if(save.coral)$('#skinBtn').textContent=save.coralActive?'산호 선체 ON':'기본 선체';
+  }
+  function buildValves(){
+    const box=$('#valves');box.innerHTML='';
+    for(let i=0;i<3;i++){const b=document.createElement('button');b.className='valve';b.setAttribute('aria-label',`${i+1}번 밸브, 왼쪽 배수 오른쪽 급수`);b.innerHTML=`<span class="valve-name">${i+1}번 · <em id="level${i}" style="font-style:normal">50</em>%</span><span class="valve-controls"><span data-dir="-1">−</span><span data-dir="1">＋</span></span><span class="heat"><i></i></span>`;b.addEventListener('pointerdown',e=>{e.preventDefault();const r=b.getBoundingClientRect();operateValve(i,e.clientX-r.left<r.width/2?-1:1);});box.appendChild(b)}
+  }
+  function showToast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1300);$('#announce').textContent=msg}
+  function operateValve(i,dir){
+    if(!state||state.ended||state.paused)return;
+    const m=missions[state.mission];
+    if(state.heats[i]>=HEAT_LIMIT){showToast(`${i+1}번 밸브 냉각 중`);return}
+    state.levels[i]=Math.max(8,Math.min(94,state.levels[i]+dir*10));state.taps++;
+    if(m.heat)state.heats[i]=Math.min(HEAT_LIMIT+12,state.heats[i]+30);
+    state.pulses[i]=1;state.score=Math.max(0,state.score+(dir>0?4:2));
+    updateHud();
+  }
+  function beginMission(){
+    cancelAnimationFrame(raf);clearInterval(adTimer);
+    const m=missions[selected];
+    state={mission:selected,levels:[45,45,45],heats:[0,0,0],pulses:[0,0,0],progress:.035,oxygen:100,hull:100,time:m.time,maxTime:m.time,taps:0,score:0,lockIndex:0,lockHold:0,paused:false,ended:false,supported:false,safe:0,waveClock:0,waveFlash:0,bubbles:[],startAt:performance.now()};
+    $('#gameTitle').textContent=`${selected+1}. ${m.name}`;$('#gameRule').textContent=m.rules;$('#lockNote').classList.remove('show');showScreen('game');resize();updateHud();last=performance.now();raf=requestAnimationFrame(loop);showToast('목표선 높이를 따라가세요');
+  }
+  function resize(){
+    const r=canvas.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));ctx.setTransform(d,0,0,d,0,0);canvas._w=r.width;canvas._h=r.height;
+  }
+  addEventListener('resize',resize,{passive:true});
+  function loop(now){if(!state||state.ended)return;const dt=Math.min(.04,(now-last)/1000||0);last=now;if(!state.paused)tick(dt);draw();raf=requestAnimationFrame(loop)}
+  function tick(dt){
+    const s=state,m=missions[s.mission];s.time-=dt;s.waveClock+=dt;s.safe=Math.max(0,s.safe-dt);
+    const idx=Math.min(2,Math.floor(s.progress*3));
+    for(let i=0;i<3;i++){
+      s.levels[i]-=m.drain[i]*dt;s.levels[i]=Math.max(7,Math.min(95,s.levels[i]));
+      s.heats[i]=Math.max(0,s.heats[i]-(s.heats[i]>=HEAT_LIMIT?25:14)*dt);s.pulses[i]=Math.max(0,s.pulses[i]-dt*3.4);
+    }
+    if(m.backflow&&s.waveClock>6.2){s.waveClock=0;s.waveFlash=1;s.levels[0]=Math.min(95,s.levels[0]+14);s.levels[1]=Math.max(7,s.levels[1]-11);s.levels[2]=Math.min(95,s.levels[2]+8);s.progress=Math.max(.03,s.progress-.018);showToast('역류 파도! 수위를 복구하세요');$('#sceneWrap').classList.add('shake');setTimeout(()=>$('#sceneWrap').classList.remove('shake'),280)}
+    s.waveFlash=Math.max(0,s.waveFlash-dt*2);
+    let locked=false;
+    if(m.locks){
+      const gates=[.335,.665],g=gates[s.lockIndex];
+      if(g!==undefined&&s.progress>=g-.008){
+        const a=s.lockIndex,b=a+1,diff=Math.abs(s.levels[a]-s.levels[b]);locked=true;$('#lockNote').classList.add('show');
+        if(diff<=10){s.lockHold+=dt;if(s.lockHold>=1.05){s.lockIndex++;s.lockHold=0;locked=false;$('#lockNote').classList.remove('show');showToast('잠금문 개방! +150');s.score+=150}}
+        else s.lockHold=Math.max(0,s.lockHold-dt*.7);
+      }
+    }
+    if(!locked)s.progress+=m.speed*dt*(1+(s.levels[idx]-m.targets[idx])*.0015);
+    const err=Math.abs(s.levels[idx]-m.targets[idx]);
+    if(err<10){s.score+=dt*24;s.oxygen=Math.min(100,s.oxygen+dt*.9)}
+    else if(err>22&&s.safe<=0){s.hull-=dt*(m.pressure?8.4:6.2)*(1+(err-22)/40);s.oxygen-=dt*(m.leak?3.9:2.3)}
+    if(m.pressure&&s.safe<=0){const d1=Math.abs(s.levels[0]-s.levels[1]),d2=Math.abs(s.levels[1]-s.levels[2]);if(Math.max(d1,d2)>42)s.hull-=dt*5.2}
+    if(s.safe<=0)s.oxygen-=dt*(m.leak?2.05:1.05);
+    if(Math.random()<dt*5)s.bubbles.push({x:Math.random(),y:1,a:1,r:1+Math.random()*3});
+    s.bubbles.forEach(b=>{b.y-=dt*(.12+b.r*.015);b.a-=dt*.28});s.bubbles=s.bubbles.filter(b=>b.a>0&&b.y>0);
+    if(s.progress>=1){finish(true);return}if(s.time<=0||s.oxygen<=0||s.hull<=0){finish(false);return}updateHud();
+  }
+  function updateHud(){if(!state)return;const s=state;$('#oxygenText').textContent=Math.max(0,Math.ceil(s.oxygen));$('#hullText').textContent=Math.max(0,Math.ceil(s.hull));$('#timeText').textContent=Math.max(0,Math.ceil(s.time));$('#oxygenBar').style.width=`${Math.max(0,s.oxygen)}%`;$('#hullBar').style.width=`${Math.max(0,s.hull)}%`;$('#timeBar').style.width=`${Math.max(0,s.time/s.maxTime*100)}%`;document.querySelectorAll('.valve').forEach((b,i)=>{b.classList.toggle('overheat',state.heats[i]>=HEAT_LIMIT);b.querySelector('.heat i').style.width=`${Math.min(100,state.heats[i]/HEAT_LIMIT*100)}%`;b.querySelector('em').textContent=Math.round(state.levels[i])})}
+  function draw(){
+    const s=state,m=missions[s.mission],w=canvas._w||1,h=canvas._h||1;ctx.clearRect(0,0,w,h);
+    const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#0d425a');grad.addColorStop(1,'#041824');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+    ctx.globalAlpha=.18;ctx.strokeStyle='#8ffaf0';ctx.lineWidth=1;for(let y=18;y<h;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.quadraticCurveTo(w*.5,y-8,w,y);ctx.stroke()}ctx.globalAlpha=1;
+    const pad=12,gap=7,tw=(w-pad*2-gap*2)/3,top=24,bottom=h-17,th=bottom-top;
+    for(let i=0;i<3;i++){
+      const x=pad+i*(tw+gap),level=s.levels[i],waterY=bottom-th*level/100,targetY=bottom-th*m.targets[i]/100;
+      ctx.fillStyle='rgba(2,14,23,.66)';roundRect(x,top,tw,th,12);ctx.fill();ctx.save();roundRect(x+3,top+3,tw-6,th-6,9);ctx.clip();
+      const wg=ctx.createLinearGradient(0,waterY,0,bottom);wg.addColorStop(0,save.coralActive?'#ff9077':'#55e4df');wg.addColorStop(.12,save.coralActive?'#e45e72':'#10adcb');wg.addColorStop(1,'#075a81');ctx.globalAlpha=.84;ctx.fillStyle=wg;ctx.fillRect(x,waterY,tw,bottom-waterY);
+      ctx.globalAlpha=.7;ctx.strokeStyle='#e8ffff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,waterY);for(let xx=0;xx<=tw;xx+=8)ctx.lineTo(x+xx,waterY+Math.sin((xx+s.waveClock*45+i*18)/13)*2.1);ctx.stroke();ctx.restore();
+      ctx.setLineDash([5,4]);ctx.strokeStyle='#ffd86e';ctx.globalAlpha=.82;ctx.beginPath();ctx.moveTo(x+6,targetY);ctx.lineTo(x+tw-6,targetY);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+      ctx.strokeStyle=s.pulses[i]>0?'#ffffff':'#8ee7e6';ctx.lineWidth=s.pulses[i]>0?3:1.4;roundRect(x,top,tw,th,12);ctx.stroke();ctx.fillStyle='#d4ffff';ctx.font='800 9px system-ui';ctx.textAlign='center';ctx.fillText(`${Math.round(level)}%`,x+tw/2,top+13);
+      if(m.leak&&i!==1){ctx.fillStyle='#ff9b7d';ctx.font='15px system-ui';ctx.fillText('⌁',x+tw-12,bottom-8)}
+    }
+    if(m.locks){[1,2].forEach((gate,gi)=>{const x=pad+gate*tw+(gate-.5)*gap;const open=gi<s.lockIndex;ctx.fillStyle=open?'#65f0be':'#ffd66b';ctx.fillRect(x-2,top+6,4,open?9:th-12);ctx.fillStyle='#071925';ctx.beginPath();ctx.arc(x,top+15,7,0,Math.PI*2);ctx.fill();ctx.fillStyle=open?'#65f0be':'#ffd66b';ctx.font='10px system-ui';ctx.fillText(open?'✓':'◆',x,top+18)})}
+    const p=Math.min(.999,s.progress),ci=Math.min(2,Math.floor(p*3)),cx=pad+tw*(p*3-ci)+ci*(tw+gap),cy=bottom-th*s.levels[ci]/100-10;
+    ctx.save();ctx.translate(cx,cy);const coral=save.coralActive;if(s.safe>0){ctx.strokeStyle='#fff2a8';ctx.lineWidth=3;ctx.globalAlpha=.55+.3*Math.sin(s.waveClock*8);ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}ctx.fillStyle=coral?'#ff806f':'#ffd66b';ctx.strokeStyle='#fff4c7';ctx.lineWidth=2;roundRect(-14,-8,28,16,8);ctx.fill();ctx.stroke();ctx.fillStyle='#17445b';ctx.beginPath();ctx.arc(4,-1,5,0,Math.PI*2);ctx.fill();ctx.fillStyle=coral?'#ffd4a2':'#ff806f';ctx.beginPath();ctx.moveTo(-14,-3);ctx.lineTo(-22,0);ctx.lineTo(-14,4);ctx.fill();ctx.restore();
+    ctx.fillStyle='#dfffff';ctx.font='700 9px system-ui';ctx.textAlign='left';ctx.fillText('출발',pad,12);ctx.textAlign='right';ctx.fillText('구조 출구',w-pad,12);
+    s.bubbles.forEach(b=>{ctx.globalAlpha=b.a*.55;ctx.strokeStyle='#cfffff';ctx.beginPath();ctx.arc(b.x*w,b.y*h,b.r,0,Math.PI*2);ctx.stroke()});ctx.globalAlpha=1;
+    if(s.waveFlash>0){ctx.fillStyle=`rgba(117,232,255,${s.waveFlash*.17})`;ctx.fillRect(0,0,w,h)}
+  }
+  function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+  function finish(success){
+    const s=state;s.ended=true;cancelAnimationFrame(raf);const m=missions[s.mission];showScreen('result');
+    if(success){
+      const final=Math.round(700+s.score+s.hull*5+s.oxygen*3+s.time*12-Math.max(0,s.taps-16)*5),stars=final>=1650?3:final>=1250?2:1;
+      save.completed[s.mission]=true;save.stars[s.mission]=Math.max(save.stars[s.mission]||0,stars);const wasCoral=save.coral;if(completedCount()===5)save.coral=true;persist();
+      $('#resultOrb').textContent='⚓';$('#resultTitle').textContent='구조 성공';$('#resultScore').textContent=`${final.toLocaleString()}점`;$('#resultStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);$('#resultMsg').textContent=`${m.name} 통과 · 선체 ${Math.ceil(s.hull)} · 산소 ${Math.ceil(s.oxygen)}`;$('#rewardNote').textContent=!wasCoral&&save.coral?'신규 보상: 산호 구조선 선체 해금!':stars===3?'완벽한 수위 제어! 최고 구조 등급입니다.':`${3-stars}개 별을 더 노려 보세요.`;$('#supportBtn').hidden=true;$('#nextBtn').hidden=s.mission>=missions.length-1;
+    }else{
+      const reason=s.oxygen<=0?'산소 고갈':s.hull<=0?'선체 손상':'시간 초과';$('#resultOrb').textContent='◌';$('#resultTitle').textContent='구조 중단';$('#resultScore').textContent=`${Math.round(s.score).toLocaleString()}점`;$('#resultStars').textContent='☆☆☆';$('#resultMsg').textContent=`${reason} · 현재 위치 ${Math.round(s.progress*100)}%`;$('#rewardNote').textContent=s.supported?'긴급 지원은 임무당 1회만 사용할 수 있습니다.':'3초 지원 신호로 현장에서 바로 복귀할 수 있습니다.';$('#supportBtn').hidden=s.supported;$('#nextBtn').hidden=true;
+    }
+  }
+  function rewardedSupport(){
+    if(!state||state.supported)return;state.supported=true;const modal=$('#adModal');modal.style.display='flex';let n=3;$('#adCount').textContent=n;clearInterval(adTimer);adTimer=setInterval(()=>{n--;$('#adCount').textContent=Math.max(0,n);if(n<=0){clearInterval(adTimer);modal.style.display='none';state.oxygen=Math.min(100,Math.max(45,state.oxygen+45));state.hull=Math.min(100,Math.max(42,state.hull+40));state.heats=[0,0,0];state.time=Math.max(12,state.time+10);state.safe=2;state.ended=false;state.paused=false;showScreen('game');updateHud();last=performance.now();raf=requestAnimationFrame(loop);showToast('지원 완료 · 복구 + 2초 보호')}} ,1000)
+  }
+  function backHome(){if(state){state.ended=true;cancelAnimationFrame(raf)}renderMissionCards();showScreen('start')}
+  $('#startBtn').onclick=beginMission;$('#retryBtn').onclick=beginMission;$('#nextBtn').onclick=()=>{selected=Math.min(4,selected+1);beginMission()};$('#homeBtn').onclick=backHome;$('#resultHomeBtn').onclick=backHome;$('#supportBtn').onclick=rewardedSupport;
+  $('#skinBtn').onclick=()=>{save.coralActive=!save.coralActive;persist();renderMissionCards();showToast(save.coralActive?'산호 구조선 장착':'기본 구조선 장착')};
+  document.querySelectorAll('.help-open').forEach(b=>b.onclick=()=>{if(state&&!state.ended)state.paused=true;$('#helpModal').classList.add('show')});
+  $('#helpClose').onclick=()=>{$('#helpModal').classList.remove('show');if(state&&!state.ended){state.paused=false;last=performance.now()}};
+  document.addEventListener('visibilitychange',()=>{if(!state||state.ended)return;if(document.hidden)state.paused=true;else if(!$('#helpModal').classList.contains('show')&&$('#adModal').style.display==='none'){state.paused=false;last=performance.now()}});
+  buildValves();renderMissionCards();
+})();
+</script>
+</body>
+</html>
