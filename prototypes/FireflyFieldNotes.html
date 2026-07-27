@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#06131a">
+<title>반딧불 생태일지 · Firefly Field Notes</title>
+<style>
+:root{--ink:#effff6;--muted:#9bb8ae;--mint:#6ff2b3;--moon:#ffe893;--blue:#78cfff;--danger:#ff766f;--panel:#10252a;--line:#315852}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#02090e;color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;overscroll-behavior:none}
+button{font:inherit;color:inherit;touch-action:manipulation}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--moon);outline-offset:2px}
+#app{position:relative;width:min(100%,430px);height:100dvh;margin:auto;overflow:hidden;background:radial-gradient(circle at 50% 15%,#173f43 0,#071a21 47%,#040d13 100%);box-shadow:0 0 70px #000}
+.screen{position:absolute;inset:0;display:none}.screen.active{display:flex}
+.primary,.secondary,.icon-btn{min-height:44px;border-radius:13px;font-weight:900}
+.primary{border:1px solid #c9ffe2;background:linear-gradient(#73efb5,#3db181);color:#041511;box-shadow:0 8px 28px #4de0a42e}
+.secondary,.icon-btn{border:1px solid #3c625f;background:#10272c;color:#e8f7f1}.icon-btn{min-width:44px;padding:0 10px}
+.start{flex-direction:column;align-items:center;padding:max(18px,env(safe-area-inset-top)) 18px max(16px,env(safe-area-inset-bottom));text-align:center;background:radial-gradient(circle at 50% 33%,#1d4d45 0,#0b252a 31%,#06131a 69%)}
+.start-top{width:100%;display:flex;justify-content:space-between;align-items:center}.eyebrow{color:var(--moon);font-size:9px;font-weight:1000;letter-spacing:.22em}.record{color:var(--muted);font-size:9px}
+.hero-orbit{position:relative;width:min(52vw,200px);aspect-ratio:1;margin:auto;display:grid;place-items:center;border:1px solid #7be6b93b;border-radius:50%;box-shadow:inset 0 0 45px #5df0a21f,0 0 38px #5bf7bd13}
+.hero-orbit:before,.hero-orbit:after{content:"";position:absolute;border-radius:50%}.hero-orbit:before{inset:15%;border:2px dashed #dfffa94d;animation:turn 16s linear infinite}.hero-orbit:after{width:13px;height:13px;background:var(--moon);box-shadow:0 0 7px #fff,0 0 22px var(--moon),62px -31px 0 -3px var(--mint),-48px 44px 0 -4px var(--blue);animation:pulse 1.8s ease-in-out infinite}
+.field-mark{font-size:48px;filter:drop-shadow(0 0 16px #7bf6bd7a)}
+.brand-en{margin:0;color:var(--moon);font:800 11px Georgia,serif;letter-spacing:.2em}.brand{margin:4px 0 3px;font:800 clamp(29px,9vw,38px) Georgia,"Noto Sans KR",serif;line-height:1.05}.intro{max-width:310px;margin:3px 0 12px;color:#b5ccc3;font-size:11px;line-height:1.55}
+.start-actions{width:100%;display:grid;grid-template-columns:1fr auto;gap:8px}.start-actions .primary{font-size:14px}
+.select{flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));background:linear-gradient(#071a20eb,#06131af2)}
+.select-head{display:flex;align-items:center;gap:9px}.select-copy{min-width:0;flex:1}.select-copy small{display:block;color:var(--moon);font-size:8px;font-weight:900;letter-spacing:.15em}.select-copy h1{margin:1px 0 0;font-size:20px}.clear-chip{padding:5px 8px;border:1px solid #436a65;border-radius:99px;color:#b8cec5;font-size:8px;white-space:nowrap}
+.expedition-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;min-height:0;margin-top:10px}
+.expedition{position:relative;min-height:76px;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#142d30,#0c2025);text-align:left;overflow:hidden}
+.expedition:before{content:"";position:absolute;right:-15px;bottom:-18px;width:62px;height:62px;border:1px solid #82dcb52d;border-radius:50%}
+.expedition h2{margin:0 18px 4px 0;font-size:11px}.expedition p{margin:0;color:var(--muted);font-size:8px;line-height:1.35}.expedition .num{position:absolute;right:9px;top:7px;color:#56736e;font:800 17px Georgia}.expedition .stars{position:absolute;right:9px;bottom:7px;color:var(--moon);font-size:9px}.expedition.cleared{border-color:#5b9a80;background:linear-gradient(145deg,#15372f,#10262a)}
+.expedition.moon{grid-column:1/-1;min-height:67px;border-color:#8e7641;background:linear-gradient(110deg,#2f2919,#132d2c)}.expedition:disabled{opacity:.42;filter:saturate(.35)}
+.select-foot{margin-top:auto;padding-top:8px;color:#78958c;font-size:8px;text-align:center}
+.game{flex-direction:column;padding:max(7px,env(safe-area-inset-top)) 9px max(7px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 42%,#133c39,#05151b 72%)}
+.game-head{display:flex;align-items:center;gap:7px}.game-title{min-width:0;flex:1}.game-title small{display:block;color:var(--moon);font-size:7px;font-weight:900;letter-spacing:.13em}.game-title b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.game-actions{display:flex;gap:5px}.game-actions button{min-width:36px;min-height:34px;padding:0 8px;border-radius:9px;font-size:10px}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}.hud-box{padding:4px 2px;border:1px solid #294e4c;border-radius:8px;background:#0c2226;text-align:center}.hud-box span{display:block;color:#83a098;font-size:6px;font-weight:900}.hud-box b{font-size:11px}
+.mission{display:flex;align-items:center;gap:8px;min-height:48px;margin:5px 0;padding:4px 8px;border:1px solid #45685c;border-radius:11px;background:#122a29}.specimen{--specimen-color:var(--mint);position:relative;flex:0 0 auto;width:48px;height:34px;border:1px solid #56776f;border-radius:10px;background:#091a1c;box-shadow:inset 0 0 14px #0007;filter:drop-shadow(0 0 5px var(--specimen-color))}.specimen-wing{position:absolute;top:6px;width:23px;height:16px;border:2px solid #f4ffe9;border-radius:72% 30% 68% 34%;background:var(--specimen-color);box-shadow:inset 0 0 0 1px #08241f}.specimen-wing.left{left:2px;transform:rotate(-18deg)}.specimen-wing.right{right:2px;transform:scaleX(-1) rotate(-18deg)}.specimen.pattern-stripe .specimen-wing{background:repeating-linear-gradient(90deg,var(--specimen-color) 0 5px,#092d27 5px 8px)}.specimen.pattern-dot .specimen-wing{background:radial-gradient(circle at 34% 42%,#092821 0 2px,transparent 2.5px),radial-gradient(circle at 70% 67%,#092821 0 2px,transparent 2.5px),var(--specimen-color)}.specimen-body{position:absolute;z-index:2;left:50%;top:9px;width:7px;height:18px;border:2px solid #06201b;border-radius:60%;background:#f6ffe9;transform:translateX(-50%)}.specimen.body-round .specimen-body{top:12px;width:11px;height:11px;border-radius:50%}.specimen.body-diamond .specimen-body{top:12px;width:11px;height:11px;border-radius:2px;transform:translateX(-50%) rotate(45deg)}.mission-copy{min-width:0;flex:1}.mission-copy small{display:block;color:#a8c2b9;font-size:7px;font-weight:900}.mission-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.mission-traits{margin-top:1px;color:#fff0a3!important;font-size:6px!important}.mission-state{max-width:88px;color:var(--moon);font-size:9px;font-weight:1000;text-align:right}
+.field{position:relative;min-height:0;flex:1;overflow:hidden;border:1px solid #2b554d;border-radius:17px;background:radial-gradient(circle at 50% 40%,#17453c,#071b21 68%);touch-action:none}
+.field canvas{display:block;width:100%;height:100%;touch-action:none}.field-note{pointer-events:none;position:absolute;left:50%;bottom:7px;transform:translateX(-50%);width:94%;color:#b2cbc1;font-size:9px;text-align:center;text-shadow:0 2px 4px #000}.field-note strong{color:var(--moon)}
+.blackout{pointer-events:none;position:absolute;inset:0;display:grid;place-items:center;background:#010609e8;color:#bad4ca;font-size:11px;font-weight:1000;letter-spacing:.12em;opacity:0;transition:opacity .25s}.blackout.on{opacity:1}.blackout.lantern{background:#091a19bd;color:#fff0a3}
+.controls{display:grid;grid-template-columns:1fr 1.06fr;gap:6px;padding-top:6px}.support{min-height:48px;border:1px solid #88763f;border-radius:13px;background:linear-gradient(#302a18,#1d261f);color:#ffeaa0;font-size:9px;font-weight:900}.support:disabled{opacity:.38}.clear-loop{min-height:48px;border:1px solid #5c8078;border-radius:13px;background:#112a2e;color:#d6e9e2;font-size:9px;font-weight:900}.clear-loop:disabled{opacity:.38}
+.toast{pointer-events:none;position:absolute;z-index:15;left:50%;top:max(59px,calc(env(safe-area-inset-top) + 46px));max-width:88%;padding:7px 11px;border:1px solid #6f927f;border-radius:99px;background:#122b25ee;opacity:0;transform:translate(-50%,-8px);font-size:9px;font-weight:900;transition:.18s}.toast.show{opacity:1;transform:translate(-50%,0)}
+.result{flex-direction:column;align-items:center;padding:max(18px,env(safe-area-inset-top)) 15px max(14px,env(safe-area-inset-bottom));text-align:center;background:radial-gradient(circle at 50% 28%,#285447,#07171d 62%)}
+.badge{display:grid;place-items:center;width:104px;height:104px;margin:auto;border:2px solid var(--moon);border-radius:50%;box-shadow:inset 0 0 0 9px #17362f,0 0 35px #ffe8872e;color:var(--moon);font:800 40px Georgia,serif}.badge.fail{border-color:var(--danger);color:var(--danger);box-shadow:inset 0 0 0 9px #351f20,0 0 35px #ff766f26}.result-kicker{margin-top:auto;color:var(--moon);font-size:8px;font-weight:900;letter-spacing:.2em}.result h2{margin:8px 0 4px;font:800 25px Georgia,"Noto Sans KR",serif}.result-copy{min-height:38px;max-width:330px;margin:0;color:#a8c1b7;font-size:10px;line-height:1.55}.result-stars{margin:7px 0;color:var(--moon);font-size:28px;letter-spacing:4px}.result-stars .off{color:#35534d}.stats{display:grid;grid-template-columns:repeat(3,1fr);width:100%;gap:6px}.stat{padding:8px 3px;border:1px solid #34564f;border-radius:11px;background:#102622}.stat span{display:block;color:var(--muted);font-size:7px}.stat b{font-size:14px}.result-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:7px;margin-top:auto}.result-actions .wide{grid-column:1/-1}
+.overlay{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:14px;background:#01070adb;backdrop-filter:blur(5px)}.overlay.open{display:flex}.modal{width:min(100%,370px);max-height:94%;overflow:auto;padding:17px;border:1px solid #45675f;border-radius:19px;background:linear-gradient(145deg,#173532,#0b1c22);box-shadow:0 20px 70px #000}.modal h2{margin:0 0 8px;font:800 22px Georgia,"Noto Sans KR",serif}.modal p,.modal li{color:#b4cac1;font-size:10px;line-height:1.6}.modal ul{padding-left:18px}.modal-actions{display:grid;gap:7px;margin-top:12px}.ticket{margin:10px 0;padding:10px;border:1px dashed var(--moon);border-radius:12px;background:#2b2719;color:#e8d998;text-align:center;font-size:9px}.ticket b{display:block;color:#fff0a3;font-size:14px}.ad-ring{display:grid;place-items:center;width:104px;height:104px;margin:12px auto;border:8px solid #35504d;border-top-color:var(--moon);border-radius:50%;color:var(--moon);font-size:31px;font-weight:1000;animation:turn 1s linear infinite}.ad-ring span{animation:turn 1s linear infinite reverse}.ad-copy{text-align:center}
+@keyframes turn{to{transform:rotate(360deg)}}@keyframes pulse{50%{transform:scale(1.2);filter:brightness(1.4)}}
+@media(max-height:620px){.start{padding-top:max(10px,env(safe-area-inset-top));padding-bottom:max(9px,env(safe-area-inset-bottom))}.hero-orbit{width:min(32vh,145px)}.brand{font-size:28px}.intro{margin-bottom:7px}.expedition-grid{gap:5px;margin-top:6px}.expedition{min-height:60px;padding:7px 8px}.expedition.moon{min-height:52px}.select-head h1{font-size:17px}.select-foot{display:none}.mission{min-height:29px;margin:4px 0}.controls button{min-height:43px}.result{padding-top:max(10px,env(safe-area-inset-top));padding-bottom:max(9px,env(safe-area-inset-bottom))}.badge{width:78px;height:78px;font-size:31px}.result h2{font-size:21px;margin:5px 0 2px}.result-stars{margin:3px 0;font-size:23px}.stat{padding:5px 2px}.result-copy{min-height:29px}}
+</style>
+</head>
+<body>
+<main id="app">
+  <section class="screen start active" id="startScreen">
+    <div class="start-top"><span class="eyebrow">NIGHT ECO UNIT</span><span class="record" id="recordText">첫 조사 대기 중</span></div>
+    <div class="hero-orbit" aria-hidden="true"><div class="field-mark">⌁</div></div>
+    <p class="brand-en">FIREFLY FIELD NOTES</p>
+    <h1 class="brand">반딧불 생태일지</h1>
+    <p class="intro">빛·몸체·날개 문양을 살펴보고, 같은 개체들의 서식 구역을 한 붓으로 기록해요.</p>
+    <div class="start-actions"><button class="primary" id="startBtn">야간 조사 시작</button><button class="icon-btn" id="helpStart" aria-label="조사 방법">?</button></div>
+  </section>
+
+  <section class="screen select" id="selectScreen">
+    <header class="select-head"><button class="icon-btn" id="homeBtn" aria-label="첫 화면">‹</button><div class="select-copy"><small>EXPEDITION MAP</small><h1>조사 구역을 골라요</h1></div><span class="clear-chip" id="clearChip">클리어 0 / 5</span></header>
+    <div class="expedition-grid" id="expeditionGrid"></div>
+    <p class="select-foot">각 구역은 3개 웨이브로 구성돼요 · 구역 3곳 클리어 시 달빛 습지가 열려요</p>
+  </section>
+
+  <section class="screen game" id="gameScreen">
+    <header class="game-head"><div class="game-title"><small id="gameKicker">ZONE 01 · WAVE 1</small><b id="gameName">이끼 정원</b></div><div class="game-actions"><button class="icon-btn" id="helpGame" aria-label="조사 방법">?</button><button class="icon-btn" id="exitGame" aria-label="조사 중단">×</button></div></header>
+    <div class="hud"><div class="hud-box"><span>남은 시간</span><b id="timeText">45.0</b></div><div class="hud-box"><span>목표</span><b id="targetText">0 / 0</b></div><div class="hud-box"><span>오포함</span><b id="mistakeText">0 / 3</b></div><div class="hud-box"><span>점수</span><b id="scoreText">0</b></div></div>
+    <div class="mission"><span class="specimen body-round pattern-plain" id="specimen" aria-hidden="true"><i class="specimen-wing left"></i><i class="specimen-wing right"></i><i class="specimen-body"></i></span><div class="mission-copy"><small>이번 관찰종 원격 확대</small><b id="missionText">청록빛 · 둥근 몸체 · 민무늬 날개</b><small class="mission-traits" id="missionTraits">형태: 둥근 몸체 · 문양: 민무늬 날개</small></div><span class="mission-state" id="missionState">관찰 중</span></div>
+    <div class="field" id="field"><canvas id="fieldCanvas" tabindex="0" role="application" aria-label="반딧불 서식 구역. 포인터로 폐곡선을 그리거나 방향키로 조사점을 옮기고 Space로 꼭짓점, Enter로 곡선을 닫으세요."></canvas><div class="blackout" id="blackout">숲이 잠시 어두워졌어요</div><div class="field-note" id="fieldNote">같은 개체를 모두 둘러싸고 <strong>시작점으로 돌아와요</strong></div></div>
+    <div class="controls"><button class="support" id="lanternBtn">☾ 달빛 랜턴 · 1회</button><button class="clear-loop" id="clearLoopBtn">그린 선 지우기</button></div>
+  </section>
+
+  <section class="screen result" id="resultScreen">
+    <p class="result-kicker" id="resultKicker">SURVEY COMPLETE</p><div class="badge" id="resultBadge">S</div>
+    <h2 id="resultTitle">서식 경계 기록 완료</h2><p class="result-copy" id="resultCopy">반딧불의 밤길을 원격 관찰로 기록했어요.</p>
+    <div class="result-stars" id="resultStars">★★★</div>
+    <div class="stats"><div class="stat"><span>조사 점수</span><b id="resultScore">0</b></div><div class="stat"><span>정확도</span><b id="resultAccuracy">0%</b></div><div class="stat"><span>최고 기록</span><b id="resultBest">0</b></div></div>
+    <div class="result-actions"><button class="secondary" id="retryBtn">다시 조사</button><button class="primary" id="nextBtn">다음 구역</button><button class="secondary wide" id="mapBtn">탐사 지도로</button></div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="overlay" id="help" role="dialog" aria-modal="true"><div class="modal"><h2>폐곡선 조사법</h2><ul><li>손가락으로 같은 관찰종을 모두 둘러싸고 시작점의 광점 가까이에서 손을 떼요. 첫 조사에서는 근처에서 놓으면 선이 자동으로 닫혀요.</li><li>빛, 몸체 모양, 날개 문양이 모두 같아야 해요. 다른 개체를 포함한 기록이 3회 누적되면 조사가 끝나요.</li><li>개체를 건드리지 않고 원격 관찰한 서식 경계를 생태일지에 기록해요.</li><li>키보드는 방향키로 조사점을 옮기고 Space로 꼭짓점을 찍은 뒤 Enter로 닫아요. Escape로 선을 지워요.</li><li>달빛 랜턴은 자발적 3초 광고 데모예요. 광고 중 게임은 멈추며, 이후 4초 군집 고정과 6초 목표 강조가 실제 적용돼요.</li></ul><div class="modal-actions"><button class="primary" id="closeHelp">조사로 돌아가기</button></div></div></div>
+  <div class="overlay" id="exitPrompt" role="dialog" aria-modal="true"><div class="modal"><h2>조사를 중단할까요?</h2><p>현재 웨이브 기록은 저장되지 않아요.</p><div class="modal-actions"><button class="secondary" id="keepPlaying">계속 조사</button><button class="primary" id="confirmExit">탐사 지도로</button></div></div></div>
+  <div class="overlay" id="reward" role="dialog" aria-modal="true"><div class="modal"><h2>달빛 랜턴을 켤까요?</h2><p>결제나 네트워크가 없는 <b>3초 보상형 광고 데모</b>예요. 이번 조사에서 한 번만 사용할 수 있어요.</p><div class="ticket"><b>군집 4초 고정 · 목표 6초 강조</b>광고 중 조사 시간과 입력이 안전하게 멈춰요</div><div class="modal-actions"><button class="primary" id="watchAd">동의하고 3초 샘플 보기</button><button class="secondary" id="cancelAd">직접 계속 조사</button></div></div></div>
+  <div class="overlay" id="ad" role="dialog" aria-modal="true"><div class="modal"><h2>달빛을 모으는 중</h2><div class="ad-ring"><span id="adCount">3</span></div><p class="ad-copy">앱을 벗어나면 카운트다운도 멈춰요.</p></div></div>
+</main>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const TAU=Math.PI*2,SAVE_KEY='firefly-field-notes-save',SAVE_VERSION=1,COLORS={mint:'#6ff2b3',gold:'#ffe681',blue:'#74cfff'};
+const zones=[
+ {id:'moss',name:'이끼 정원',desc:'정지 군집에서 빛을 구별해요',rules:'정지 군집',time:42,moving:false,waves:[['mint','plain','round',2,5],['gold','plain','long',3,7],['blue','plain','diamond',4,9]]},
+ {id:'brook',name:'반짝 개울',desc:'움직이는 빛의 길을 따라가요',rules:'이동 군집',time:46,moving:true,speed:.055,waves:[['blue','plain','long',2,6],['mint','plain','diamond',3,8],['gold','plain','round',4,10]]},
+ {id:'fern',name:'고사리 그늘',desc:'간헐 암전 전 위치를 기억해요',rules:'이동 · 간헐 암전',time:48,moving:true,blackout:true,speed:.045,waves:[['gold','plain','diamond',2,7],['blue','plain','round',3,9],['mint','plain','long',4,10]]},
+ {id:'mirror',name:'의태 꽃밭',desc:'빛·몸체·날개 문양을 함께 봐요',rules:'빛 + 몸체 + 날개',time:50,moving:true,mimic:true,speed:.038,waves:[['mint','stripe','round',2,8],['gold','dot','long',3,10],['blue','stripe','diamond',4,11]]},
+ {id:'owl',name:'올빼미 협곡',desc:'포식자의 분열을 피해 기록해요',rules:'이동 · 포식자 분열',time:52,moving:true,mimic:true,predator:true,speed:.05,waves:[['gold','dot','diamond',2,8],['mint','stripe','long',3,10],['blue','dot','round',4,12]]},
+ {id:'moon',name:'달빛 습지 탐사',desc:'모든 규칙이 섞인 확장 구역',rules:'확장 · 혼합 생태',time:58,moving:true,mimic:true,predator:true,blackout:true,moon:true,speed:.052,waves:[['blue','stripe','long',3,10],['mint','dot','diamond',4,12],['gold','stripe','round',5,14]]}
+];
+function blankSave(){return{version:SAVE_VERSION,cleared:{},stars:{},best:{},totalBest:0,tutorialSeen:false}}
+function loadSave(){try{const x=JSON.parse(localStorage.getItem(SAVE_KEY));if(!x||x.version!==SAVE_VERSION||!x.cleared||!x.stars||!x.best)throw 0;return x}catch(_){return blankSave()}}
+function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(_){}}
+let save=loadSave(),screen='start',selected=0,run=null,runSerial=0,raf=0,lastFrame=0,toastTimer=0,adRAF=0,adLast=0,adRemain=3000,adFinishing=false,adRunId=0,focusPaused=false;
+const canvas=$('#fieldCanvas'),ctx=canvas.getContext('2d');let W=1,H=1,DPR=1;
+function clearCount(){return zones.slice(0,5).filter(z=>save.cleared[z.id]).length}
+function moonUnlocked(){return clearCount()>=3}
+function show(id){screen=id;$$('.screen').forEach(x=>x.classList.toggle('active',x.id===id+'Screen'));if(id!=='game'){cancelAnimationFrame(raf);raf=0}}
+function starsText(n){return n?'★'.repeat(n)+'☆'.repeat(3-n):'미조사'}
+function refreshStart(){$('#recordText').textContent=save.totalBest?`최고 ${save.totalBest.toLocaleString()}점`:'첫 조사 대기 중'}
+function refreshMap(){
+ const grid=$('#expeditionGrid');grid.innerHTML='';zones.forEach((z,i)=>{const b=document.createElement('button'),locked=i===5&&!moonUnlocked();b.className='expedition'+(i===5?' moon':'')+(save.cleared[z.id]?' cleared':'');b.disabled=locked;b.innerHTML=`<span class="num">${i===5?'☾':'0'+(i+1)}</span><h2>${z.name}</h2><p>${locked?'메인 구역 3곳을 클리어하면 열려요':z.desc}</p><span class="stars">${locked?`${clearCount()} / 3`:starsText(save.stars[z.id]||0)}</span>`;b.onclick=()=>startRun(i);grid.appendChild(b)});
+ $('#clearChip').textContent=`클리어 ${clearCount()} / 5`;store();
+}
+function resize(){
+ const r=$('#field').getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);W=Math.max(1,r.width);H=Math.max(1,r.height);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);draw();
+}
+function currentZone(){return zones[selected]}function waveDef(){return currentZone().waves[run.wave]}
+function colorName(c){return c==='mint'?'청록빛':c==='gold'?'황금빛':'푸른빛'}function patternName(p){return p==='stripe'?'줄무늬 날개':p==='dot'?'점박이 날개':'민무늬 날개'}function bodyName(b){return b==='round'?'둥근 몸체':b==='long'?'긴 몸체':'마름모 몸체'}
+function targetLabel(){const w=waveDef();return `${colorName(w[0])} · ${bodyName(w[2])} · ${patternName(w[1])}`}
+function randomPos(i,total){const cols=Math.ceil(Math.sqrt(total*1.35)),rows=Math.ceil(total/cols),col=i%cols,row=Math.floor(i/cols),jx=(Math.random()-.5)*.09,jy=(Math.random()-.5)*.09;return{x:.12+(col+0.5)/cols*.76+jx,y:.12+(row+0.5)/rows*.72+jy}}
+function clusteredPositions(total,targetCount){
+ const spots=Array.from({length:total},(_,i)=>randomPos(i,total)),anchor={x:.16+Math.random()*.68,y:.17+Math.random()*.62};
+ spots.sort((a,b)=>Math.hypot(a.x-anchor.x,a.y-anchor.y)-Math.hypot(b.x-anchor.x,b.y-anchor.y));
+ const targets=spots.slice(0,targetCount),others=spots.slice(targetCount);for(const group of [targets,others])for(let i=group.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[group[i],group[j]]=[group[j],group[i]]}return targets.concat(others);
+}
+function spawnWave(){
+ const z=currentZone(),w=waveDef(),targetCount=w[3],total=w[4],flies=[],spots=clusteredPositions(total,targetCount);
+ for(let i=0;i<total;i++){const target=i<targetCount,pos=spots[i],angle=Math.random()*TAU,speed=z.moving?(z.speed||.04)*(.72+Math.random()*.55):0;let color,pattern;
+  let body;if(target){color=w[0];pattern=w[1];body=w[2]}else if(z.mimic){if(i%3===0){color=w[0];pattern=w[1];body=w[2]==='round'?'long':'round'}else if(i%3===1){color=w[0];pattern=w[1]==='stripe'?'dot':'stripe';body=w[2]}else{color=w[0]==='mint'?'gold':w[0]==='gold'?'blue':'mint';pattern=w[1];body=w[2]}}else{const other=['mint','gold','blue'].filter(c=>c!==w[0]);color=other[i%2];pattern='plain';body=['round','long','diamond'][i%3]}
+  flies.push({x:pos.x,y:pos.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,color,pattern,body,target,alive:true,phase:Math.random()*TAU,predator:false});
+ }
+ if(z.predator)flies.push({x:.5,y:.18,vx:.035,vy:.023,color:'red',pattern:'predator',target:false,alive:true,phase:0,predator:true});
+ run.flies=flies;run.waveCaptured=0;run.waveTarget=targetCount;run.path=[];run.drawing=false;run.keyboardPath=[];run.releases=[];run.popups=[];run.cursor={x:W*.5,y:H*.72};run.nextSplit=run.elapsed+4.6;run.splitWarned=false;run.splitFlash=0;run.transition=false;run.resolving=false;run.tutorial=selected===0&&run.wave===0&&!save.tutorialSeen;updateMission();updateHud();toast(run.tutorial?'점선 예시처럼 서식 경계를 한 번에 기록해요':`웨이브 ${run.wave+1} · 관찰종의 서식 경계를 기록해요`);
+}
+function startRun(index){
+ if(index===5&&!moonUnlocked())return;cancelAnimationFrame(adRAF);adRAF=0;adRunId=0;selected=index;const z=currentZone();run={id:++runSerial,elapsed:0,wave:0,score:0,mistakes:0,captured:0,wrong:0,loops:0,supportUsed:false,freezeUntil:0,highlightUntil:0,ended:false,transition:false,resolving:false,drawing:false,pointerId:null,path:[],keyboardPath:[],releases:[],popups:[],cursor:{x:0,y:0},splitFlash:0,nextSplit:0,splitWarned:false,tutorial:false,flies:[]};
+ $('#gameName').textContent=z.name;$('#lanternBtn').disabled=false;$('#lanternBtn').textContent='☾ 달빛 랜턴 · 1회';$('#clearLoopBtn').disabled=false;$('#blackout').className='blackout';show('game');resize();spawnWave();startLoop();
+}
+function startLoop(){cancelAnimationFrame(raf);lastFrame=performance.now();raf=requestAnimationFrame(loop)}
+function modalOpen(){return $$('.overlay.open').length>0}
+function isPaused(){return document.hidden||focusPaused||screen!=='game'||modalOpen()}
+function loop(now){
+ raf=0;if(screen!=='game'||!run||run.ended)return;const dt=Math.min(.04,Math.max(0,(now-lastFrame)/1000));lastFrame=now;
+ if(!isPaused()&&!run.transition){run.elapsed+=dt;updateFlies(dt);if(run.elapsed>=currentZone().time){endRun(false,'조사 시간이 끝나 군집이 숲속으로 흩어졌어요.');return}updateHud()}
+ draw();raf=requestAnimationFrame(loop);
+}
+function fieldDark(){const z=currentZone();return z.blackout&&run&&run.highlightUntil<=run.elapsed&&run.elapsed%6.2>4.25}
+function updateFlies(dt){
+ const z=currentZone(),frozen=run.freezeUntil>run.elapsed;if(!z.moving||frozen)return;
+ if(z.predator&&!run.splitWarned&&run.nextSplit-run.elapsed<=1){run.splitWarned=true;run.splitFlash=.28;toast('포식자 접근 1초 전 · 선을 잠시 멈춰요')}
+ if(z.predator&&run.elapsed>=run.nextSplit){run.nextSplit=run.elapsed+4.8;run.splitWarned=false;run.splitFlash=.65;for(const f of run.flies){if(!f.predator&&f.alive){const a=Math.atan2(f.y-.5,f.x-.5)+(Math.random()-.5)*1.3,s=(z.speed||.05)*(1.1+Math.random()*.65);f.vx=Math.cos(a)*s;f.vy=Math.sin(a)*s}}toast('포식자가 지나가 군집이 분열했어요')}
+ run.splitFlash=Math.max(0,run.splitFlash-dt);
+ for(const f of run.flies){if(!f.alive)continue;f.x+=f.vx*dt;f.y+=f.vy*dt;if(f.x<.07||f.x>.93){f.vx*=-1;f.x=Math.max(.07,Math.min(.93,f.x))}if(f.y<.08||f.y>.9){f.vy*=-1;f.y=Math.max(.08,Math.min(.9,f.y))}}
+}
+function updateMission(){
+ const w=waveDef(),specimen=$('#specimen');$('#gameKicker').textContent=`${selected===5?'MOON WETLAND':'ZONE 0'+(selected+1)} · WAVE ${run.wave+1} / 3`;$('#missionText').textContent=targetLabel();$('#missionTraits').textContent=`형태: ${bodyName(w[2])} · 문양: ${patternName(w[1])}`;specimen.className=`specimen body-${w[2]} pattern-${w[1]}`;specimen.style.setProperty('--specimen-color',COLORS[w[0]]);$('#missionState').textContent=currentZone().rules;$('#fieldNote').innerHTML=run.wave===0?'관찰종의 서식 경계를 그리고 <strong>시작 광점에 가까이 놓아요</strong>':'한 붓으로 서식 경계를 <strong>한 번에 기록</strong>해요';
+}
+function updateHud(){
+ if(!run)return;const z=currentZone(),left=Math.max(0,run.waveTarget-run.waveCaptured);$('#timeText').textContent=Math.max(0,z.time-run.elapsed).toFixed(1);$('#targetText').textContent=`${left} 남음`;$('#mistakeText').textContent=`${run.mistakes} / 3`;$('#scoreText').textContent=Math.round(run.score).toLocaleString();const dark=fieldDark();$('#blackout').className='blackout'+(dark?' on':'')+(run.highlightUntil>run.elapsed?' lantern':'');$('#blackout').textContent=run.highlightUntil>run.elapsed?'달빛 랜턴이 목표를 비춰요':dark?'숲이 잠시 어두워졌어요':'';
+}
+function drawWing(x,y,r,angle,color,pattern,body,alpha){
+ ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.shadowColor=color;ctx.shadowBlur=10;ctx.fillStyle=color;
+ ctx.beginPath();ctx.ellipse(-r*.58,-r*.24,r*.62,r*.34,-.55,0,TAU);ctx.ellipse(r*.58,-r*.24,r*.62,r*.34,.55,0,TAU);ctx.fill();ctx.shadowBlur=0;
+ ctx.strokeStyle='#11221f';ctx.fillStyle='#17332d';ctx.lineWidth=1.1;if(pattern==='stripe'){for(const s of [-.55,.55]){ctx.beginPath();ctx.moveTo(s*r*.2,-r*.52);ctx.lineTo(s*r*.75,-r*.05);ctx.stroke()}}else if(pattern==='dot'){for(const s of [-1,1]){ctx.beginPath();ctx.arc(s*r*.55,-r*.28,r*.12,0,TAU);ctx.fill()}}
+ ctx.fillStyle='#f2ffe5';ctx.beginPath();if(body==='round')ctx.arc(0,r*.18,r*.27,0,TAU);else if(body==='diamond'){ctx.moveTo(0,-r*.23);ctx.lineTo(r*.28,r*.2);ctx.lineTo(0,r*.72);ctx.lineTo(-r*.28,r*.2);ctx.closePath()}else ctx.ellipse(0,r*.18,r*.2,r*.55,0,0,TAU);ctx.fill();
+ ctx.restore();
+}
+function draw(){
+ if(!ctx||!run||screen!=='game')return;const z=currentZone(),dark=fieldDark(),highlight=run.highlightUntil>run.elapsed,t=run.elapsed,now=performance.now();ctx.clearRect(0,0,W,H);
+ const g=ctx.createRadialGradient(W*.5,H*.4,10,W*.5,H*.45,Math.max(W,H)*.7);g.addColorStop(0,highlight?'#315942':'#17443b');g.addColorStop(1,'#06171d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ ctx.globalAlpha=.32;ctx.fillStyle='#7ad8a6';for(let i=0;i<15;i++){const x=(i*83%101)/101*W,y=H*(.78+(i%4)*.06);ctx.beginPath();ctx.ellipse(x,y,16+(i%3)*8,5,-.5+(i%5)*.2,0,TAU);ctx.fill()}ctx.globalAlpha=1;
+ if(run.splitFlash>0){ctx.strokeStyle=`rgba(255,220,126,${run.splitFlash})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(W*.5,H*.5,(1-run.splitFlash)*W*.7,0,TAU);ctx.stroke()}
+ for(const f of run.flies){if(!f.alive)continue;const x=f.x*W,y=f.y*H,r=f.predator?11:9+Math.sin(t*4+f.phase)*1.2;if(f.predator){ctx.save();ctx.translate(x,y);ctx.fillStyle='#ff766f';ctx.shadowColor='#ff433a';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(-12,-7);ctx.lineTo(0,2);ctx.lineTo(12,-7);ctx.lineTo(8,8);ctx.lineTo(0,4);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.restore();continue}
+  const targetGlow=highlight&&f.target,alpha=dark&&!targetGlow?.08:1,color=COLORS[f.color];if(targetGlow){ctx.strokeStyle='#fff3a1';ctx.lineWidth=3;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(x,y,r+10+Math.sin(t*8)*2,0,TAU);ctx.stroke();ctx.setLineDash([])}drawWing(x,y,r,Math.sin(t*2+f.phase)*.14,color,f.pattern,f.body,alpha);
+ }
+ run.releases=run.releases.filter(e=>now-e.start<820);for(const e of run.releases){const p=Math.min(1,(now-e.start)/820),x=e.x*W+Math.sin(p*Math.PI)*28*(e.side||1),y=e.y*H-p*H*.34,alpha=1-p;drawWing(x,y,9+p*3,-.35+p*.7,COLORS[e.color],e.pattern,e.body,alpha);ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle='#dfffb0';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(e.x*W,e.y*H);ctx.quadraticCurveTo(e.x*W+(e.side||1)*34,e.y*H-H*.18,x,y);ctx.stroke();ctx.restore()}
+ run.popups=run.popups.filter(e=>now-e.start<900);for(const e of run.popups){const p=(now-e.start)/900;ctx.save();ctx.globalAlpha=Math.max(0,1-p);ctx.fillStyle='#fff2a1';ctx.font='900 15px system-ui';ctx.textAlign='center';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillText(e.text,e.x*W,e.y*H-p*42);ctx.restore()}
+ if(run.tutorial)drawTutorial();
+ drawPath(run.path,false);drawPath(run.keyboardPath,true);
+ if(run.cursor&&run.keyboardPath.length){ctx.strokeStyle='#fff0a0';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(run.cursor.x,run.cursor.y,8,0,TAU);ctx.stroke()}
+}
+function drawPath(path,keyboard){
+ if(!path||path.length<1)return;ctx.save();ctx.strokeStyle=keyboard?'#ffe995':'#89ffd0';ctx.fillStyle=keyboard?'#ffe995':'#89ffd0';ctx.lineWidth=keyboard?3:4;ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let i=1;i<path.length;i++)ctx.lineTo(path[i].x,path[i].y);ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(path[0].x,path[0].y,8+Math.sin(performance.now()/170)*1.5,0,TAU);ctx.fill();if(path.length>2){const e=path[path.length-1],d=Math.hypot(e.x-path[0].x,e.y-path[0].y),closeTolerance=run?.tutorial?60:36,snap=d<=closeTolerance;ctx.strokeStyle=snap?'#fff2a1':'#6a9285';ctx.lineWidth=snap?3:1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(path[0].x,path[0].y,snap?18:14,0,TAU);ctx.stroke();ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(path[0].x,path[0].y);ctx.stroke()}ctx.restore();
+}
+function drawTutorial(){const targets=run.flies.filter(f=>f.target&&f.alive);if(!targets.length)return;const xs=targets.map(f=>f.x*W),ys=targets.map(f=>f.y*H),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),cx=(minX+maxX)/2,cy=(minY+maxY)/2,rx=Math.max(38,(maxX-minX)/2+25),ry=Math.max(32,(maxY-minY)/2+24);ctx.save();ctx.strokeStyle='#fff0a0aa';ctx.fillStyle='#fff2a0';ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.font='800 9px system-ui';ctx.textAlign='center';ctx.fillText('점선 밖을 따라 한 바퀴',cx,Math.max(13,cy-ry-7));ctx.restore()}
+function localPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function pathLength(path){let n=0;for(let i=1;i<path.length;i++)n+=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y);return n}
+function polygonArea(path){let a=0;for(let i=0,j=path.length-1;i<path.length;j=i++)a+=path[j].x*path[i].y-path[i].x*path[j].y;return Math.abs(a/2)}
+function segmentsCross(a,b,c,d){const cross=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x),a1=cross(a,b,c),a2=cross(a,b,d),a3=cross(c,d,a),a4=cross(c,d,b);return((a1>0&&a2<0)||(a1<0&&a2>0))&&((a3>0&&a4<0)||(a3<0&&a4>0))}
+function selfIntersects(path){const n=path.length-1;for(let i=0;i<n;i++)for(let j=i+2;j<n;j++){if(i===0&&j===n-1)continue;if(segmentsCross(path[i],path[i+1],path[j],path[j+1]))return true}return false}
+function pointInPolygon(x,y,p){let inside=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j],hit=((a.y>y)!==(b.y>y))&&(x<(b.x-a.x)*(y-a.y)/(b.y-a.y||.0001)+a.x);if(hit)inside=!inside}return inside}
+function closeLoop(path,forcedClose=false){
+ if(!run||run.ended||run.transition||run.resolving||isPaused())return;run.drawing=false;const length=pathLength(path);if(length<18){clearPaths();return}if(path.length<5||length<70){toast('조금 더 크게 둘러싸 주세요');clearPaths();return}
+ const first=path[0],last=path[path.length-1],closeTolerance=run.tutorial?60:36;if(!forcedClose&&Math.hypot(last.x-first.x,last.y-first.y)>closeTolerance){toast('빛나는 시작점 가까이 돌아오면 자동으로 닫혀요');clearPaths();return}
+ path[path.length-1]={x:first.x,y:first.y};if(polygonArea(path)<850){toast('서식 구역의 면적이 너무 작아요');clearPaths();return}if(selfIntersects(path)){toast('선이 서로 교차했어요 · 다시 그려 주세요');clearPaths();return}
+ run.resolving=true;run.loops++;const caught=run.flies.filter(f=>f.alive&&pointInPolygon(f.x*W,f.y*H,path)),good=caught.filter(f=>f.target).length,bad=caught.filter(f=>!f.target).length,missing=Math.max(0,run.waveTarget-good),predator=caught.some(f=>f.predator);
+ if(bad||missing){if(bad){run.wrong+=bad;run.mistakes+=predator?2:1;run.score=Math.max(0,run.score-(predator?450:220))}else run.score=Math.max(0,run.score-80);clearPaths();run.resolving=false;try{navigator.vibrate?.([70])}catch(_){}
+  if(bad&&missing)toast(`오포함 ${bad} · 목표 ${missing}마리 누락`);else if(bad)toast(predator?'포식자 오포함 · 기록 경고 2회':'다른 개체가 포함됐어요');else toast(`목표 ${missing}마리가 누락됐어요`);
+  updateHud();if(run.mistakes>=3)endRun(false,'다른 개체를 포함한 기록이 3회 누적되어 조사를 중단했어요.');return}
+ if(run.tutorial){run.tutorial=false;save.tutorialSeen=true;store()}const released=caught.filter(f=>f.target),earned=good*720+Math.max(0,300-Math.round(length*.3)),now=performance.now();for(const [i,f] of released.entries()){f.alive=false;run.releases.push({...f,start:now+i*35,side:i%2?1:-1})}run.popups.push({x:released.reduce((n,f)=>n+f.x,0)/good,y:released.reduce((n,f)=>n+f.y,0)/good,start:now,text:`일지 +${earned}`});run.captured+=good;run.waveCaptured=good;run.score+=earned;clearPaths();try{navigator.vibrate?.([25,25,35])}catch(_){}toast(`${good}마리 원격 관찰 · 서식 경계 기록 완료`);updateHud();completeWave();
+}
+function clearPaths(){if(!run)return;run.path=[];run.keyboardPath=[];run.drawing=false;run.pointerId=null;draw()}
+function completeWave(){
+ if(run.transition||run.ended)return;run.transition=true;run.score+=700+Math.round((currentZone().time-run.elapsed)*8);const id=run.id;if(run.wave>=2){setTimeout(()=>{if(run&&run.id===id&&!run.ended)endRun(true)},950);toast('구역 생태일지를 완성했어요!')}else{toast(`웨이브 ${run.wave+1} 완료 · 다음 원격 관찰 지점으로 이동해요`);setTimeout(()=>{if(!run||run.id!==id||run.ended)return;run.wave++;spawnWave()},1050)}
+}
+function rank(stars,success){if(!success)return'F';return stars===3?'S':stars===2?'A':'B'}
+function endRun(success,reason=''){
+ if(!run||run.ended)return;run.ended=true;run.resolving=true;run.drawing=false;run.pointerId=null;cancelAnimationFrame(raf);cancelAnimationFrame(adRAF);raf=0;adRAF=0;adRunId=0;adFinishing=false;$('#reward').classList.remove('open');$('#ad').classList.remove('open');const z=currentZone();let stars=0;
+ let justUnlocked=false;if(success){const accuracy=run.captured/Math.max(1,run.captured+run.wrong),wasMoonUnlocked=moonUnlocked();stars=1+(run.mistakes<=1?1:0)+(run.mistakes===0?1:0);run.score+=Math.round((z.time-run.elapsed)*32)+400;save.cleared[z.id]=true;save.stars[z.id]=Math.max(save.stars[z.id]||0,stars);save.best[z.id]=Math.max(save.best[z.id]||0,Math.round(run.score));save.totalBest=Math.max(save.totalBest||0,Math.round(run.score));justUnlocked=!wasMoonUnlocked&&moonUnlocked();store();$('#resultAccuracy').textContent=Math.round(accuracy*100)+'%'}else $('#resultAccuracy').textContent=Math.round(run.captured/Math.max(1,run.captured+run.wrong)*100)+'%';
+ $('#resultKicker').textContent=success?'SURVEY COMPLETE':'SURVEY ENDED';$('#resultBadge').textContent=rank(stars,success);$('#resultBadge').classList.toggle('fail',!success);$('#resultTitle').textContent=success?(z.moon?'달빛 습지 기록 완료':'서식 경계 기록 완료'):'야간 조사 실패';let copy=reason;
+ if(success){copy=justUnlocked?'세 번째 구역 기록으로 달빛 습지 탐사가 열렸어요.':z.moon?'혼합 생태의 반딧불 군집까지 안전하게 기록했어요.':`${z.name}의 세 군집을 안전하게 기록했어요.`}
+ $('#resultCopy').textContent=copy;$('#resultStars').innerHTML=success?'★'.repeat(stars)+`<span class="off">${'★'.repeat(3-stars)}</span>`:'<span class="off">★★★</span>';$('#resultScore').textContent=Math.round(run.score).toLocaleString();$('#resultBest').textContent=(save.best[z.id]||0).toLocaleString();$('#nextBtn').textContent=nextIndex()!=null?(nextIndex()===5?'달빛 습지 탐사':'다음 구역'):'탐사 지도';show('result');
+}
+function nextIndex(){if(selected<4)return selected+1;if(selected!==5&&moonUnlocked())return 5;return null}
+function toast(msg){clearTimeout(toastTimer);$('#toast').textContent=msg;$('#toast').classList.add('show');toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),1700)}
+canvas.addEventListener('pointerdown',e=>{if(!run||run.ended||run.transition||run.resolving||isPaused())return;e.preventDefault();canvas.focus({preventScroll:true});clearPaths();const p=localPoint(e);run.drawing=true;run.pointerId=e.pointerId;run.path=[p];try{canvas.setPointerCapture(e.pointerId)}catch(_){}});
+canvas.addEventListener('pointermove',e=>{if(!run||!run.drawing||run.pointerId!==e.pointerId||isPaused())return;e.preventDefault();const p=localPoint(e),last=run.path[run.path.length-1];if(Math.hypot(p.x-last.x,p.y-last.y)>4)run.path.push(p)});
+function releasePointer(e){if(!run||!run.drawing||run.pointerId!==e.pointerId)return;let p=localPoint(e);const first=run.path[0];if(run.tutorial&&first&&Math.hypot(p.x-first.x,p.y-first.y)<=60)p={...first};run.path.push(p);try{canvas.releasePointerCapture(e.pointerId)}catch(_){}closeLoop([...run.path])}
+canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',()=>clearPaths());
+canvas.addEventListener('keydown',e=>{if(!run||run.ended||run.transition||run.resolving||isPaused())return;const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Enter','Escape'];if(keys.includes(e.code))e.preventDefault();const step=e.shiftKey?18:10;if(e.code==='ArrowLeft')run.cursor.x=Math.max(8,run.cursor.x-step);if(e.code==='ArrowRight')run.cursor.x=Math.min(W-8,run.cursor.x+step);if(e.code==='ArrowUp')run.cursor.y=Math.max(8,run.cursor.y-step);if(e.code==='ArrowDown')run.cursor.y=Math.min(H-8,run.cursor.y+step);if(e.code==='Space'&&!e.repeat){run.keyboardPath.push({x:run.cursor.x,y:run.cursor.y});toast(run.keyboardPath.length===1?'시작점을 찍었어요':'꼭짓점을 추가했어요')}if(e.code==='Enter'&&!e.repeat&&run.keyboardPath.length>2){const p=[...run.keyboardPath,{...run.keyboardPath[0]}];closeLoop(p,true)}if(e.code==='Escape')clearPaths();draw()});
+$('#clearLoopBtn').onclick=clearPaths;
+$('#startBtn').onclick=()=>{refreshMap();show('select')};$('#homeBtn').onclick=()=>{refreshStart();show('start')};
+$('#helpStart').onclick=()=>$('#help').classList.add('open');$('#helpGame').onclick=()=>{if(!run||run.ended||run.transition)return;clearPaths();$('#help').classList.add('open')};$('#closeHelp').onclick=()=>{$('#help').classList.remove('open');lastFrame=performance.now()};
+$('#exitGame').onclick=()=>{if(!run||run.ended)return;clearPaths();$('#exitPrompt').classList.add('open')};$('#keepPlaying').onclick=()=>{$('#exitPrompt').classList.remove('open');lastFrame=performance.now()};$('#confirmExit').onclick=()=>{$('#exitPrompt').classList.remove('open');if(run){run.ended=true;cancelAnimationFrame(raf)}refreshMap();show('select')};
+$('#lanternBtn').onclick=()=>{if(!run||run.supportUsed||run.ended||run.transition||screen!=='game')return;clearPaths();$('#reward').classList.add('open')};$('#cancelAd').onclick=()=>{$('#reward').classList.remove('open');lastFrame=performance.now()};
+$('#watchAd').onclick=()=>{if(!run||run.supportUsed||run.ended||run.transition||adFinishing)return;run.supportUsed=true;adRunId=run.id;$('#lanternBtn').disabled=true;$('#lanternBtn').textContent='☾ 랜턴 사용 완료';$('#reward').classList.remove('open');$('#ad').classList.add('open');adRemain=3000;adLast=0;adFinishing=false;$('#adCount').textContent='3';cancelAnimationFrame(adRAF);adRAF=requestAnimationFrame(adTick)};
+function adTick(now){adRAF=0;if(!$('#ad').classList.contains('open')||adFinishing)return;if(!document.hidden&&!focusPaused){if(adLast)adRemain-=now-adLast;adLast=now;$('#adCount').textContent=Math.max(0,Math.ceil(adRemain/1000));if(adRemain<=0){finishLantern();return}}else adLast=0;adRAF=requestAnimationFrame(adTick)}
+function finishLantern(){if(adFinishing)return;adFinishing=true;cancelAnimationFrame(adRAF);adRAF=0;$('#ad').classList.remove('open');if(!run||run.ended||run.id!==adRunId||screen!=='game'){adFinishing=false;return}run.freezeUntil=run.elapsed+4;run.highlightUntil=run.elapsed+6;lastFrame=performance.now();updateHud();toast('달빛 랜턴 · 4초 고정 + 6초 목표 강조');adFinishing=false}
+$('#retryBtn').onclick=()=>startRun(selected);$('#mapBtn').onclick=()=>{refreshMap();show('select')};$('#nextBtn').onclick=()=>{const n=nextIndex();if(n==null){refreshMap();show('select')}else startRun(n)};
+function clearInput(){if(!run)return;run.drawing=false;run.pointerId=null;run.path=[];run.keyboardPath=[]}
+document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();adLast=0;clearInput()});addEventListener('blur',()=>{focusPaused=true;lastFrame=performance.now();adLast=0;clearInput()});addEventListener('focus',()=>{focusPaused=false;lastFrame=performance.now();adLast=0});addEventListener('resize',resize);
+refreshStart();resize();
+})();
+</script>
+</body>
+</html>
