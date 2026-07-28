@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#1d2624">
+  <meta name="description" content="한 번의 스와이프로 도시락 재료를 동시에 움직여 주문 칸에 담는 한 손 중력 퍼즐">
+  <title>중력 도시락 · Gravity Bento</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      --ink:#fff8e8;--muted:#b9c7bd;--bg:#111816;--panel:#1d2824;
+      --line:#405449;--mint:#78e6b6;--gold:#ffd166;--red:#ff7067;--blue:#78b7ff;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+    body{
+      display:grid;place-items:center;background:
+      radial-gradient(circle at 20% 8%,#31503d 0 1px,transparent 2px) 0 0/28px 28px,
+      linear-gradient(155deg,#22332b,#0d1412 58%);
+      color:var(--ink);font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+      touch-action:none;
+    }
+    button{font:inherit;cursor:pointer}
+    button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+    #app{
+      position:relative;width:min(100vw,430px);height:100dvh;max-height:900px;
+      overflow:hidden;background:
+      linear-gradient(180deg,rgba(255,255,255,.035),transparent 25%),
+      var(--bg);box-shadow:0 0 80px #000b;
+    }
+    .screen{
+      position:absolute;inset:0;display:none;flex-direction:column;
+      padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));
+    }
+    .screen.active{display:flex}
+    .icon-btn,.ghost-btn{
+      border:1px solid var(--line);background:#1d2b26;color:var(--ink);border-radius:14px;
+      min-width:42px;min-height:42px;font-weight:900;
+    }
+    .primary{
+      border:0;border-radius:16px;min-height:52px;padding:11px 16px;
+      color:#152019;background:linear-gradient(135deg,#9af0c7,#61d79f);
+      box-shadow:0 6px 0 #2c815d;font-weight:1000;
+    }
+    .primary:active{transform:translateY(3px);box-shadow:0 3px 0 #2c815d}
+    .primary:disabled,.ghost-btn:disabled{opacity:.4;cursor:not-allowed}
+    .eyebrow{color:var(--mint);font-size:10px;font-weight:1000;letter-spacing:.18em;text-transform:uppercase}
+
+    /* 주문판 */
+    #start{background:
+      radial-gradient(circle at 82% 8%,#ffd16626 0 52px,transparent 53px),
+      linear-gradient(180deg,#1e3029,#111816)}
+    .start-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .brand h1{margin:2px 0 0;font-size:32px;line-height:1;letter-spacing:-.06em}
+    .brand p{margin:7px 0 0;color:var(--muted);font-size:11px}
+    .stamp{
+      display:grid;place-items:center;width:64px;height:64px;border:2px solid #ffd16680;
+      border-radius:50%;color:var(--gold);font-weight:1000;transform:rotate(8deg);
+      box-shadow:inset 0 0 0 5px #ffd16610;
+    }
+    .progress{display:flex;align-items:center;gap:8px;margin:12px 0 8px;color:var(--muted);font-size:10px}
+    .progress-track{flex:1;height:6px;border-radius:99px;background:#0c1210;overflow:hidden}
+    .progress-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--gold));transition:width .3s}
+    .order-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:1;min-height:0}
+    .order{
+      position:relative;display:flex;flex-direction:column;justify-content:center;min-height:70px;
+      padding:9px 10px;border:1px solid var(--line);border-radius:15px;background:#17211e;
+      color:var(--ink);text-align:left;overflow:hidden;
+    }
+    .order::after{content:"";position:absolute;inset:auto -15px -28px auto;width:70px;height:70px;border-radius:50%;background:var(--order-color,#78e6b6);opacity:.08}
+    .order.selected{border-color:var(--gold);background:#2a2b20;box-shadow:inset 0 0 0 1px #ffd16655}
+    .order.locked{opacity:.42}
+    .order b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .order small{margin-top:3px;color:var(--muted);font-size:9px;line-height:1.25}
+    .order .stars{margin-top:4px;color:var(--gold);font-size:10px;letter-spacing:1px}
+    .lock{position:absolute;right:8px;top:7px;font-size:10px}
+    .start-actions{display:grid;grid-template-columns:1fr 52px;gap:8px;margin-top:9px}
+
+    /* 게임 */
+    #game{padding-left:10px;padding-right:10px;background:
+      linear-gradient(90deg,#0002 1px,transparent 1px) 0 0/20px 20px,
+      linear-gradient(#0002 1px,transparent 1px) 0 0/20px 20px,#19231f}
+    .game-top{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px}
+    .game-title{text-align:center;min-width:0}
+    .game-title b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .game-title small{display:block;margin-top:2px;color:var(--muted);font-size:9px}
+    .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 4px 7px}
+    .hud div{padding:5px 6px;border:1px solid #394a42;border-radius:11px;background:#101714;text-align:center}
+    .hud span{display:block;color:var(--muted);font-size:8px}.hud b{font-size:13px}
+    .board-wrap{position:relative;display:grid;place-items:center;flex:1;min-height:0}
+    #board{
+      --cols:5;--rows:7;position:relative;height:min(52dvh,420px);max-width:100%;
+      aspect-ratio:5/7;border:7px solid #8c5a36;border-radius:22px;
+      background:#e9d7af;box-shadow:inset 0 0 0 4px #4e2f1e,0 14px 30px #0009;
+      overflow:hidden;touch-action:none;
+    }
+    .cell{
+      position:absolute;width:calc(100%/var(--cols));height:calc(100%/var(--rows));
+      left:calc(var(--c)*100%/var(--cols));top:calc(var(--r)*100%/var(--rows));
+      border:1px solid #76533528;background:#f9edcc;
+    }
+    .cell.dark{background:#f1dfb7}
+    .cell.wall{background:linear-gradient(135deg,#6b4b35,#412d22);box-shadow:inset 0 0 0 3px #8d6548}
+    .cell.target::after{
+      content:attr(data-icon);position:absolute;inset:17%;display:grid;place-items:center;
+      border:2px dashed var(--target,#53796a);border-radius:13px;color:#5f6a5c;
+      font-size:clamp(12px,4.3vmin,20px);opacity:.62;
+    }
+    .cell.spill{background:
+      radial-gradient(circle,#c5523d 0 22%,transparent 24%) center/11px 11px,#f1cf9f}
+    .cell.shutter::before{
+      content:"";position:absolute;inset:6%;z-index:2;border:3px double #896e8f;
+      border-radius:8px;background:#b093bd55;
+    }
+    .cell.shutter.open::before{opacity:.25;border-style:dashed}
+    .piece{
+      position:absolute;z-index:5;width:calc(100%/var(--cols));height:calc(100%/var(--rows));
+      left:calc(var(--c)*100%/var(--cols));top:calc(var(--r)*100%/var(--rows));
+      display:grid;place-items:center;transition:left .2s cubic-bezier(.2,.9,.3,1),top .2s cubic-bezier(.2,.9,.3,1);
+      filter:drop-shadow(0 4px 3px #3d2a1d55);
+    }
+    .food{
+      position:relative;display:grid;place-items:center;width:78%;height:78%;border-radius:19px;
+      background:var(--food);border:3px solid #fff9;box-shadow:inset 0 -5px 0 #0002;
+      font-size:clamp(15px,5.2vmin,24px);
+    }
+    .food::after{content:attr(data-tag);position:absolute;right:-5px;bottom:-5px;padding:2px 4px;border-radius:7px;background:#19231f;color:#fff;font-size:7px;font-weight:1000}
+    .piece.on-target .food{animation:happy .6s ease-in-out infinite alternate;box-shadow:0 0 0 4px #fff8,0 0 18px var(--food)}
+    .piece.anchored .food{box-shadow:0 0 0 4px #ffef9b,0 0 22px #ffd166;transform:scale(.9)}
+    .piece.anchored::before{content:"🥢";position:absolute;z-index:8;right:-8%;top:-18%;font-size:clamp(16px,5vmin,24px);transform:rotate(-38deg);filter:drop-shadow(0 2px 2px #0008)}
+    .preview-piece{
+      position:absolute;z-index:3;width:calc(100%/var(--cols));height:calc(100%/var(--rows));
+      left:calc(var(--c)*100%/var(--cols));top:calc(var(--r)*100%/var(--rows));
+      display:grid;place-items:center;color:#463927;font-size:clamp(12px,4.4vmin,20px);opacity:.24;
+      border:2px dotted #4b5d4f;border-radius:14px;pointer-events:none;
+    }
+    @keyframes happy{to{transform:translateY(-3px) rotate(3deg)}}
+    .toast{
+      position:absolute;z-index:12;left:50%;top:8px;max-width:90%;padding:7px 11px;
+      border-radius:99px;background:#101714e8;color:#fff;font-size:10px;font-weight:900;
+      opacity:0;transform:translate(-50%,-8px);transition:.2s;pointer-events:none;text-align:center;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .swipe-hint{position:absolute;inset:auto 0 7px;text-align:center;color:#59432e;font-size:9px;font-weight:1000;pointer-events:none}
+    .controls{display:grid;grid-template-columns:1fr 124px 1fr;align-items:center;gap:7px;padding:8px 2px 0}
+    .support{
+      min-height:46px;border:1px solid #8b7243;border-radius:14px;background:#322b1c;
+      color:#ffe39a;font-size:9px;font-weight:900;line-height:1.25;
+    }
+    .support:disabled{opacity:.35}
+    .dpad{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px);gap:4px;justify-content:center}
+    .arrow{border:1px solid #50645b;border-radius:11px;background:#25342e;color:#fff;font-weight:1000}
+    .arrow[data-dir="up"]{grid-column:2}.arrow[data-dir="left"]{grid-column:1}.arrow[data-dir="down"]{grid-column:2}.arrow[data-dir="right"]{grid-column:3}
+    .rule-chip{min-height:46px;padding:7px;border:1px solid #42564c;border-radius:14px;background:#15201c;color:var(--muted);font-size:8px;line-height:1.3;text-align:center}
+
+    /* 공용 오버레이 */
+    .overlay{position:absolute;z-index:40;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:#07100dd9;backdrop-filter:blur(6px)}
+    .overlay.open{display:flex}
+    .modal{width:min(100%,370px);max-height:94%;overflow:auto;padding:18px;border:1px solid #50655b;border-radius:22px;background:linear-gradient(155deg,#25372f,#121b18);box-shadow:0 25px 80px #000}
+    .modal h2{margin:3px 0 8px;font-size:23px;letter-spacing:-.04em}.modal p{margin:7px 0;color:var(--muted);font-size:11px;line-height:1.55}
+    .modal ul{margin:8px 0 13px;padding-left:19px;color:#d9e2dc;font-size:10px;line-height:1.6}
+    .modal-actions{display:grid;gap:8px;margin-top:13px}.modal-actions.two{grid-template-columns:1fr 1fr}
+    .ticket{margin:11px 0;padding:12px;border:1px dashed #b99650;border-radius:14px;background:#312a1b;text-align:center;color:#ffe19a;font-size:10px}
+    .ticket b{display:block;margin-bottom:3px;font-size:16px}
+    .ad-ring{display:grid;place-items:center;width:104px;height:104px;margin:14px auto;border:8px solid #34453e;border-top-color:var(--gold);border-radius:50%;font-size:32px;font-weight:1000;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .result-mark{display:grid;place-items:center;width:86px;height:86px;margin:2px auto 9px;border-radius:26px;background:#ffd1661c;font-size:43px;transform:rotate(-3deg)}
+    .result-stars{text-align:center;color:var(--gold);font-size:30px;letter-spacing:4px}.result-stars .off{color:#526058}
+    .result-title{text-align:center}.result-title h2{margin:4px 0}.result-title p{min-height:34px;text-align:center}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+    .stats div{padding:8px 4px;border:1px solid #405349;border-radius:12px;text-align:center}.stats span{display:block;color:var(--muted);font-size:8px}.stats b{font-size:14px}
+    .reward-result{border-color:#8b7243;background:#322b1c;color:#ffe39a}
+
+    @media(max-height:620px){
+      .screen{padding-top:max(7px,env(safe-area-inset-top));padding-bottom:max(7px,env(safe-area-inset-bottom))}
+      .brand h1{font-size:26px}.brand p{display:none}.stamp{width:48px;height:48px;font-size:12px}
+      .progress{margin:7px 0 5px}.order-grid{gap:5px}.order{min-height:58px;padding:6px 8px}.order small{font-size:8px}.start-actions{margin-top:6px}.primary{min-height:44px}
+      .hud{margin:4px 4px}.hud div{padding:3px}.game-top .icon-btn{min-height:36px}.board-wrap{min-height:0}
+      #board{height:min(50dvh,286px);border-width:5px;border-radius:18px}.controls{padding-top:4px}.support,.rule-chip{min-height:40px}.dpad{grid-template-columns:repeat(3,34px);grid-template-rows:repeat(2,34px)}
+      .arrow{min-height:34px}.swipe-hint{display:none}.modal{padding:14px}.result-mark{width:62px;height:62px;font-size:32px}.result-stars{font-size:24px}.stats{margin:6px 0}
+    }
+  </style>
+</head>
+<body>
+<main id="app" aria-live="polite">
+  <section class="screen active" id="start">
+    <div class="start-top">
+      <div class="brand">
+        <div class="eyebrow">ONE SWIPE BENTO PUZZLE</div>
+        <h1>중력 도시락</h1>
+        <p>도시락을 기울여 모든 반찬을 제자리로!</p>
+      </div>
+      <div class="stamp">오늘의<br>주문</div>
+    </div>
+    <div class="progress"><span id="starTotal">★ 0</span><div class="progress-track"><i id="progressFill"></i></div><span>야식 해금 9★</span></div>
+    <div class="order-grid" id="orderGrid"></div>
+    <div class="start-actions">
+      <button class="primary" id="startBtn">1번 주문 시작</button>
+      <button class="ghost-btn" id="helpBtn" aria-label="도움말">?</button>
+    </div>
+  </section>
+
+  <section class="screen" id="game">
+    <div class="game-top">
+      <button class="icon-btn" id="homeBtn" aria-label="주문판으로">‹</button>
+      <div class="game-title"><b id="levelName">첫 도시락</b><small id="levelDesc">모든 재료를 점선 칸에 담으세요</small></div>
+      <button class="icon-btn" id="gameHelpBtn" aria-label="도움말">?</button>
+    </div>
+    <div class="hud">
+      <div><span>남은 기울임</span><b id="movesLeft">8</b></div>
+      <div><span>담은 반찬</span><b id="placed">0 / 3</b></div>
+      <div><span>최고 기록</span><b id="best">--</b></div>
+    </div>
+    <div class="board-wrap">
+      <div id="board" role="application" aria-label="도시락 퍼즐판"></div>
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="controls">
+      <button class="support" id="supportBtn">광고 3초<br>직전 수 복구</button>
+      <div class="dpad" aria-label="도시락 기울이기">
+        <button class="arrow" data-dir="up" aria-label="위로 기울이기">▲</button>
+        <button class="arrow" data-dir="left" aria-label="왼쪽으로 기울이기">◀</button>
+        <button class="arrow" data-dir="down" aria-label="아래로 기울이기">▼</button>
+        <button class="arrow" data-dir="right" aria-label="오른쪽으로 기울이기">▶</button>
+      </div>
+      <div class="rule-chip" id="ruleChip">반찬을 잡고<br>스와이프</div>
+    </div>
+  </section>
+
+  <div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal">
+      <div class="eyebrow">HOW TO PACK</div>
+      <h2 id="helpTitle">한 손으로 도시락 완성</h2>
+      <ul>
+        <li><b>고정할 반찬에서 스와이프</b>하면 젓가락으로 그 반찬만 잡고, 나머지가 동시에 미끄러집니다.</li>
+        <li>모양이 같은 점선 칸에 모든 반찬을 넣으면 성공입니다. 방향 버튼과 방향키도 지원합니다.</li>
+        <li><b>김</b>을 잡으면 맞닿은 반찬도 함께 고정되고, <b>두부</b>는 한 번에 3칸 이상 움직이면 깨집니다.</li>
+        <li><b>소스</b>는 이동 자국을 남기지만, 소스를 잡고 기울이면 인접한 자국 하나를 닦습니다. 보랏빛 셔터는 홀수 턴에 닫힙니다.</li>
+        <li>희미한 반찬은 현재 고정 선택의 예상 낙하지점입니다. 보상형 샘플은 동의 후 3초 동안 멈추고 직전 수만 실제 복구합니다.</li>
+      </ul>
+      <button class="primary" id="closeHelpBtn">바로 플레이</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="reward" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+    <div class="modal">
+      <div class="eyebrow">VOLUNTARY REWARD SAMPLE</div>
+      <h2 id="rewardTitle">셰프의 손길을 받을까요?</h2>
+      <p>결제나 네트워크가 없는 3초 보상형 광고 데모입니다. 광고 중 퍼즐 입력은 멈춥니다.</p>
+      <div class="ticket"><b>직전 기울임 1회 복구</b>추가 턴은 없으며 이번 도전에서 한 번만 사용할 수 있습니다.</div>
+      <div class="modal-actions">
+        <button class="primary" id="watchAdBtn">동의하고 3초 샘플 보기</button>
+        <button class="ghost-btn" id="cancelAdBtn">직접 계속 풀기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="ad" role="dialog" aria-modal="true" aria-labelledby="adTitle">
+    <div class="modal">
+      <div class="eyebrow">PROTOTYPE AD SAMPLE</div>
+      <h2 id="adTitle">셰프가 도시락을 확인 중</h2>
+      <div class="ad-ring" id="adCount">3</div>
+      <p style="text-align:center">화면을 벗어나면 카운트가 안전하게 멈춥니다.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal">
+      <div class="result-mark" id="resultMark">🍱</div>
+      <div class="result-stars" id="resultStars"></div>
+      <div class="result-title">
+        <h2 id="resultTitle">도시락 완성!</h2>
+        <p id="resultText"></p>
+      </div>
+      <div class="stats">
+        <div><span>사용 턴</span><b id="resultMoves">0</b></div>
+        <div><span>새 기록</span><b id="newBest">YES</b></div>
+        <div><span>누적 별</span><b id="resultTotal">0★</b></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn reward-result" id="resultSupportBtn">광고 3초 · 마지막 동작만 되돌리고 이어하기</button>
+        <div class="modal-actions two">
+          <button class="ghost-btn" id="retryBtn">다시 담기</button>
+          <button class="primary" id="nextBtn">다음 주문</button>
+        </div>
+        <button class="ghost-btn" id="resultHomeBtn">주문판으로</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(()=>{
+"use strict";
+const ROWS=7,COLS=5,SAVE_KEY="gravity-bento-v1";
+const DIRS={up:{dr:-1,dc:0},down:{dr:1,dc:0},left:{dr:0,dc:-1},right:{dr:0,dc:1}};
+const foods={
+  rice:{icon:"🍙",tag:"밥",color:"#f4f0df"},
+  egg:{icon:"🍳",tag:"달걀",color:"#ffd65a"},
+  carrot:{icon:"🥕",tag:"당근",color:"#ff815e"},
+  nori:{icon:"▤",tag:"김",color:"#3c7658",binds:true},
+  tofu:{icon:"□",tag:"두부",color:"#f5e5b7",fragile:true},
+  sauce:{icon:"●",tag:"소스",color:"#db5f4c",sauce:true}
+};
+const levels=[
+ {id:"lunch",name:"첫 도시락",desc:"세 반찬을 점선 칸에 맞춰요",moves:7,stars:[6,7],rules:["기본 중력"],walls:[[1,1],[1,3],[3,1],[3,3],[5,1],[5,3]],pieces:[
+  ["a","rice",6,0,0,4],["b","egg",6,2,0,2],["c","carrot",6,4,0,0]]},
+ {id:"nori",name:"끈끈 김말이",desc:"김을 잡으면 맞닿은 반찬도 함께 고정돼요",moves:10,stars:[8,10],rules:["김 연결 고정"],walls:[[4,1],[4,3],[4,2],[3,1],[5,1],[0,4]],pieces:[
+  ["a","rice",0,1,6,1],["b","nori",6,2,6,0],["c","egg",5,2,3,4]]},
+ {id:"tofu",name:"살살 두부정식",desc:"두부가 한 번에 3칸 가면 깨져요",moves:9,stars:[6,9],rules:["두부 2칸 안전"],walls:[[1,2],[0,3],[4,1],[2,4],[0,0],[2,1],[5,1]],pieces:[
+  ["a","tofu",2,2,6,0],["b","rice",5,2,6,4],["c","carrot",2,0,4,2]]},
+ {id:"sauce",name:"매콤 소스칸",desc:"소스가 지나간 칸은 다른 반찬이 못 가요",moves:8,stars:[4,8],rules:["소스 자국","잡으면 닦기"],walls:[[1,0],[2,3],[3,1],[2,4],[6,4],[1,4],[0,0]],pieces:[
+  ["a","sauce",6,2,3,3],["b","rice",0,3,0,1],["c","nori",5,3,6,0]]},
+ {id:"shutter",name:"저녁 셔터 도시락",desc:"보랏빛 셔터가 홀수 턴에 닫혀요",moves:10,stars:[8,10],rules:["홀수 턴 셔터","김 연결","두부 주의"],walls:[[2,4],[3,2],[4,4],[2,2],[0,3],[6,3],[3,3]],shutters:[[5,0],[6,4],[4,1]],pieces:[
+  ["a","rice",2,0,1,1],["b","nori",0,2,0,0],["c","tofu",0,1,1,0]]},
+ {id:"midnight",name:"야식 주문",desc:"모든 특수 규칙이 섞인 해금 챌린지",moves:10,stars:[6,10],rules:["확장","김","두부","소스","셔터"],expansion:true,walls:[[0,0],[1,1],[5,4],[6,2],[6,1],[0,1],[3,3],[4,3]],shutters:[[6,0],[4,4]],pieces:[
+  ["a","sauce",3,1,5,2],["b","nori",0,4,2,1],["c","tofu",1,4,2,0]]}
+];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const ui={start:$("#start"),game:$("#game"),board:$("#board"),orderGrid:$("#orderGrid"),startBtn:$("#startBtn"),starTotal:$("#starTotal"),progressFill:$("#progressFill"),levelName:$("#levelName"),levelDesc:$("#levelDesc"),movesLeft:$("#movesLeft"),placed:$("#placed"),best:$("#best"),ruleChip:$("#ruleChip"),toast:$("#toast"),supportBtn:$("#supportBtn"),help:$("#help"),reward:$("#reward"),ad:$("#ad"),result:$("#result"),resultMark:$("#resultMark"),resultStars:$("#resultStars"),resultTitle:$("#resultTitle"),resultText:$("#resultText"),resultMoves:$("#resultMoves"),newBest:$("#newBest"),resultTotal:$("#resultTotal"),resultSupportBtn:$("#resultSupportBtn"),nextBtn:$("#nextBtn"),adCount:$("#adCount")};
+let selected=0,screen="start",run=null,runSeq=0,toastTimer=0,adRAF=0,adLast=0,adRemain=0,adRunId=0,pointer=null;
+function blankSave(){return{version:1,highest:0,stars:{},best:{},midnight:false}}
+function loadSave(){
+ try{const x=JSON.parse(localStorage.getItem(SAVE_KEY));if(!x||x.version!==1||!Number.isInteger(x.highest)||!x.stars||!x.best)throw 0;return x}catch(_){return blankSave()}
+}
+let save=loadSave();
+function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(_){}}
+function totalStars(){return Object.values(save.stars).reduce((a,b)=>a+(Number.isFinite(b)?b:0),0)}
+function unlocked(i){return i===5?totalStars()>=9:i<=save.highest}
+function showScreen(name){
+ screen=name;ui.start.classList.toggle("active",name==="start");ui.game.classList.toggle("active",name==="game");
+}
+function closeOverlays(){["help","reward","ad","result"].forEach(id=>ui[id].classList.remove("open"))}
+function renderOrders(){
+ save.midnight=totalStars()>=9;ui.starTotal.textContent=`★ ${totalStars()}`;ui.progressFill.style.width=`${Math.min(100,totalStars()/9*100)}%`;
+ ui.orderGrid.innerHTML="";
+ levels.forEach((lv,i)=>{
+  const b=document.createElement("button");const open=unlocked(i),stars=save.stars[lv.id]||0;
+  b.className=`order${selected===i?" selected":""}${open?"":" locked"}`;b.style.setProperty("--order-color",lv.expansion?"#ba91ff":["#78e6b6","#ffd166","#ff8b72","#f45f55","#78b7ff"][i]);
+  b.disabled=!open;b.innerHTML=`${open?"":"<span class=lock>🔒</span>"}<b>${lv.expansion?"🌙 ":""}${lv.name}</b><small>${lv.rules.slice(0,2).join(" · ")}</small><span class=stars>${"★".repeat(stars)}${"☆".repeat(3-stars)}</span>`;
+  b.onclick=()=>{selected=i;renderOrders()};ui.orderGrid.append(b);
+ });
+ const lv=levels[selected];ui.startBtn.textContent=`${selected+1}번 · ${lv.name} 시작`;ui.startBtn.disabled=!unlocked(selected);
+}
+function makeRun(index){
+ const lv=levels[index],pieces=lv.pieces.map(p=>({id:p[0],type:p[1],r:p[2],c:p[3],gr:p[4],gc:p[5]}));
+ return{id:++runSeq,index,moves:0,supportUsed:false,ended:false,reason:"",spill:[],history:[],anchorId:pieces[0].id,pieces};
+}
+function begin(index=selected){
+ selected=index;cancelAnimationFrame(adRAF);adRAF=0;adRunId=0;closeOverlays();run=makeRun(index);showScreen("game");
+ const lv=levels[index];ui.levelName.textContent=lv.name;ui.levelDesc.textContent=lv.desc;ui.ruleChip.innerHTML=lv.rules.map(x=>`<span>${x}</span>`).join("<br>");
+ renderBoard();announce(`${lv.name} 주문을 시작합니다`);
+}
+function key(r,c){return `${r},${c}`}
+function snapshot(){
+ return{moves:run.moves,spill:run.spill.slice(),anchorId:run.anchorId,pieces:run.pieces.map(p=>({...p}))};
+}
+function restore(s){
+ run.moves=s.moves;run.spill=s.spill.slice();run.anchorId=s.anchorId;run.pieces=s.pieces.map(p=>({...p}));run.ended=false;run.reason="";renderBoard();
+}
+function closedShutter(lv){
+ return lv.shutters&&run.moves%2===0;
+}
+function isBlocked(lv,r,c,piece,occupied,spill=run.spill,moves=run.moves){
+ if(r<0||r>=ROWS||c<0||c>=COLS)return true;
+ if((lv.walls||[]).some(x=>x[0]===r&&x[1]===c))return true;
+ if(lv.shutters&&moves%2===0&&(lv.shutters||[]).some(x=>x[0]===r&&x[1]===c))return true;
+ if(!foods[piece.type].sauce&&spill.includes(key(r,c)))return true;
+ return occupied.has(key(r,c));
+}
+function pinnedIds(pieces,anchorId){
+ const anchor=pieces.find(p=>p.id===anchorId);if(!anchor)return new Set();
+ const pinned=new Set([anchorId]);
+ const adjacentNori=pieces.filter(p=>p.type==="nori"&&Math.abs(p.r-anchor.r)+Math.abs(p.c-anchor.c)<=1);
+ adjacentNori.forEach(n=>pinned.add(n.id));
+ if(anchor.type==="nori")pieces.filter(p=>Math.abs(p.r-anchor.r)+Math.abs(p.c-anchor.c)===1).forEach(p=>pinned.add(p.id));
+ return pinned;
+}
+function previewPositions(name,anchorId){
+ if(!name||!run)return[];
+ const lv=levels[run.index],d=DIRS[name],pieces=run.pieces.map(p=>({...p})),spill=run.spill.slice(),pinned=pinnedIds(pieces,anchorId);
+ const anchor=pieces.find(p=>p.id===anchorId);
+ if(anchor&&foods[anchor.type].sauce){
+  const nearby=spill.find(s=>{const [r,c]=s.split(",").map(Number);return Math.abs(r-anchor.r)+Math.abs(c-anchor.c)<=1});
+  if(nearby)spill.splice(spill.indexOf(nearby),1);
+ }
+ const order=pieces.slice().sort((a,b)=>d.dr<0?a.r-b.r:d.dr>0?b.r-a.r:d.dc<0?a.c-b.c:b.c-a.c);
+ const occupied=new Set(pieces.map(p=>key(p.r,p.c)));
+ for(const p of order){
+  if(pinned.has(p.id))continue;
+  occupied.delete(key(p.r,p.c));let steps=0;
+  while(steps<Math.max(ROWS,COLS)){
+   const nr=p.r+d.dr,nc=p.c+d.dc;if(isBlocked(lv,nr,nc,p,occupied,spill,run.moves))break;
+   if(foods[p.type].sauce&&!spill.includes(key(p.r,p.c)))spill.push(key(p.r,p.c));
+   p.r=nr;p.c=nc;steps++;
+  }
+  occupied.add(key(p.r,p.c));
+ }
+ return pieces;
+}
+function tilt(name,anchorId=run&&run.anchorId){
+ if(screen!=="game"||!run||run.ended||ui.help.classList.contains("open")||ui.reward.classList.contains("open")||ui.ad.classList.contains("open"))return;
+ const d=DIRS[name],lv=levels[run.index],before=snapshot();
+ run.anchorId=anchorId;const pinned=pinnedIds(run.pieces,anchorId);
+ if(!pinned.size){announce("먼저 고정할 반찬을 선택하세요");return}
+ const anchor=run.pieces.find(p=>p.id===anchorId);
+ if(anchor&&foods[anchor.type].sauce){
+  const nearby=run.spill.filter(s=>{const [r,c]=s.split(",").map(Number);return Math.abs(r-anchor.r)+Math.abs(c-anchor.c)<=1});
+  if(nearby.length)run.spill=run.spill.filter(s=>s!==nearby[0]);
+ }
+ const order=run.pieces.slice().sort((a,b)=>d.dr<0?a.r-b.r:d.dr>0?b.r-a.r:d.dc<0?a.c-b.c:b.c-a.c);
+ const occupied=new Set(run.pieces.map(p=>key(p.r,p.c)));let any=false,broken=false;
+ for(const p of order){
+  if(pinned.has(p.id))continue;
+  occupied.delete(key(p.r,p.c));let steps=0,max=Math.max(ROWS,COLS);
+  while(steps<max){
+   const nr=p.r+d.dr,nc=p.c+d.dc;if(isBlocked(lv,nr,nc,p,occupied))break;
+   if(foods[p.type].sauce&&!run.spill.includes(key(p.r,p.c)))run.spill.push(key(p.r,p.c));
+   p.r=nr;p.c=nc;steps++;any=true;
+  }
+  if(foods[p.type].fragile&&steps>=3){broken=true;run.reason="두부가 너무 세게 부딪혔어요";}
+  occupied.add(key(p.r,p.c));
+ }
+ if(!any){restore(before);announce("잡은 반찬을 바꾸거나 다른 방향을 골라 보세요");return}
+ run.history.push(before);if(run.history.length>8)run.history.shift();run.moves++;
+ renderBoard();
+ if(broken){finish(false);return}
+ if(isComplete()){finish(true);return}
+ if(run.moves>=lv.moves){run.reason="기울임 횟수를 모두 사용했어요";finish(false)}
+}
+function isComplete(){return run.pieces.every(p=>p.r===p.gr&&p.c===p.gc)}
+function renderBoard(){
+ const lv=levels[run.index];ui.board.innerHTML="";
+ const targetBy=new Map(run.pieces.map(p=>[key(p.gr,p.gc),p]));
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  const cell=document.createElement("div"),target=targetBy.get(key(r,c));
+  cell.className=`cell${(r+c)%2?" dark":""}`;cell.style.setProperty("--r",r);cell.style.setProperty("--c",c);
+  if((lv.walls||[]).some(x=>x[0]===r&&x[1]===c))cell.classList.add("wall");
+  if(target){cell.classList.add("target");cell.dataset.icon=foods[target.type].icon;cell.style.setProperty("--target",foods[target.type].color)}
+  if(run.spill.includes(key(r,c)))cell.classList.add("spill");
+  if((lv.shutters||[]).some(x=>x[0]===r&&x[1]===c)){cell.classList.add("shutter");if(!closedShutter(lv))cell.classList.add("open")}
+  ui.board.append(cell);
+ }
+ if(run.previewDir){
+  const preview=previewPositions(run.previewDir,run.anchorId);
+  preview.forEach(p=>{
+   const live=run.pieces.find(x=>x.id===p.id);if(!live||(live.r===p.r&&live.c===p.c))return;
+   const mark=document.createElement("div");mark.className="preview-piece";mark.style.setProperty("--r",p.r);mark.style.setProperty("--c",p.c);mark.textContent=foods[p.type].icon;ui.board.append(mark);
+  });
+ }
+ run.pieces.forEach(p=>{
+  const el=document.createElement("div");el.className=`piece${p.r===p.gr&&p.c===p.gc?" on-target":""}${p.id===run.anchorId?" anchored":""}`;el.style.setProperty("--r",p.r);el.style.setProperty("--c",p.c);el.dataset.id=p.id;
+  const f=foods[p.type];el.innerHTML=`<div class=food data-tag="${f.tag}" style="--food:${f.color}">${f.icon}</div>`;ui.board.append(el);
+ });
+ const placed=run.pieces.filter(p=>p.r===p.gr&&p.c===p.gc).length;
+ ui.movesLeft.textContent=Math.max(0,lv.moves-run.moves);ui.placed.textContent=`${placed} / ${run.pieces.length}`;ui.best.textContent=save.best[lv.id]!=null?`${save.best[lv.id]}턴`:"--";
+ ui.supportBtn.disabled=run.supportUsed||!run.history.length;ui.supportBtn.innerHTML=run.supportUsed?"셰프 도움<br>사용 완료":"광고 3초<br>직전 수 복구";
+ const hint=document.createElement("div");hint.className="swipe-hint";hint.textContent="도시락 위를 상하좌우로 스와이프";ui.board.append(hint);
+}
+function starsFor(lv,moves){
+ return moves<=lv.stars[0]?3:moves<=lv.stars[1]?2:1;
+}
+function finish(success){
+ if(!run||run.ended)return;run.ended=true;const lv=levels[run.index];let stars=0,isNew=false;
+ if(success){
+  stars=starsFor(lv,run.moves);const prev=save.stars[lv.id]||0;save.stars[lv.id]=Math.max(prev,stars);
+  if(save.best[lv.id]==null||run.moves<save.best[lv.id]){save.best[lv.id]=run.moves;isNew=true}
+  if(run.index<4)save.highest=Math.max(save.highest,run.index+1);save.midnight=totalStars()>=9;store();
+ }
+ ui.resultMark.textContent=success?(lv.expansion?"🌙":"🍱"):(run.reason.includes("두부")?"💥":"🥢");
+ ui.resultStars.innerHTML=`${"★".repeat(stars)}<span class=off>${"★".repeat(3-stars)}</span>`;
+ ui.resultTitle.textContent=success?(stars===3?"완벽한 도시락!":"주문 포장 완료"):"포장이 멈췄어요";
+ ui.resultText.textContent=success?(lv.expansion?"야식 주방의 복합 주문까지 완성했습니다.":save.midnight&&totalStars()>=9?"별 9개 달성! 야식 주문이 열렸습니다.":`${lv.name}을 ${run.moves}번의 기울임으로 담았습니다.`):`${run.reason} 직전 동작을 되돌리거나 다시 도전해 보세요.`;
+ ui.resultMoves.textContent=run.moves;ui.newBest.textContent=isNew?"YES":"—";ui.resultTotal.textContent=`${totalStars()}★`;
+ ui.resultSupportBtn.hidden=success||run.supportUsed||!run.history.length;ui.nextBtn.textContent=success&&run.index<4?"다음 주문":"주문판 보기";
+ ui.result.classList.add("open");announce(success?"도시락 완성":"도전 실패");
+}
+function openReward(){
+ if(!run||run.supportUsed||!run.history.length)return;ui.result.classList.remove("open");ui.reward.classList.add("open");
+}
+function startAd(){
+ if(!run||run.supportUsed||!run.history.length)return;run.supportUsed=true;ui.reward.classList.remove("open");ui.ad.classList.add("open");
+ adRunId=run.id;adRemain=3000;adLast=0;ui.adCount.textContent="3";cancelAnimationFrame(adRAF);adRAF=requestAnimationFrame(adTick);
+}
+function adTick(ts){
+ if(!run||run.id!==adRunId){ui.ad.classList.remove("open");return}
+ if(document.hidden){adLast=0;adRAF=requestAnimationFrame(adTick);return}
+ if(adLast)adRemain-=Math.min(100,ts-adLast);adLast=ts;ui.adCount.textContent=String(Math.max(1,Math.ceil(adRemain/1000)));
+ if(adRemain>0){adRAF=requestAnimationFrame(adTick);return}
+ const used=true,s=run.history.pop();restore(s);run.supportUsed=used;ui.ad.classList.remove("open");showScreen("game");renderBoard();announce("직전 기울임 1회 복구");
+}
+function announce(msg){clearTimeout(toastTimer);ui.toast.textContent=msg;ui.toast.classList.add("show");toastTimer=setTimeout(()=>ui.toast.classList.remove("show"),1500)}
+function goHome(){cancelAnimationFrame(adRAF);adRAF=0;closeOverlays();run=null;showScreen("start");renderOrders()}
+function openHelp(){ui.help.classList.add("open")}
+$("#helpBtn").onclick=openHelp;$("#gameHelpBtn").onclick=openHelp;$("#closeHelpBtn").onclick=()=>ui.help.classList.remove("open");
+ui.startBtn.onclick=()=>begin(selected);$("#homeBtn").onclick=goHome;$("#resultHomeBtn").onclick=goHome;
+ui.supportBtn.onclick=openReward;ui.resultSupportBtn.onclick=openReward;$("#watchAdBtn").onclick=startAd;
+$("#cancelAdBtn").onclick=()=>{ui.reward.classList.remove("open");if(run&&run.ended)ui.result.classList.add("open")};
+$("#retryBtn").onclick=()=>begin(selected);
+ui.nextBtn.onclick=()=>{if(run&&!run.ended)return;if(run&&isComplete()&&run.index<4&&unlocked(run.index+1))begin(run.index+1);else goHome()};
+$$(".arrow").forEach(b=>b.onclick=()=>tilt(b.dataset.dir,run&&run.anchorId));
+ui.board.addEventListener("pointerdown",e=>{
+ if(screen!=="game"||!run)return;
+ const rect=ui.board.getBoundingClientRect(),c=Math.floor((e.clientX-rect.left)/rect.width*COLS),r=Math.floor((e.clientY-rect.top)/rect.height*ROWS);
+ const piece=run.pieces.find(p=>p.r===r&&p.c===c);
+ if(!piece){announce("고정할 반찬 위에서 스와이프하세요");pointer=null;return}
+ run.anchorId=piece.id;run.previewDir="";renderBoard();pointer={id:e.pointerId,x:e.clientX,y:e.clientY,anchorId:piece.id};ui.board.setPointerCapture?.(e.pointerId);
+});
+ui.board.addEventListener("pointermove",e=>{
+ if(!pointer||pointer.id!==e.pointerId||!run)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.hypot(dx,dy)<18)return;
+ const dir=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");if(run.previewDir!==dir){run.previewDir=dir;renderBoard()}
+});
+ui.board.addEventListener("pointerup",e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y,anchorId=pointer.anchorId;pointer=null;if(run)run.previewDir="";if(Math.hypot(dx,dy)<24){renderBoard();announce("젓가락 고정 선택 완료");return}tilt(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"),anchorId)});
+ui.board.addEventListener("pointercancel",()=>{pointer=null;if(run){run.previewDir="";renderBoard()}});
+addEventListener("keydown",e=>{const map={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"};if(map[e.key]){e.preventDefault();tilt(map[e.key],run&&run.anchorId)}});
+addEventListener("blur",()=>{pointer=null;adLast=0});document.addEventListener("visibilitychange",()=>{pointer=null;adLast=0});
+window.__GRAVITY_BENTO_TEST__={levels,foods,begin,tilt,getState:()=>run?JSON.parse(JSON.stringify(run)):null,setProgress:(n=15)=>{save.highest=4;levels.slice(0,5).forEach(l=>save.stars[l.id]=3);store();renderOrders()}};
+renderOrders();
+})();
+</script>
+</body>
+</html>
