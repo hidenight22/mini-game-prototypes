@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#18143a">
+<title>젤리다리 통통축제 · Jellybridge Bounce</title>
+<style>
+:root{--ink:#fffaf3;--muted:#c9c3df;--panel:#241e50;--line:#514a7d;--pink:#ff6fbd;--cyan:#55e7ec;--gold:#ffd766;--good:#7cf49d;--bad:#ff7b83}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d0a25;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none}
+button{min-height:44px;border:0;border-radius:14px;font:inherit;font-weight:900;color:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{cursor:default;opacity:.38}
+#app{position:relative;width:min(100%,430px);height:100dvh;margin:auto;overflow:hidden;background:radial-gradient(circle at 50% 25%,#3c2364 0,#171337 56%,#0b0921 100%);box-shadow:0 0 70px #000}
+.screen{position:absolute;inset:0;display:none;overflow:hidden}.screen.on{display:flex}
+.primary{background:linear-gradient(135deg,#ff65b7,#df4ae6);box-shadow:0 7px 0 #8c2f9c}.secondary{border:1px solid var(--line);background:#29234e}.icon{width:44px;padding:0;border:1px solid var(--line);background:#2b2455;font-size:20px}
+.start{flex-direction:column;align-items:center;padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));text-align:center}
+.start-top{display:flex;width:100%;justify-content:space-between;align-items:center;color:#d8c8ff;font-size:11px;font-weight:900;letter-spacing:.12em}
+.hero{position:relative;width:min(72vw,278px);aspect-ratio:1;margin:auto 0 8px}.hero-cloud{position:absolute;left:20%;right:20%;top:3%;height:25%;border-radius:999px;background:#fff8f2;box-shadow:-36px 10px 0 -6px #fff8f2,36px 12px 0 -8px #fff8f2,0 10px 34px #f9c8ff80}.hero-cloud:after{content:"★";color:#ff64b8;font-size:42px;line-height:70px}
+.hero-jelly{position:absolute;left:50%;top:32%;width:78px;height:70px;transform:translateX(-50%);border-radius:48% 52% 40% 42%;background:linear-gradient(145deg,#7cf6de,#38c7e8);box-shadow:inset 14px 12px 0 #ffffff4a,0 18px 35px #35ddea42;animation:bob 1.15s ease-in-out infinite}.hero-jelly:before,.hero-jelly:after{content:"";position:absolute;top:30px;width:8px;height:11px;border-radius:50%;background:#263052}.hero-jelly:before{left:22px}.hero-jelly:after{right:22px}.hero-smile{position:absolute;left:50%;top:42px;width:24px;height:11px;transform:translateX(-50%);border-bottom:4px solid #263052;border-radius:50%}
+.hero-bridge{position:absolute;left:8%;right:8%;bottom:16%;height:14px;border-radius:999px;background:linear-gradient(90deg,#ff71c1,#ffd96d,#54e9ed);box-shadow:0 8px 0 #4f367c,0 13px 24px #0007;transform:rotate(-5deg)}.hero-bridge:before,.hero-bridge:after{content:"";position:absolute;top:50%;width:48px;height:48px;border:7px solid #fff7e8;border-radius:50%;background:#ef59ba;transform:translate(-50%,-50%)}.hero-bridge:before{left:0}.hero-bridge:after{left:100%;background:#4ddde8}
+@keyframes bob{50%{transform:translate(-50%,13px) scaleY(.94)}}
+.brand-en{margin:0;color:#61edf0;font-size:10px;font-weight:1000;letter-spacing:.24em}.start h1{margin:5px 0 7px;font-size:30px;letter-spacing:-.06em}.start-copy{max-width:330px;margin:0 0 18px;color:#d4cce5;font-size:12px;line-height:1.55}.start-actions{display:grid;width:100%;grid-template-columns:1fr 56px;gap:9px}.start-actions .primary{font-size:15px}
+.map{flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 12px max(11px,env(safe-area-inset-bottom));background:linear-gradient(#181238,#0c0a22)}
+.map-head{display:flex;align-items:center;justify-content:space-between;min-height:49px}.map-title small{display:block;color:var(--cyan);font-size:8px;font-weight:1000;letter-spacing:.18em}.map-title b{font-size:19px}.star-total{padding:9px 12px;border:1px solid #665f87;border-radius:999px;background:#27214d;color:var(--gold);font-size:12px;font-weight:1000}
+.stage-list{display:grid;min-height:0;flex:1;grid-template-columns:1fr 1fr;gap:8px;padding:6px 0;overflow:auto;scrollbar-width:none}.stage-list::-webkit-scrollbar{display:none}
+.stage-card{position:relative;min-height:111px;padding:12px;text-align:left;border:1px solid #514a77;background:linear-gradient(145deg,#2c2557,#1c173e);box-shadow:inset 0 1px #ffffff0c}.stage-card.wide{grid-column:1/-1;min-height:95px;background:linear-gradient(115deg,#35205f,#173f5c)}.stage-card.locked{filter:saturate(.35)}.stage-card .num{display:block;color:var(--cyan);font-size:8px;letter-spacing:.14em}.stage-card strong{display:block;margin:4px 0;font-size:14px}.stage-card p{margin:0;color:#bdb5d5;font-size:9px;line-height:1.45}.stage-card .stars{position:absolute;right:10px;top:9px;color:var(--gold);font-size:12px}.stage-card .lock{position:absolute;right:10px;bottom:9px;color:#b9b1d0;font-size:9px}
+.game{flex-direction:column;padding:max(6px,env(safe-area-inset-top)) 7px max(6px,env(safe-area-inset-bottom));background:linear-gradient(#17123b,#0b0921)}
+.game-head{display:flex;align-items:center;justify-content:space-between;min-height:42px}.game-title small{display:block;color:var(--cyan);font-size:8px;font-weight:1000;letter-spacing:.15em}.game-title b{display:block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}.game-actions{display:flex;gap:5px}.game-actions .icon{min-height:38px;width:38px;font-size:16px}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:5px}.hud-box{padding:5px 3px;border:1px solid #4e4772;border-radius:10px;background:#211b48;text-align:center}.hud-box span{display:block;color:#afa8c9;font-size:8px}.hud-box b{font-size:12px}.objective{display:flex;align-items:center;justify-content:space-between;gap:7px;min-height:31px;padding:5px 9px;margin-bottom:5px;border:1px solid #564f7a;border-radius:10px;background:#28204d;color:#eee9ff;font-size:9px;font-weight:900}.objective em{color:var(--gold);font-style:normal;white-space:nowrap}
+.field{position:relative;min-height:0;flex:1;overflow:hidden;border:1px solid #5a4e88;border-radius:18px;background:#151039;touch-action:none;box-shadow:inset 0 0 35px #0007}.field canvas{display:block;width:100%;height:100%;touch-action:none}.field-tip{pointer-events:none;position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:96%;color:#fff7d4;font-size:9px;font-weight:900;text-align:center;text-shadow:0 2px 5px #000}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:6px}.reward-btn{border:1px solid #9e7f42;background:linear-gradient(#3a2e35,#26203f);color:#ffe69b;font-size:10px}.launch-btn{border:1px solid #4e8e91;background:#153e56;color:#a9fbff;font-size:10px}
+.result{flex-direction:column;align-items:center;padding:max(17px,env(safe-area-inset-top)) 15px max(13px,env(safe-area-inset-bottom));text-align:center;background:radial-gradient(circle at 50% 28%,#50306d,#151033 64%)}
+.result-kicker{margin-top:auto;color:var(--cyan);font-size:9px;font-weight:1000;letter-spacing:.2em}.result-jelly{position:relative;width:104px;height:92px;margin:13px 0 8px;border-radius:50% 50% 43% 43%;background:linear-gradient(145deg,#75f0dd,#42c7ee);box-shadow:inset 18px 14px 0 #ffffff42,0 20px 42px #49e4de33}.result-jelly.fail{filter:grayscale(.55);transform:rotate(8deg)}.result-jelly:before,.result-jelly:after{content:"";position:absolute;top:39px;width:10px;height:14px;border-radius:50%;background:#29294c}.result-jelly:before{left:28px}.result-jelly:after{right:28px}.result h2{margin:4px 0;font-size:25px}.result-copy{min-height:37px;max-width:340px;margin:0;color:#c8c0dc;font-size:10px;line-height:1.5}.result-stars{margin:8px 0;color:var(--gold);font-size:30px;letter-spacing:3px}.result-stars .off{color:#4c4669}.stats{display:grid;width:100%;grid-template-columns:repeat(3,1fr);gap:6px}.stat{padding:8px 3px;border:1px solid #554c78;border-radius:11px;background:#221b48}.stat span{display:block;color:#aaa3c1;font-size:7px}.stat b{font-size:14px}.result-actions{display:grid;width:100%;grid-template-columns:1fr 1fr;gap:7px;margin-top:auto}.result-actions .wide{grid-column:1/-1}
+.overlay{position:absolute;z-index:20;inset:0;display:none;place-items:center;padding:18px;background:#070617cc;backdrop-filter:blur(7px)}.overlay.on{display:grid}.modal{width:min(100%,350px);max-height:90dvh;overflow:auto;padding:18px;border:1px solid #625a87;border-radius:22px;background:linear-gradient(145deg,#2e275a,#181438);box-shadow:0 24px 70px #000}.modal h2{margin:0 0 8px;font-size:20px}.modal p,.modal li{color:#d0c9df;font-size:11px;line-height:1.55}.modal ul{padding-left:19px}.modal b{color:#fff3a6}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}.modal-actions .primary:only-child{grid-column:1/-1}.reward-ticket{padding:11px;border:1px solid #8c7849;border-radius:13px;background:#342a36;color:#f6e5ac;font-size:10px;line-height:1.45}.reward-ticket b{display:block;color:#fff1a5}.ad-ring{display:grid;place-items:center;width:112px;height:112px;margin:17px auto;border:9px solid #51466e;border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}.ad-ring span{font-size:35px;font-weight:1000;animation:counterSpin 1s linear infinite}.ad-note{text-align:center}.toast{pointer-events:none;position:absolute;z-index:30;left:50%;top:17%;transform:translate(-50%,-8px);max-width:90%;padding:9px 13px;border:1px solid #ffffff3a;border-radius:999px;background:#1a153bea;color:#fff6cf;font-size:10px;font-weight:900;opacity:0;transition:.2s}.toast.on{transform:translate(-50%,0);opacity:1}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes counterSpin{to{transform:rotate(-360deg)}}
+@media(max-height:590px){.start-copy{margin-bottom:11px;font-size:10px}.hero{width:205px}.start h1{font-size:25px}.stage-card{min-height:92px;padding:9px}.stage-card p{font-size:8px}.map-head{min-height:40px}.game-head{min-height:34px}.hud-box{padding:3px}.objective{min-height:27px}.result-jelly{width:80px;height:70px}.result h2{font-size:21px}.result-stars{font-size:24px;margin:4px}.stat{padding:5px}}
+</style>
+</head>
+<body>
+<main id="app">
+  <section class="screen start on" id="startScreen">
+    <div class="start-top"><span>JELLY SKY FESTIVAL</span><span id="saveNote">첫 축제 준비 중</span></div>
+    <div class="hero" aria-hidden="true"><div class="hero-cloud"></div><div class="hero-jelly"><i class="hero-smile"></i></div><div class="hero-bridge"></div></div>
+    <p class="brand-en">JELLYBRIDGE BOUNCE</p>
+    <h1>젤리다리 통통축제</h1>
+    <p class="start-copy">좌우 손잡이로 탄성 다리를 기울여 젤리 친구를 알맞은 구름북까지 통통 띄워요.</p>
+    <div class="start-actions"><button class="primary" id="startBtn">축제 무대 열기</button><button class="icon" id="helpStart" aria-label="게임 방법">?</button></div>
+  </section>
+
+  <section class="screen map" id="mapScreen">
+    <header class="map-head"><div class="map-title"><small>FESTIVAL PROGRAM</small><b>오늘의 통통 무대</b></div><div class="star-total" id="starTotal">★ 0 / 15</div></header>
+    <div class="stage-list" id="stageList"></div>
+  </section>
+
+  <section class="screen game" id="gameScreen">
+    <header class="game-head"><div class="game-title"><small id="stageKicker">STAGE 01</small><b id="stageName">첫 통통 인사</b></div><div class="game-actions"><button class="icon" id="helpGame" aria-label="게임 방법">?</button><button class="icon" id="exitGame" aria-label="무대 나가기">×</button></div></header>
+    <div class="hud">
+      <div class="hud-box"><span>남은 시간</span><b id="timeText">45</b></div>
+      <div class="hud-box"><span>착지</span><b id="servedText">0 / 4</b></div>
+      <div class="hud-box"><span>하트</span><b id="heartText">♥♥♥</b></div>
+      <div class="hud-box"><span>점수</span><b id="scoreText">0</b></div>
+    </div>
+    <div class="objective"><span id="objectiveText">손잡이를 위아래로 움직여 구름을 조준해요</span><em id="ruleText">기본 탄성</em></div>
+    <div class="field" id="field"><canvas id="canvas" tabindex="0" aria-label="젤리다리 조작 무대"></canvas><div class="field-tip" id="fieldTip">화면 왼쪽과 오른쪽을 각각 위아래로 끌어보세요</div></div>
+    <div class="controls"><button class="reward-btn" id="rewardBtn" disabled>꿀벌 구조대 · 실수 후 사용</button><button class="launch-btn" id="centerBtn">다리 가운데로 맞추기</button></div>
+  </section>
+
+  <section class="screen result" id="resultScreen">
+    <p class="result-kicker" id="resultKicker">STAGE COMPLETE</p><div class="result-jelly" id="resultJelly"></div>
+    <h2 id="resultTitle">구름북 연주 성공!</h2><p class="result-copy" id="resultCopy"></p>
+    <div class="result-stars" id="resultStars">★★★</div>
+    <div class="stats"><div class="stat"><span>축제 점수</span><b id="resultScore">0</b></div><div class="stat"><span>남은 하트</span><b id="resultHearts">3</b></div><div class="stat"><span>최고 기록</span><b id="resultBest">0</b></div></div>
+    <div class="result-actions"><button class="secondary" id="mapBtn">무대 목록</button><button class="secondary" id="retryBtn">다시 하기</button><button class="primary wide" id="nextBtn">다음 무대</button></div>
+  </section>
+
+  <div class="overlay" id="helpOverlay" role="dialog" aria-modal="true"><div class="modal"><h2>젤리다리 연주법</h2><ul>
+    <li>왼쪽과 오른쪽 손잡이를 위아래로 움직이면 다리의 <b>기울기와 탄성</b>이 바뀌어요.</li>
+    <li>다리를 아래로 당길수록 높이 튀고, 좌우 높이 차이로 날아갈 방향을 정해요. 한 손가락은 가까운 손잡이를, 두 손가락은 양쪽을 함께 움직여요.</li>
+    <li>젤리가 자기 색 구름북에 닿으면 착지해요. 바람, 무거운 젤리, 끈적 젤리, 움직이는 북, 황금 젤리 규칙이 차례로 더해져요.</li>
+    <li>황금 젤리는 다리를 너무 깊게 당기면 놀라요. 화면의 안전 탄성 표시를 확인해요.</li>
+    <li>실수한 뒤 꿀벌 구조대를 선택하면 3초 광고 샘플 후 하트 1개와 같은 젤리 재도전을 즉시 받아요. 한 판에 한 번이고 등급은 깎이지 않아요.</li>
+  </ul><div class="modal-actions"><button class="primary" id="closeHelp">무대로 돌아가기</button></div></div></div>
+
+  <div class="overlay" id="exitOverlay" role="dialog" aria-modal="true"><div class="modal"><h2>무대를 나갈까요?</h2><p>이번 판의 착지와 점수는 저장되지 않아요.</p><div class="modal-actions"><button class="secondary" id="keepPlaying">계속 연주하기</button><button class="primary" id="confirmExit">무대 목록으로</button></div></div></div>
+
+  <div class="overlay" id="rewardOverlay" role="dialog" aria-modal="true"><div class="modal"><h2>놓친 젤리를 데려올까요?</h2><p>결제와 네트워크가 없는 <b>3초 보상형 광고 데모</b>예요. 이번 판에서 한 번만 선택할 수 있어요.</p><div class="reward-ticket"><b>3초 광고 샘플 → 하트 1개 + 같은 젤리 재도전</b>광고 중 무대와 타이머는 완전히 멈추고, 완료 즉시 보상을 받아요. 별 등급에는 불이익이 없어요.</div><div class="modal-actions"><button class="primary" id="watchReward">동의하고 3초 보기</button><button class="secondary" id="cancelReward">광고 없이 계속하기</button></div></div></div>
+
+  <div class="overlay" id="adOverlay" role="dialog" aria-modal="true"><div class="modal"><h2>꿀벌 구조대가 오는 중</h2><div class="ad-ring"><span id="adCount">3</span></div><p class="ad-note">앱을 벗어나면 광고 샘플도 함께 멈춰요.</p></div></div>
+  <div class="toast" id="toast"></div>
+</main>
+<script>
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s), SAVE_KEY="jellybridge-bounce-save-v1", W=360, H=390;
+const COLORS={mint:"#58e8d7",pink:"#ff6fbd",gold:"#ffd45f",violet:"#a88cff"};
+const levels=[
+ {id:"hello",name:"첫 통통 인사",rule:"기본 탄성",desc:"다리 높이와 기울기를 익혀요",goal:4,time:44,par:28,colors:["mint","pink"],spawn:[150,210,115,245],targets:[258,92,270,82]},
+ {id:"wind",name:"바람개비 언덕",rule:"좌우 횡풍",desc:"바람 깃발을 보고 반대로 기울여요",goal:5,time:48,par:34,colors:["pink","mint"],spawn:[115,230,165,255,105],targets:[252,96,278,104,238],wind:true},
+ {id:"texture",name:"말랑말랑 행진",rule:"무거움 · 끈적임",desc:"젤리마다 필요한 탄성이 달라요",goal:5,time:52,par:39,colors:["mint","violet","pink"],spawn:[125,235,165,260,105],targets:[266,92,248,112,276],types:["heavy","sticky","normal","heavy","sticky"]},
+ {id:"drums",name:"춤추는 구름북",rule:"이동 목표 · 색상",desc:"움직이는 자기 색 북을 따라가요",goal:6,time:54,par:42,colors:["pink","mint","violet"],spawn:[110,245,165,225,130,260],targets:[236,108,258,96,242,112],moving:true,colorRule:true},
+ {id:"gold",name:"황금 손님맞이",rule:"안전 탄성",desc:"황금 젤리는 부드럽게 띄워요",goal:6,time:58,par:46,colors:["gold","mint","gold","pink"],spawn:[145,225,105,255,170,235],targets:[252,108,270,92,246,104],wind:true,moving:true,golden:true},
+ {id:"prism",name:"프리즘 나이트",rule:"확장 · 혼합 규칙",desc:"바람과 물성, 색이 밤마다 바뀌어요",goal:7,time:64,par:50,colors:["mint","pink","violet","gold"],spawn:[115,245,165,210,95,265,150],targets:[252,104,270,88,240,112,260],types:["normal","heavy","sticky","normal","heavy","normal","sticky"],wind:true,moving:true,colorRule:true,prism:true,expansion:true}
+];
+let save=loadSave(), selected=0, run=null, raf=0, lastFrame=0, runSerial=0, toastTimer=0, adRAF=0, adElapsed=0, adLast=0, focusPaused=false;
+const canvas=$("#canvas"), ctx=canvas.getContext("2d"), field=$("#field");
+function loadSave(){try{const v=JSON.parse(localStorage.getItem(SAVE_KEY)||"{}");return{stars:v.stars||{},best:v.best||{}}}catch(_){return{stars:{},best:{}}}}
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(_){}}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.toggle("on",x.id===id))}
+function overlay(id,on){$("#"+id).classList.toggle("on",!!on)}
+function totalStars(){return levels.slice(0,5).reduce((n,l)=>n+(save.stars[l.id]||0),0)}
+function expansionUnlocked(){return totalStars()>=9}
+function mainUnlocked(i){return i===0||!!save.stars[levels[i-1].id]}
+function updateSaveNote(){const n=Object.keys(save.stars).length;$("#saveNote").textContent=n?`${n}개 무대 기록 중`:"첫 축제 준비 중"}
+function renderMap(){
+ const total=totalStars();$("#starTotal").textContent=`★ ${total} / 15`;$("#stageList").innerHTML="";
+ levels.forEach((l,i)=>{
+  const unlocked=l.expansion?expansionUnlocked():mainUnlocked(i), stars=save.stars[l.id]||0, b=document.createElement("button");
+  b.className="stage-card"+(l.expansion?" wide":"")+(unlocked?"":" locked");b.disabled=!unlocked;
+  b.innerHTML=`<span class="num">${l.expansion?"NIGHT EXPANSION":"STAGE "+String(i+1).padStart(2,"0")}</span><strong>${l.name}</strong><p>${l.desc}</p><span class="stars">${"★".repeat(stars)}${"☆".repeat(3-stars)}</span>${unlocked?"":`<span class="lock">${l.expansion?"★ 9개로 해금":"이전 무대 완료"}</span>`}`;
+  b.onclick=()=>startLevel(i);$("#stageList").appendChild(b);
+ });
+ show("mapScreen");
+}
+function current(){return levels[selected]}
+function startLevel(index){
+ if(index===5&&!expansionUnlocked())return;selected=index;const l=current(), id=++runSerial;
+ cancelAnimationFrame(raf);cancelAnimationFrame(adRAF);adRAF=0;
+ run={id,ended:false,transition:false,elapsed:0,hearts:3,served:0,score:0,combo:0,nextIndex:0,jelly:null,leftY:304,rightY:304,pointers:new Map(),lastMiss:null,rescueSpec:null,nextSpawnAt:.7,rewardUsed:false,rewarding:false,awaitingContinue:false,windPhase:0,targetX:180,targetDir:1,prismIndex:0,prismClock:0,particles:[],flash:0};
+ $("#stageKicker").textContent=l.expansion?"PRISM NIGHT":"STAGE "+String(index+1).padStart(2,"0");$("#stageName").textContent=l.name;$("#ruleText").textContent=l.rule;
+ $("#objectiveText").textContent=l.desc;$("#fieldTip").textContent=index===0?"다리를 아래로 당겨 높이, 기울여 방향을 정해요":"깃발·젤리 표식·구름 움직임을 함께 읽어보세요";
+ $("#rewardBtn").disabled=true;$("#rewardBtn").textContent="꿀벌 구조대 · 실수 후 사용";show("gameScreen");resize();updateHUD();startLoop();
+}
+function startLoop(){lastFrame=performance.now();raf=requestAnimationFrame(loop)}
+function isPaused(){return focusPaused||!!document.querySelector(".overlay.on")||!run||run.ended}
+function loop(now){
+ if(!run||run.ended)return;const dt=Math.min(.032,Math.max(0,(now-lastFrame)/1000));lastFrame=now;
+ if(!isPaused())update(dt);draw();raf=requestAnimationFrame(loop);
+}
+function specAt(index){
+ const l=current(), ci=index%l.colors.length, type=(l.types&&l.types[index%l.types.length])||(l.golden&&l.colors[ci]==="gold"?"golden":"normal");
+ return{color:l.colors[ci],type,spawnX:l.spawn[index%l.spawn.length],targetX:l.targets[index%l.targets.length],serial:index};
+}
+function spawnJelly(){
+ if(!run||run.ended||run.jelly||run.awaitingContinue)return;const spec=run.rescueSpec||specAt(run.nextIndex++);run.rescueSpec=null;
+ const mass=spec.type==="heavy"?1.28:spec.type==="sticky"?.9:1;if(!current().colorRule||current().prism)run.targetX=spec.targetX||180;
+ run.jelly={...spec,x:spec.spawnX,y:87,vx:0,vy:28,r:15,mass,bounced:false,bounceCount:0,age:0,stuck:0,trail:[]};
+ $("#rewardBtn").disabled=run.rewardUsed||!run.lastMiss;$("#rewardBtn").textContent=run.rewardUsed?"구조대 사용 완료":run.lastMiss?"꿀벌 구조대 · 재도전 받기":"꿀벌 구조대 · 실수 후 사용";toast(`${typeName(spec.type)} ${colorName(spec.color)} 젤리가 내려와요`);
+}
+function typeName(t){return t==="heavy"?"묵직한":t==="sticky"?"쫀득한":t==="golden"?"황금":""}
+function colorName(c){return c==="mint"?"민트":c==="pink"?"딸기":c==="violet"?"포도":"황금"}
+function targetColor(){
+ if(!run)return"mint";const l=current();
+ if(l.prism)return["mint","pink","violet","gold"][run.prismIndex%4];
+ return run.jelly?run.jelly.color:l.colors[0];
+}
+function update(dt){
+ const l=current();if(run.transition){updateHUD();return}run.elapsed+=dt;run.windPhase+=dt;run.flash=Math.max(0,run.flash-dt);
+ if(run.elapsed>=l.time){endRun(false,"축제 시간이 끝났어요. 다리의 높이를 미리 맞춰보세요.");return}
+ if(l.moving){run.targetX+=run.targetDir*(l.prism?72:52)*dt;if(run.targetX<84||run.targetX>276){run.targetX=Math.max(84,Math.min(276,run.targetX));run.targetDir*=-1}}
+ if(l.prism){run.prismClock+=dt;if(run.prismClock>=1.6){run.prismClock-=1.6;run.prismIndex=(run.prismIndex+1)%4}}
+ if(!run.jelly&&run.elapsed>=run.nextSpawnAt)spawnJelly();
+ const j=run.jelly;if(j){
+  j.age+=dt;if(j.age>6.2){missJelly("구름북을 오래 맴돌았어요");updateHUD();return}
+  const wind=l.wind?Math.sin(run.windPhase*1.45)*(l.prism?62:46):0, oldY=j.y, oldX=j.x;
+  if(j.stuck>0){j.stuck-=dt;if(j.stuck<=0)bounce(j,true)}else{
+   j.vx+=wind*dt;j.vy+=520*j.mass*dt;j.x+=j.vx*dt;j.y+=j.vy*dt;
+   if(j.x-j.r<5){j.x=5+j.r;j.vx=Math.abs(j.vx)*.7}if(j.x+j.r>355){j.x=355-j.r;j.vx=-Math.abs(j.vx)*.7}
+   const ly=bridgeY(j.x), oldLy=bridgeY(oldX);
+   if(j.vy>0&&j.y+j.r>=ly&&oldY+j.r<oldLy+3){
+    j.y=ly-j.r;
+    if(j.type==="sticky"){j.stuck=.28;j.vx*=.4;toast("쫀득! 잠깐 붙었다가 튀어요")}else bounce(j,false);
+   }
+  }
+  j.trail.push({x:j.x,y:j.y,a:1});if(j.trail.length>13)j.trail.shift();j.trail.forEach(p=>p.a-=dt*2.2);
+  const hit=targetSpecs().find(t=>circleRect(j.x,j.y,j.r,t.x-t.w/2,38,t.w,47));
+  if(j.bounced&&j.vy<60&&hit){
+   if(j.color!==hit.color){j.vy=Math.abs(j.vy)+90;j.y=91;toast("다른 색 구름북이에요 · 자기 색을 노려요")}else catchJelly(hit.x);
+  }else if(j.y>H+34||(j.bounced&&j.y<-45))missJelly("구름북을 지나쳤어요");
+ }
+ for(const p of run.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;p.life-=dt}run.particles=run.particles.filter(p=>p.life>0);
+ updateHUD();
+}
+function bridgeY(x){const t=(Math.max(42,Math.min(318,x))-42)/276;return run.leftY+(run.rightY-run.leftY)*t}
+function tension(){return Math.max(.12,Math.min(1,(run.leftY+run.rightY-470)/220))}
+function bounce(j,fromSticky){
+ const t=tension(), slope=(run.rightY-run.leftY)/276;
+ if(j.type==="golden"&&t>.76){missJelly("황금 젤리가 강한 탄성에 놀랐어요");return}
+ j.bounceCount++;if(j.bounceCount>3){missJelly("세 번 튕겨 구름북 기회를 놓쳤어요");return}
+ const base=j.type==="heavy"?545:j.type==="sticky"?610:590, stickyBoost=fromSticky?1.07:1;
+ j.vy=-base*(.72+t*.43)*stickyBoost/j.mass;j.vx=Math.max(-245,Math.min(245,j.vx-slope*650));j.bounced=true;j.stuck=0;
+ burst(j.x,j.y,COLORS[j.color],7);run.flash=.12;
+}
+function circleRect(cx,cy,r,x,y,w,h){return cx+r>x&&cx-r<x+w&&cy+r>y&&cy-r<y+h}
+function catchJelly(catchX=run.targetX){
+ const j=run.jelly;if(!j)return;run.served++;run.combo++;const l=current(), timeBonus=Math.max(0,l.time-run.elapsed);
+ run.score+=Math.round(500+run.combo*60+timeBonus*7);burst(catchX,65,COLORS[j.color],18);run.jelly=null;run.nextSpawnAt=run.elapsed+.72;toast("통통 착지! 구름북이 울렸어요");
+ if(run.served>=l.goal){run.transition=true;setTimeout(()=>{if(run&&run.transition&&!run.ended)endRun(true)},520)}
+}
+function missJelly(message){
+ if(!run||!run.jelly||run.ended)return;run.lastMiss={color:run.jelly.color,type:run.jelly.type,spawnX:run.jelly.spawnX,serial:run.jelly.serial};run.jelly=null;run.hearts--;run.combo=0;run.flash=.22;toast(message);
+ if(run.hearts<=0){
+  if(!run.rewardUsed){run.awaitingContinue=true;setTimeout(()=>{if(run&&run.awaitingContinue&&!run.ended)overlay("rewardOverlay",true)},250)}
+  else endRun(false,"젤리 친구를 모두 놓쳤어요. 기울기를 조금씩 조정해보세요.");
+ }else{run.nextSpawnAt=run.elapsed+1;$("#rewardBtn").disabled=run.rewardUsed;$("#rewardBtn").textContent=run.rewardUsed?"구조대 사용 완료":"꿀벌 구조대 · 재도전 받기"}
+ updateHUD();
+}
+function burst(x,y,color,n){for(let i=0;i<n;i++){const a=Math.PI*2*i/n+Math.random()*.3,s=45+Math.random()*90;run.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-35,life:.6+Math.random()*.45,color})}}
+function scoreStars(){
+ const l=current();if(run.hearts>=3&&run.elapsed<=l.par)return 3;if(run.hearts>=2)return 2;return 1;
+}
+function endRun(win,copy=""){
+ if(!run||run.ended)return;run.ended=true;run.transition=false;run.pointers.clear();cancelAnimationFrame(raf);const l=current(), stars=win?scoreStars():0, score=win?run.score:0;
+ if(win){save.stars[l.id]=Math.max(save.stars[l.id]||0,stars);save.best[l.id]=Math.max(save.best[l.id]||0,score);persist()}
+ $("#resultKicker").textContent=win?(l.expansion?"PRISM NIGHT COMPLETE":"STAGE COMPLETE"):"STAGE FAILED";$("#resultJelly").classList.toggle("fail",!win);
+ $("#resultTitle").textContent=win?"구름북 연주 성공!":"다시 통통 준비해요";$("#resultCopy").textContent=copy||(win?(l.expansion?"밤빛이 바뀌는 순간까지 읽고 프리즘 축제를 완성했어요.":"젤리다리의 높이와 기울기를 맞춰 축제 무대를 완성했어요."):"다리를 아래로 당겨 높이를 만들고, 좌우 차이로 방향을 정해보세요.");
+ $("#resultStars").innerHTML="★".repeat(stars)+`<span class="off">${"★".repeat(3-stars)}</span>`;$("#resultScore").textContent=score.toLocaleString();$("#resultHearts").textContent=String(Math.max(0,run.hearts));$("#resultBest").textContent=(save.best[l.id]||0).toLocaleString();
+ $("#nextBtn").disabled=!win||selected>=5;$("#nextBtn").textContent=selected===4&&win?(expansionUnlocked()?"프리즘 나이트 열기":"별 9개를 모아 확장 해금"):selected===5?"확장 완료":"다음 무대";show("resultScreen");updateSaveNote();
+}
+function updateHUD(){
+ if(!run)return;const l=current();$("#timeText").textContent=Math.max(0,l.time-run.elapsed).toFixed(1);$("#servedText").textContent=`${run.served} / ${l.goal}`;$("#heartText").textContent="♥".repeat(Math.max(0,run.hearts))+"♡".repeat(Math.max(0,3-run.hearts));$("#scoreText").textContent=run.score.toLocaleString();
+}
+function resize(){const r=field.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));draw()}
+function draw(){
+ if(!run)return;const r=canvas.getBoundingClientRect(),sx=r.width/W,sy=r.height/H,d=Math.min(2,devicePixelRatio||1);ctx.setTransform(d*sx,0,0,d*sy,0,0);ctx.clearRect(0,0,W,H);
+ const l=current(),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,l.expansion?"#211145":"#33205d");g.addColorStop(.58,"#171748");g.addColorStop(1,"#10102d");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ drawDecor(l);drawTarget(l);drawGuide();if(run.jelly)drawJelly(run.jelly);drawBridge();drawParticles();
+ if(run.flash){ctx.fillStyle=`rgba(255,255,255,${run.flash})`;ctx.fillRect(0,0,W,H)}
+}
+function drawDecor(l){
+ ctx.globalAlpha=.55;for(let i=0;i<18;i++){const x=(i*83+27)%360,y=(i*47+20)%220;ctx.fillStyle=i%3?"#ffffff":"#ffd76b";ctx.beginPath();ctx.arc(x,y,1+(i%3),0,Math.PI*2);ctx.fill()}
+ if(l.wind){const w=Math.sin(run.windPhase*1.45);ctx.strokeStyle="#b6f6ff66";ctx.lineWidth=2;for(let i=0;i<5;i++){const y=115+i*36,x=180+w*60;ctx.beginPath();ctx.moveTo(x-42,y);ctx.lineTo(x+42,y+w*10);ctx.stroke()}ctx.fillStyle="#d8fbff";ctx.font="900 10px system-ui";ctx.fillText(w>0?"바람 →":"← 바람",12,24)}
+ ctx.globalAlpha=1;
+}
+function targetSpecs(){
+ const l=current();if(l.colorRule&&!l.prism){const colors=[...new Set(l.colors)],bases=colors.length===3?[72,180,288]:[105,255],drift=(run.targetX-180)*.25;return colors.map((color,i)=>({x:bases[i]+drift,color,w:76,multi:true}))}
+ return[{x:run.targetX,color:targetColor(),w:96,multi:false}];
+}
+function drawTarget(l){
+ for(const t of targetSpecs()){const x=t.x,y=58,c=COLORS[t.color],scale=t.multi?.73:1;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.shadowColor=c;ctx.shadowBlur=18;ctx.fillStyle="#fff9f1";
+  for(const p of [[-30,5,24],[0,-5,31],[30,7,22]]){ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);ctx.fill()}ctx.shadowBlur=0;ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(0,8,29,16,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#2b2450";ctx.beginPath();ctx.arc(0,8,13,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="900 9px system-ui";ctx.textAlign="center";ctx.fillText(l.prism?"빛이 바뀌어요":t.multi?colorName(t.color):"착지",0,34);ctx.restore()}
+}
+function drawGuide(){
+ const t=tension(),m=(run.leftY+run.rightY)/2,slope=(run.rightY-run.leftY)/276;ctx.save();ctx.setLineDash([5,6]);ctx.strokeStyle=t>.76&&run.jelly?.type==="golden"?"#ff7b83aa":"#ffe37e88";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(180,m-4);for(let i=1;i<=5;i++){const q=i/5,x=180-slope*340*q,y=m-(120+105*t)*Math.sin(Math.PI*q);ctx.lineTo(x,y)}ctx.stroke();ctx.setLineDash([]);ctx.restore();
+}
+function drawBridge(){
+ const t=tension(),danger=run.jelly?.type==="golden"&&t>.76;ctx.save();ctx.lineCap="round";ctx.shadowColor=danger?"#ff4d74":"#ff69c1";ctx.shadowBlur=13;ctx.strokeStyle=danger?"#ff6f7d":"#ff72c2";ctx.lineWidth=15;ctx.beginPath();ctx.moveTo(42,run.leftY);ctx.quadraticCurveTo(180,(run.leftY+run.rightY)/2+7,318,run.rightY);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle="#ffe680";ctx.lineWidth=5;ctx.stroke();
+ drawHandle(42,run.leftY,"L","#ff65b7");drawHandle(318,run.rightY,"R","#55dfe9");ctx.fillStyle=danger?"#ff8a8f":"#fff1a6";ctx.font="900 9px system-ui";ctx.textAlign="center";ctx.fillText(danger?"황금 안전선 초과":`탄성 ${Math.round(t*100)}%`,180,Math.min(run.leftY,run.rightY)+28);ctx.restore();
+}
+function drawHandle(x,y,label,color){ctx.fillStyle="#fff9ea";ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,17,0,Math.PI*2);ctx.fill();ctx.fillStyle="#242044";ctx.font="1000 10px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(label,x,y+1)}
+function drawJelly(j){
+ for(const p of j.trail){if(p.a<=0)continue;ctx.globalAlpha=Math.max(0,p.a)*.32;ctx.fillStyle=COLORS[j.color];ctx.beginPath();ctx.arc(p.x,p.y,j.r*.58,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.save();ctx.translate(j.x,j.y);ctx.shadowColor=COLORS[j.color];ctx.shadowBlur=15;ctx.fillStyle=COLORS[j.color];ctx.beginPath();ctx.moveTo(-j.r,3);ctx.bezierCurveTo(-j.r,-j.r,j.r,-j.r,j.r,3);ctx.quadraticCurveTo(j.r,j.r*.9,j.r*.45,j.r*.72);ctx.quadraticCurveTo(0,j.r*1.16,-j.r*.45,j.r*.72);ctx.quadraticCurveTo(-j.r,j.r*.9,-j.r,3);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle="#27264c";ctx.beginPath();ctx.arc(-5,-1,2.2,0,Math.PI*2);ctx.arc(5,-1,2.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#27264c";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,3,5,0,Math.PI);ctx.stroke();ctx.fillStyle="#fff";ctx.font="900 7px system-ui";ctx.textAlign="center";ctx.fillText(j.type==="heavy"?"무거움":j.type==="sticky"?"쫀득":j.type==="golden"?"살살":"",0,-20);ctx.restore();
+}
+function drawParticles(){for(const p of run.particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,4,4)}ctx.globalAlpha=1}
+function localPoint(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
+canvas.addEventListener("pointerdown",e=>{
+ if(!run||run.ended||isPaused())return;e.preventDefault();canvas.focus({preventScroll:true});const p=localPoint(e),side=p.x<180?"left":"right";run.pointers.set(e.pointerId,side);try{canvas.setPointerCapture(e.pointerId)}catch(_){}moveHandle(side,p.y);
+});
+canvas.addEventListener("pointermove",e=>{if(!run||!run.pointers.has(e.pointerId)||isPaused())return;e.preventDefault();moveHandle(run.pointers.get(e.pointerId),localPoint(e).y)});
+function releasePointer(e){if(!run)return;run.pointers.delete(e.pointerId);try{canvas.releasePointerCapture(e.pointerId)}catch(_){}}
+canvas.addEventListener("pointerup",releasePointer);canvas.addEventListener("pointercancel",releasePointer);canvas.addEventListener("lostpointercapture",releasePointer);
+function moveHandle(side,y){if(!run)return;y=Math.max(238,Math.min(350,y));if(side==="left")run.leftY=y;else run.rightY=y;draw()}
+canvas.addEventListener("keydown",e=>{
+ if(!run||run.ended||isPaused())return;const step=e.shiftKey?12:6,keys=["KeyA","KeyZ","KeyK","KeyM","ArrowUp","ArrowDown"];if(keys.includes(e.code))e.preventDefault();
+ if(e.code==="KeyA")moveHandle("left",run.leftY-step);if(e.code==="KeyZ")moveHandle("left",run.leftY+step);if(e.code==="KeyK")moveHandle("right",run.rightY-step);if(e.code==="KeyM")moveHandle("right",run.rightY+step);
+ if(e.code==="ArrowUp"){moveHandle("left",run.leftY-step);moveHandle("right",run.rightY-step)}if(e.code==="ArrowDown"){moveHandle("left",run.leftY+step);moveHandle("right",run.rightY+step)}
+});
+function toast(text){clearTimeout(toastTimer);$("#toast").textContent=text;$("#toast").classList.add("on");toastTimer=setTimeout(()=>$("#toast").classList.remove("on"),1450)}
+function promptReward(){if(!run||run.rewardUsed||!run.lastMiss)return;overlay("rewardOverlay",true)}
+function beginReward(){
+ if(!run||run.rewardUsed||!run.lastMiss)return;overlay("rewardOverlay",false);overlay("adOverlay",true);run.rewarding=true;run.pointers.clear();adElapsed=0;adLast=performance.now();$("#adCount").textContent="3";adRAF=requestAnimationFrame(adLoop);
+}
+function adLoop(now){
+ if(!run||run.ended||!run.rewarding)return;if(!focusPaused&&!document.hidden)adElapsed+=Math.max(0,now-adLast);adLast=now;$("#adCount").textContent=String(Math.max(1,Math.ceil((3000-adElapsed)/1000)));
+ if(adElapsed>=3000){finishReward();return}adRAF=requestAnimationFrame(adLoop);
+}
+function finishReward(){
+ cancelAnimationFrame(adRAF);adRAF=0;overlay("adOverlay",false);run.rewarding=false;run.rewardUsed=true;run.hearts=Math.min(3,Math.max(1,run.hearts+1));run.rescueSpec={...run.lastMiss};run.lastMiss=null;run.awaitingContinue=false;run.nextSpawnAt=run.elapsed+.45;$("#rewardBtn").disabled=true;$("#rewardBtn").textContent="구조대 사용 완료";toast("하트 1개와 같은 젤리 재도전을 받았어요");updateHUD();
+}
+$("#startBtn").onclick=renderMap;$("#helpStart").onclick=()=>overlay("helpOverlay",true);$("#helpGame").onclick=()=>overlay("helpOverlay",true);$("#closeHelp").onclick=()=>overlay("helpOverlay",false);
+$("#exitGame").onclick=()=>overlay("exitOverlay",true);$("#keepPlaying").onclick=()=>overlay("exitOverlay",false);$("#confirmExit").onclick=()=>{overlay("exitOverlay",false);if(run){run.ended=true;cancelAnimationFrame(raf)}renderMap()};
+$("#rewardBtn").onclick=promptReward;$("#watchReward").onclick=beginReward;$("#cancelReward").onclick=()=>{overlay("rewardOverlay",false);if(run?.awaitingContinue)endRun(false,"젤리 친구를 모두 놓쳤어요. 구조대 없이 다시 도전할 수 있어요.")};
+$("#centerBtn").onclick=()=>{if(!run||run.ended||isPaused())return;run.leftY=304;run.rightY=304;toast("다리를 가운데 높이로 맞췄어요");draw()};
+$("#mapBtn").onclick=renderMap;$("#retryBtn").onclick=()=>startLevel(selected);$("#nextBtn").onclick=()=>{if(selected===4&&expansionUnlocked())startLevel(5);else if(selected<4)startLevel(selected+1);else renderMap()};
+window.addEventListener("resize",resize);window.addEventListener("blur",()=>{focusPaused=true;if(run)run.pointers.clear()});window.addEventListener("focus",()=>{focusPaused=false;lastFrame=performance.now();adLast=performance.now()});
+document.addEventListener("visibilitychange",()=>{focusPaused=document.hidden;if(run)run.pointers.clear();lastFrame=performance.now();adLast=performance.now()});
+updateSaveNote();
+})();
+</script>
+</body>
+</html>
