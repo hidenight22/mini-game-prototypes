@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#130d22">
+<title>빛쐐기 주조소 · Prismwedge Foundry</title>
+<style>
+  :root{color-scheme:dark;--ink:#fff8dc;--dim:#bdb2d4;--violet:#6e4fff;--cyan:#52efff;--rose:#ff568f;--gold:#ffd166;--bg:#10091e}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#090611;font-family:ui-rounded,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;color:var(--ink);touch-action:none;overscroll-behavior:none}
+  button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+  button:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+  #app{position:relative;width:100%;height:100%;max-width:520px;margin:auto;overflow:hidden;background:radial-gradient(circle at 50% 18%,#3c1e5c 0,#190e2d 36%,#0d0918 100%)}
+  #app:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background-image:linear-gradient(30deg,transparent 48%,#8b69ff22 49%,transparent 51%),linear-gradient(150deg,transparent 48%,#3efff422 49%,transparent 51%);background-size:28px 28px}
+  .screen{position:absolute;inset:0;display:none;z-index:2;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));overflow:hidden}
+  .screen.on{display:flex;flex-direction:column}
+  .brand{margin:auto 0 8px;text-align:center}
+  .brand-mark{width:112px;height:112px;margin:0 auto 12px;position:relative;filter:drop-shadow(0 0 24px #7d5aff88)}
+  .brand-mark:before{content:"";position:absolute;inset:8px 22px 10px;background:linear-gradient(135deg,#fff 0,#7cf4ff 28%,#855eff 58%,#ff5b9b 88%);clip-path:polygon(50% 0,100% 88%,70% 72%,50% 100%,30% 72%,0 88%)}
+  .brand-mark:after{content:"";position:absolute;left:50%;bottom:0;width:148px;height:24px;transform:translateX(-50%);border:4px solid #ffcc72;border-top:0;border-radius:0 0 50% 50%;box-shadow:0 8px 32px #ff873966}
+  h1{font-size:clamp(28px,8vw,40px);line-height:1.05;margin:0;letter-spacing:-1.5px;text-shadow:0 2px 0 #5a278b,0 0 22px #b96eff66}
+  .eng{margin-top:7px;color:var(--cyan);font-size:12px;letter-spacing:3px;font-weight:900}
+  .tag{margin:16px auto 0;color:#d6cae9;font-size:14px;line-height:1.55;max-width:310px}
+  .primary,.secondary{width:100%;min-height:52px;border-radius:17px;font-weight:900;letter-spacing:-.2px;transition:transform .08s,filter .15s}
+  .primary{background:linear-gradient(135deg,#8b67ff,#ff5d9a);box-shadow:0 8px 0 #4b285d,0 12px 28px #b14d9c55}
+  .secondary{background:#ffffff14;border:1px solid #ffffff2b;color:#eee6ff}
+  button:active{transform:translateY(2px);filter:brightness(.9)}
+  .home-actions{display:grid;gap:12px;margin-top:auto}
+  .smallrow{display:flex;gap:10px}
+  .smallrow>*{flex:1}
+  .micro{font-size:11px;color:#9c91b1;text-align:center;margin:9px 0 0}
+  .topbar{display:flex;align-items:center;gap:10px;min-height:43px;position:relative;z-index:3}
+  .icon{width:42px;height:42px;border-radius:14px;background:#ffffff14;border:1px solid #ffffff22;font-weight:900;font-size:19px}
+  .top-title{flex:1;text-align:center;font-weight:900;line-height:1.1}
+  .top-title small{display:block;color:var(--cyan);font-size:10px;margin-top:4px;letter-spacing:1px}
+  #stageGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px;overflow:auto;padding:2px 2px 14px;scrollbar-width:none;touch-action:pan-y}
+  .stage-card{position:relative;min-height:118px;padding:15px;text-align:left;border-radius:19px;background:linear-gradient(145deg,#2e1c49,#171025);border:1px solid #ffffff1f;overflow:hidden}
+  .stage-card:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-34px;bottom:-48px;background:var(--accent,#6e4fff);filter:blur(20px);opacity:.36}
+  .stage-card.locked{filter:saturate(.15);opacity:.66}
+  .stage-card.daily{grid-column:1/-1;min-height:104px;background:linear-gradient(120deg,#351d49,#142b43)}
+  .stage-no{font-size:10px;color:#c4b7d4;font-weight:900;letter-spacing:1.2px}
+  .stage-name{display:block;font-size:16px;font-weight:900;margin:6px 0 7px;line-height:1.15}
+  .stage-rule{font-size:11px;color:#c9bfd8;line-height:1.35}
+  .stars{color:#ffd166;letter-spacing:2px;font-size:14px}
+  .locknote{color:#9ef8ff;font-weight:800;font-size:11px}
+  #game{padding:0;background:#0c0814}
+  #hud{height:74px;padding:max(9px,env(safe-area-inset-top)) 12px 7px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;z-index:3;background:linear-gradient(#130d22f2,#130d22bc);border-bottom:1px solid #ffffff18}
+  .hudbox{font-size:10px;color:#bfb4ce;font-weight:800;letter-spacing:.5px}
+  .hudbox strong{display:block;color:#fff;font-size:18px;letter-spacing:0;margin-top:1px}
+  .hudbox.right{text-align:right}
+  #goalPill{padding:7px 11px;border:1px solid #ffffff2b;border-radius:999px;font-size:11px;font-weight:900;background:#ffffff12;white-space:nowrap}
+  #arenaWrap{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 90%,#4c273a 0,#171020 44%,#0b0811 78%)}
+  #arena{display:block;width:100%;height:100%;touch-action:none}
+  #arenaHint{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);padding:7px 12px;border-radius:999px;background:#0c0718bb;color:#f5eaff;font-size:12px;font-weight:900;pointer-events:none;opacity:0;transition:opacity .2s;text-align:center;white-space:nowrap}
+  #arenaHint.show{opacity:1}
+  #pauseBadge{display:none;position:absolute;inset:0;place-items:center;background:#080611aa;backdrop-filter:blur(5px);font-weight:900;font-size:24px;z-index:4}
+  #pauseBadge.on{display:grid}
+  #gameTools{position:absolute;right:10px;top:84px;z-index:4;display:grid;gap:7px}
+  #gameTools .icon{width:38px;height:38px;font-size:15px;background:#120b20cc}
+  .modal{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:18px;background:#090611d9;backdrop-filter:blur(7px);touch-action:none}
+  .modal.on{display:flex}
+  .panel{width:min(100%,410px);max-height:92%;overflow:auto;border-radius:24px;background:linear-gradient(150deg,#2b1940,#130d20);border:1px solid #ffffff2b;padding:21px;box-shadow:0 24px 70px #0009;touch-action:pan-y}
+  .panel h2{margin:0 0 8px;font-size:23px}
+  .panel p,.panel li{font-size:13px;line-height:1.55;color:#d5cbdf}
+  .panel ul{padding-left:19px;margin:12px 0 18px}
+  .panel .primary,.panel .secondary{margin-top:9px}
+  #resultModal .panel{text-align:center;overflow:hidden}
+  .result-glyph{font-size:54px;line-height:1;margin:0 0 8px;filter:drop-shadow(0 0 20px currentColor)}
+  #resultTitle{font-size:27px;margin:0}
+  #resultText{min-height:40px;margin:8px 0 12px;color:#cfc3db;font-size:13px;line-height:1.5}
+  #resultStars{font-size:31px;color:#ffd166;letter-spacing:4px;min-height:38px}
+  .scoreline{display:flex;justify-content:center;gap:25px;margin:8px 0 13px}
+  .scoreline span{font-size:10px;color:#aa9eb9;font-weight:800}
+  .scoreline strong{display:block;color:white;font-size:20px;margin-top:2px}
+  #rewardBtn{background:linear-gradient(135deg,#2cbbcc,#4b65dc);box-shadow:0 7px 0 #263a78}
+  #rewardBtn[hidden]{display:none}
+  #rewardProgress{display:none;margin:11px 0 5px;height:10px;border-radius:99px;background:#ffffff12;overflow:hidden}
+  #rewardProgress.on{display:block}
+  #rewardFill{height:100%;width:0;background:linear-gradient(90deg,#5df5ff,#fff6b2);border-radius:inherit}
+  .toast{position:absolute;z-index:30;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:10px 16px;border-radius:999px;background:#fff4d9;color:#2b1736;font-size:12px;font-weight:900;transition:.24s;white-space:nowrap;box-shadow:0 7px 30px #0008}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media(max-height:600px){.brand-mark{width:78px;height:78px;margin-bottom:7px}.brand{margin-top:auto}.tag{margin-top:8px;font-size:12px}.home-actions{gap:8px}.primary,.secondary{min-height:46px}.micro{margin-top:5px}.screen{padding-top:9px;padding-bottom:9px}#stageGrid{gap:7px;margin-top:8px}.stage-card{min-height:99px;padding:11px}.stage-card.daily{min-height:85px}.stage-name{font-size:14px;margin:4px 0}.stage-rule{font-size:10px}.topbar{min-height:38px}.icon{width:38px;height:38px}#resultModal .panel{padding:13px 15px}#resultModal .result-glyph{font-size:38px;margin-bottom:3px}#resultTitle{font-size:22px}#resultText{min-height:28px;margin:4px 0 6px}#resultStars{font-size:24px;min-height:28px}.scoreline{margin:3px 0 6px}.scoreline strong{font-size:17px}#resultModal .primary,#resultModal .secondary{min-height:42px;margin-top:5px}}
+  @media(min-width:650px){#app{height:min(900px,100%);top:50%;transform:translateY(-50%);border-radius:28px;box-shadow:0 30px 90px #000;border:1px solid #ffffff20}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app" aria-label="빛쐐기 주조소 게임">
+  <section id="home" class="screen on">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <h1>빛쐐기 주조소</h1>
+      <div class="eng">PRISMWEDGE FOUNDRY</div>
+      <p class="tag">쐐기 하나, 세 갈래 운명.<br>광석의 빛을 읽고 정확한 용광로로 흘려보내세요.</p>
+    </div>
+    <div class="home-actions">
+      <button id="playBtn" class="primary">주조 시작</button>
+      <div class="smallrow">
+        <button id="homeHelpBtn" class="secondary">조작법</button>
+        <button id="resetBtn" class="secondary">기록 초기화</button>
+      </div>
+      <p id="homeRecord" class="micro">별 0 · 최고점 0</p>
+    </div>
+  </section>
+
+  <section id="select" class="screen">
+    <div class="topbar">
+      <button id="backHomeBtn" class="icon" aria-label="처음으로">‹</button>
+      <div class="top-title">주조 명령서<small>CHALLENGE SELECT</small></div>
+      <button id="selectHelpBtn" class="icon" aria-label="도움말">?</button>
+    </div>
+    <div id="stageGrid" aria-label="챌린지 목록"></div>
+  </section>
+
+  <section id="game" class="screen">
+    <header id="hud">
+      <div class="hudbox">점수<strong id="scoreText">0</strong></div>
+      <div id="goalPill">0 / 0</div>
+      <div class="hudbox right">시간 · 생명<strong><span id="timeText">0</span>″ · <span id="lifeText">♥♥♥</span></strong></div>
+    </header>
+    <div id="arenaWrap">
+      <canvas id="arena" aria-label="광석 분류 작업장"></canvas>
+      <div id="arenaHint">쐐기를 좌우로 드래그하세요</div>
+      <div id="pauseBadge">일시 정지</div>
+    </div>
+    <div id="gameTools">
+      <button id="pauseBtn" class="icon" aria-label="일시 정지">Ⅱ</button>
+      <button id="gameHelpBtn" class="icon" aria-label="도움말">?</button>
+    </div>
+  </section>
+
+  <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="panel">
+      <h2 id="helpTitle">한 손 주조법</h2>
+      <ul>
+        <li>아래의 빛쐐기를 좌우로 드래그해 낙하 광석의 접촉면을 고르세요.</li>
+        <li><b>왼사면 / 중앙 홈 / 오른사면</b>이 각각 같은 위치의 용광로로 보냅니다.</li>
+        <li>광석의 빛과 머리 위 경로 표식을 보고 순서대로 분류하세요.</li>
+        <li>중광석은 쐐기에 두 번 닿습니다. 횡풍과 교대 혼합로도 주의하세요.</li>
+      </ul>
+      <p>실패 뒤에는 원할 때만 ‘감독관 리플레이’를 눌러 체크포인트에서 한 번 이어갈 수 있습니다.</p>
+      <button id="closeHelpBtn" class="primary">확인</button>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="panel">
+      <div id="resultGlyph" class="result-glyph">✦</div>
+      <h2 id="resultTitle">주조 완료</h2>
+      <p id="resultText"></p>
+      <div id="resultStars"></div>
+      <div class="scoreline"><span>점수<strong id="resultScore">0</strong></span><span>최고<strong id="resultBest">0</strong></span></div>
+      <button id="nextBtn" class="primary">다음 챌린지</button>
+      <button id="retryBtn" class="secondary">다시 도전</button>
+      <button id="rewardBtn" class="primary" hidden>▶ 감독관 리플레이 · 3초</button>
+      <div id="rewardProgress"><div id="rewardFill"></div></div>
+      <button id="resultSelectBtn" class="secondary">명령서로</button>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const screens = ['home','select','game'];
+  const canvas = $('arena'), ctx = canvas.getContext('2d');
+  const storeKey = 'prismwedge-foundry-v1';
+  const colors = {L:'#58efff',C:'#ffd166',R:'#ff5c96',X:'#a9a1b4'};
+  const labels = {L:'좌',C:'홈',R:'우',X:'폐'};
+  const rawStages = [
+    {id:1,name:'첫 불꽃',rule:'기본 2로 분류',furnaces:['L','R'],time:30,wind:0,ores:[['L'],['R'],['L'],['L'],['R'],['R'],['L'],['R']]},
+    {id:2,name:'바람의 대장간',rule:'횡풍이 낙하선을 흔듭니다',furnaces:['L','R'],time:34,wind:24,ores:[['R'],['L'],['R'],['R'],['L'],['L'],['R'],['L'],['R']]},
+    {id:3,name:'재를 가르는 홈',rule:'중앙 폐석 홈 추가',furnaces:['L','C','R'],time:38,wind:12,ores:[['L'],['C'],['R'],['C'],['L'],['R'],['C'],['R'],['L'],['C']]},
+    {id:4,name:'중광석 담금질',rule:'중광석은 2회 연속 접촉',furnaces:['L','C','R'],time:44,wind:8,ores:[['L'],['R','L'],['C'],['L','R'],['R'],['C','L'],['L'],['R','C'],['C'],['R']]},
+    {id:5,name:'교대 혼합로',rule:'빛이 번갈아 목적지를 바꿉니다',furnaces:['L','C','R'],time:48,wind:18,alternate:true,ores:[['L'],['R'],['C'],['L','R'],['R'],['C'],['L'],['R','C'],['C'],['L','R'],['R'],['C']]}
+  ];
+  let save = loadSave();
+  let activePointer = null, dragOffset = 0, raf = 0, lastStamp = 0, toastTimer = 0;
+  let run = freshRun();
+
+  function freshRun(){return {id:0,status:'idle',stage:null,index:0,active:null,wedgeX:.5,score:0,lives:3,time:0,elapsed:0,spawnWait:0.42,resultLocked:false,finishing:false,rewardUsed:false,preview:0,combo:0,checkpoint:null,particles:[],transits:[],shakes:0,pauseReasons:new Set(),lastTs:0};}
+  function loadSave(){try{const s=JSON.parse(localStorage.getItem(storeKey)||'{}');return {stars:s.stars||{},best:s.best||{},unlocked:s.unlocked||1};}catch(_){return {stars:{},best:{},unlocked:1};}}
+  function persist(){try{localStorage.setItem(storeKey,JSON.stringify(save));}catch(_){} updateRecord();}
+  function totalStars(){return Object.values(save.stars).reduce((a,b)=>a+(Number(b)||0),0);}
+  function updateRecord(){const best=Math.max(0,...Object.values(save.best).map(Number));$('homeRecord').textContent=`별 ${totalStars()} · 최고점 ${best.toLocaleString()}`;}
+  function showScreen(id){screens.forEach(x=>$(x).classList.toggle('on',x===id));}
+  function dailyStage(){
+    const d=new Date(), key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    let seed=0; for(const c of key)seed=(seed*31+c.charCodeAt(0))>>>0;
+    const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+    const routes=['L','C','R'], ores=[];
+    for(let i=0;i<14;i++){const a=routes[Math.floor(rnd()*3)];ores.push(rnd()>.72?[a,routes[Math.floor(rnd()*3)]]:[a]);}
+    return {id:'daily',name:'자정 합금로',rule:`${key} 날짜 시드 · 일일 배열`,furnaces:['L','C','R'],time:52,wind:12+Math.floor(rnd()*14),alternate:rnd()>.5,ores,dateKey:key};
+  }
+  function renderStages(){
+    const daily=dailyStage(), cards=[...rawStages,daily];
+    $('stageGrid').innerHTML=cards.map((s,i)=>{
+      const dailyMode=s.id==='daily', unlocked=dailyMode?totalStars()>=9:s.id<=save.unlocked;
+      const stars=save.stars[s.id]||0, lock=dailyMode?'별 9개 필요':`챌린지 ${s.id-1} 완료 필요`;
+      return `<button class="stage-card ${dailyMode?'daily':''} ${unlocked?'':'locked'}" style="--accent:${i%3===0?'#5fefff':i%3===1?'#ff5897':'#ffcf68'}" data-stage="${s.id}" ${unlocked?'':'aria-disabled="true"'}><span class="stage-no">${dailyMode?'DAILY':'CHALLENGE '+s.id}</span><span class="stage-name">${unlocked?'':'▣ '}${s.name}</span><span class="stage-rule">${unlocked?s.rule:lock}</span><br><span class="${unlocked?'stars':'locknote'}">${unlocked?`${'★'.repeat(stars)}${'☆'.repeat(3-stars)}`:'잠김'}</span></button>`;
+    }).join('');
+  }
+  function openSelect(){renderStages();showScreen('select');}
+  function selectStage(id){
+    const s=id==='daily'?dailyStage():rawStages.find(x=>x.id===Number(id));
+    const allowed=s&&(s.id==='daily'?totalStars()>=9:s.id<=save.unlocked);
+    if(!allowed){toast('아직 주조 명령이 잠겨 있습니다');return;} startStage(s);
+  }
+  function startStage(stage){
+    cancelAnimationFrame(raf); const nextId=run.id+1;
+    run=freshRun();run.id=nextId;run.stage=stage;run.status='playing';run.time=stage.time;run.wedgeX=.5;
+    run.checkpoint={index:0,score:0,time:stage.time};
+    showScreen('game');$('resultModal').classList.remove('on');$('pauseBadge').classList.remove('on');
+    updateHud(); resize(); hint('쐐기를 좌우로 드래그하세요',1400);
+    lastStamp=performance.now();raf=requestAnimationFrame(loop);
+  }
+  function loop(ts){
+    const rid=run.id;
+    if(run.status==='playing'){
+      let dt=Math.min(.034,(ts-lastStamp)/1000||0); lastStamp=ts;
+      if(run.pauseReasons.size===0){
+        run.elapsed+=dt;if(!run.finishing)run.time=Math.max(0,run.time-dt);run.preview=Math.max(0,run.preview-dt);
+        updateGame(dt,rid);
+        if(run.id===rid&&run.status==='playing'&&!run.finishing&&run.time<=0&&!run.resultLocked)finish(false,'용광로가 식었습니다');
+      }
+      draw();updateHud();
+    }
+    if(run.id===rid&&run.status==='playing')raf=requestAnimationFrame(loop);
+  }
+  function nextOre(){
+    if(run.index>=run.stage.ores.length){finish(true);return;}
+    const route=run.stage.ores[run.index].slice();
+    run.active={x:.5,y:-.07,vy:.255+Math.min(run.index*.006,.06),route,step:0,heavy:route.length>1,bob:0,failed:false};
+    run.spawnWait=0;
+  }
+  function updateGame(dt,rid){
+    if(run.active){
+      const o=run.active;o.bob+=dt;
+      const phase=run.elapsed*2.1+run.index*1.77;
+      const wind=(run.stage.wind||0)/canvas.width;
+      o.x+=Math.sin(phase)*wind*dt;
+      o.y+=o.vy*dt;
+      if(o.y>=.695)contact(o,rid);
+    } else if(run.spawnWait>0){run.spawnWait-=dt;if(run.spawnWait<=0&&run.id===rid&&run.status==='playing')nextOre();}
+    for(let i=run.particles.length-1;i>=0;i--){const p=run.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.35*dt;p.life-=dt;if(p.life<=0)run.particles.splice(i,1);}
+    for(let i=run.transits.length-1;i>=0;i--){const t=run.transits[i];t.age+=dt;if(t.age>=t.duration)run.transits.splice(i,1);}
+    if(run.finishing&&run.transits.length===0&&run.id===rid)finish(true);
+    run.shakes=Math.max(0,run.shakes-dt*24);
+  }
+  function resolvedTarget(o){
+    let target=o.route[o.step];
+    if(run.stage.alternate&&((run.index+o.step)&1)) target=target==='L'?'R':target==='R'?'L':'C';
+    return target;
+  }
+  function contact(o,rid){
+    if(run.id!==rid||run.resultLocked||o!==run.active)return;
+    const rel=o.x-run.wedgeX; let hit=rel<-.07?'L':rel>.07?'R':'C';
+    if(!run.stage.furnaces.includes(hit)) hit='X';
+    const target=resolvedTarget(o);
+    if(hit===target){
+      burst(o.x,.69,colors[target],14);run.combo++;run.score+=100+run.combo*12+Math.round(run.time);
+      run.transits.push({fromX:o.x,fromY:.69,toX:furnaceX(target),toY:.86,color:colors[target],age:0,duration:.28,heavy:o.heavy});
+      o.step++;
+      if(o.step<o.route.length){o.y=.39;o.vy=.28;o.x=Math.max(.08,Math.min(.92,o.x+(hit==='L'?.14:hit==='R'?-.14:.09)));hint(`담금질 ${o.step}/${o.route.length} · 다음 ${labels[resolvedTarget(o)]}`,700);}
+      else{
+        run.index++;run.active=null;run.spawnWait=.36;
+        if(run.index%3===0)run.checkpoint={index:run.index,score:run.score,time:run.time};
+        if(run.index>=run.stage.ores.length){run.spawnWait=0;run.finishing=true;}
+      }
+    }else{
+      burst(o.x,.69,'#ff496e',20);run.shakes=7;run.combo=0;run.lives--;run.active=null;run.spawnWait=.52;
+      hint(`${labels[target]}로 필요!`,800);
+      if(run.lives<=0)finish(false,'오분류로 주조가 중단되었습니다');
+    }
+  }
+  function finish(success,reason='모든 광석을 정확히 주조했습니다'){
+    if(run.resultLocked||run.status!=='playing')return;
+    run.resultLocked=true;run.status='result';cancelAnimationFrame(raf);activePointer=null;
+    const stageKey=run.stage.id, score=Math.max(0,Math.round(run.score+run.time*15+run.lives*120));
+    let stars=0;
+    if(success){stars=1+(run.lives>=2?1:0)+(run.time>=run.stage.time*.23?1:0);save.stars[stageKey]=Math.max(save.stars[stageKey]||0,stars);save.best[stageKey]=Math.max(save.best[stageKey]||0,score);if(typeof stageKey==='number')save.unlocked=Math.max(save.unlocked,Math.min(5,stageKey+1));persist();}
+    $('resultGlyph').textContent=success?'✦':'✕';$('resultGlyph').style.color=success?'#ffd166':'#ff5c82';
+    $('resultTitle').textContent=success?'주조 완료':'주조 중단';$('resultText').textContent=success?reason:`${reason}. 체크포인트 ${run.checkpoint.index}/${run.stage.ores.length}`;
+    $('resultStars').textContent=success?'★'.repeat(stars)+'☆'.repeat(3-stars):'';$('resultScore').textContent=score.toLocaleString();$('resultBest').textContent=(save.best[stageKey]||0).toLocaleString();
+    $('nextBtn').hidden=!success||run.stage.id==='daily';$('rewardBtn').hidden=success||run.rewardUsed;$('retryBtn').hidden=false;$('resultSelectBtn').hidden=false;
+    $('rewardProgress').classList.remove('on');$('resultModal').classList.add('on');
+  }
+  function nextStage(){const n=typeof run.stage.id==='number'?run.stage.id+1:null;if(n&&n<=5)startStage(rawStages[n-1]);else openSelect();}
+  function beginReward(){
+    if(run.status!=='result'||run.rewardUsed)return;
+    const rid=run.id;run.rewardUsed=true;run.pauseReasons.add('reward');
+    $('rewardBtn').hidden=true;$('retryBtn').hidden=true;$('resultSelectBtn').hidden=true;$('rewardProgress').classList.add('on');
+    const fill=$('rewardFill'), started=performance.now();fill.style.width='0%';
+    function adFrame(now){if(run.id!==rid)return;const p=Math.min(1,(now-started)/3000);fill.style.width=`${p*100}%`;if(p<1)requestAnimationFrame(adFrame);}
+    requestAnimationFrame(adFrame);
+    setTimeout(()=>{if(run.id!==rid||run.status!=='result'||!run.rewardUsed)return;restoreCheckpoint(rid);},3000);
+  }
+  function restoreCheckpoint(rid){
+    if(run.id!==rid)return;const cp=run.checkpoint;
+    run.index=cp.index;run.score=cp.score;run.time=Math.max(cp.time,12);run.lives=1;run.combo=0;run.active=null;run.transits=[];run.finishing=false;run.spawnWait=.35;run.preview=4;run.resultLocked=false;run.status='playing';run.pauseReasons.delete('reward');
+    $('resultModal').classList.remove('on');hint('감독관 예고 4초 · 체크포인트 복구',1400);lastStamp=performance.now();raf=requestAnimationFrame(loop);
+  }
+  function setPause(reason,on){
+    if(run.status!=='playing')return;
+    if(on)run.pauseReasons.add(reason);else run.pauseReasons.delete(reason);
+    $('pauseBadge').classList.toggle('on',run.pauseReasons.has('manual'));
+    $('pauseBtn').textContent=run.pauseReasons.has('manual')?'▶':'Ⅱ';lastStamp=performance.now();
+  }
+  function openHelp(){if(run.status==='playing')setPause('help',true);$('helpModal').classList.add('on');}
+  function closeHelp(){$('helpModal').classList.remove('on');if(run.status==='playing')setPause('help',false);}
+  function updateHud(){$('scoreText').textContent=Math.round(run.score);$('goalPill').textContent=`${run.index} / ${run.stage?run.stage.ores.length:0}`;$('timeText').textContent=Math.ceil(run.time);$('lifeText').textContent='♥'.repeat(Math.max(0,run.lives))+'·'.repeat(Math.max(0,3-run.lives));}
+  function resize(){
+    const box=$('arenaWrap').getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.max(1,Math.round(box.width*dpr));canvas.height=Math.max(1,Math.round(box.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);canvas._w=box.width;canvas._h=box.height;draw();
+  }
+  function draw(){
+    const w=canvas._w||canvas.clientWidth,h=canvas._h||canvas.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);ctx.save();
+    if(run.shakes)ctx.translate((Math.random()-.5)*run.shakes,(Math.random()-.5)*run.shakes);
+    drawFoundry(ctx,w,h);drawFurnaces(ctx,w,h);if(run.preview>0)drawPreview(ctx,w,h);if(run.active)drawOre(ctx,w,h,run.active);drawWedge(ctx,w,h);drawTransits(ctx,w,h);drawParticles(ctx,w,h);ctx.restore();
+  }
+  function drawFoundry(g,w,h){
+    const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#130b20');grad.addColorStop(.62,'#211227');grad.addColorStop(1,'#5a2930');g.fillStyle=grad;g.fillRect(0,0,w,h);
+    g.strokeStyle='#ffffff0e';g.lineWidth=1;for(let y=22;y<h;y+=31){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}for(let x=20;x<w;x+=55){g.beginPath();g.moveTo(x,0);g.lineTo(x-25,h);g.stroke();}
+    if(run.stage&&run.stage.wind){const dir=Math.sin(run.elapsed*2.1)>0?1:-1;g.strokeStyle='#b6eeff25';g.lineWidth=2;for(let i=0;i<4;i++){const y=h*(.18+i*.1);g.beginPath();g.moveTo(w*(dir>0?.15:.85),y);g.quadraticCurveTo(w*.5,y-12,w*(dir>0?.85:.15),y);g.stroke();}}
+  }
+  function drawFurnaces(g,w,h){
+    if(!run.stage)return;const fs=run.stage.furnaces, positions=fs.length===2?[.19,.81]:[.16,.5,.84];
+    fs.forEach((f,i)=>{const x=w*positions[i],y=h*.9,active=run.active&&resolvedTarget(run.active)===f;g.save();g.translate(x,y);g.fillStyle='#100b17';g.strokeStyle=colors[f];g.lineWidth=active?4:2;g.shadowColor=colors[f];g.shadowBlur=active?20:8;roundRect(g,-w*.115,-h*.06,w*.23,h*.1,12);g.fill();g.stroke();g.fillStyle=colors[f];g.globalAlpha=.75;g.beginPath();g.ellipse(0,-h*.055,w*.075,h*.018,0,0,Math.PI*2);g.fill();g.globalAlpha=1;g.fillStyle='#fff';g.font='900 11px system-ui';g.textAlign='center';g.fillText(f==='C'?'폐석 홈':`${labels[f]} 용광로`,0,h*.02);g.restore();});
+  }
+  function furnaceX(target){const two=run.stage&&run.stage.furnaces.length===2;return target==='L'?(two?.19:.16):target==='R'?(two?.81:.84):.5;}
+  function drawTransits(g,w,h){
+    for(const t of run.transits){
+      const p=Math.min(1,t.age/t.duration),ease=1-Math.pow(1-p,3),cx=(t.fromX+t.toX)*.5+(t.toX-t.fromX)*.12;
+      const qx=(1-ease)*(1-ease)*t.fromX+2*(1-ease)*ease*cx+ease*ease*t.toX;
+      const qy=(1-ease)*(1-ease)*t.fromY+2*(1-ease)*ease*.74+ease*ease*t.toY;
+      g.save();g.strokeStyle=t.color;g.lineWidth=3;g.globalAlpha=.24+(1-p)*.56;g.shadowColor=t.color;g.shadowBlur=15;g.beginPath();g.moveTo(t.fromX*w,t.fromY*h);g.quadraticCurveTo(cx*w,.74*h,t.toX*w,t.toY*h);g.stroke();
+      g.globalAlpha=1;g.fillStyle=t.color;g.beginPath();g.arc(qx*w,qy*h,t.heavy?8:6,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.globalAlpha=.8*(1-p);g.beginPath();g.arc(qx*w-2,qy*h-2,2,0,Math.PI*2);g.fill();g.restore();
+    }
+  }
+  function drawWedge(g,w,h){
+    const x=run.wedgeX*w,y=h*.72,ww=Math.min(w*.33,142),hh=Math.min(h*.16,84);g.save();g.translate(x,y);g.shadowColor='#9b73ff';g.shadowBlur=20;
+    const grad=g.createLinearGradient(-ww/2,0,ww/2,0);grad.addColorStop(0,'#49e9fa');grad.addColorStop(.48,'#f7e7ff');grad.addColorStop(.52,'#ffe787');grad.addColorStop(1,'#ff5c96');g.fillStyle=grad;g.beginPath();g.moveTo(0,-hh*.62);g.lineTo(ww*.52,hh*.38);g.lineTo(ww*.14,hh*.18);g.lineTo(0,hh*.5);g.lineTo(-ww*.14,hh*.18);g.lineTo(-ww*.52,hh*.38);g.closePath();g.fill();
+    g.fillStyle='#25143a';g.beginPath();g.moveTo(-ww*.09,-hh*.04);g.lineTo(0,hh*.22);g.lineTo(ww*.09,-hh*.04);g.closePath();g.fill();g.shadowBlur=0;g.strokeStyle='#fff8';g.lineWidth=1.5;g.stroke();g.restore();
+  }
+  function drawOre(g,w,h,o){
+    const x=o.x*w,y=o.y*h,r=Math.min(w,h)*.043,target=resolvedTarget(o);g.save();g.translate(x,y);g.rotate(o.bob*1.7);g.shadowColor=colors[target];g.shadowBlur=18;g.fillStyle=colors[target];g.beginPath();
+    const sides=o.heavy?7:6;for(let i=0;i<sides;i++){const a=Math.PI*2*i/sides,rr=r*(i%2?.82:1);g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}g.closePath();g.fill();g.strokeStyle='#fff9';g.lineWidth=2;g.stroke();
+    if(o.heavy){g.fillStyle='#26172f';g.beginPath();g.arc(0,0,r*.5,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.font='900 11px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(`${o.step+1}/2`,0,0);}g.restore();
+    g.save();g.textAlign='center';g.font='900 11px system-ui';for(let i=o.step;i<o.route.length;i++){let t=o.route[i];if(run.stage.alternate&&((run.index+i)&1))t=t==='L'?'R':t==='R'?'L':'C';g.fillStyle=colors[t];g.fillText(labels[t],x+(i-o.step-(o.route.length-o.step-1)/2)*25,y-r-12);}g.restore();
+  }
+  function drawPreview(g,w,h){
+    if(!run.active)return;const target=resolvedTarget(run.active),pos=target==='L'?(run.stage.furnaces.length===2?.19:.16):target==='R'?(run.stage.furnaces.length===2?.81:.84):.5;g.save();g.setLineDash([7,7]);g.strokeStyle=colors[target];g.globalAlpha=.62;g.lineWidth=3;g.beginPath();g.moveTo(run.active.x*w,run.active.y*h+18);g.quadraticCurveTo(run.wedgeX*w,h*.67,pos*w,h*.84);g.stroke();g.setLineDash([]);g.fillStyle=colors[target];g.font='900 11px system-ui';g.textAlign='center';g.fillText('예고',pos*w,h*.82);g.restore();
+  }
+  function burst(x,y,color,n){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=.08+Math.random()*.25;run.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.12,life:.35+Math.random()*.45,color});}}
+  function drawParticles(g,w,h){for(const p of run.particles){g.globalAlpha=Math.max(0,p.life*1.8);g.fillStyle=p.color;g.fillRect(p.x*w-2,p.y*h-2,4,4);}g.globalAlpha=1;}
+  function roundRect(g,x,y,w,h,r){g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):(g.rect(x,y,w,h));}
+  function pointerX(e){const r=canvas.getBoundingClientRect();return Math.max(.12,Math.min(.88,(e.clientX-r.left)/r.width));}
+  function onDown(e){if(run.status!=='playing'||run.pauseReasons.size||activePointer!==null)return;activePointer=e.pointerId;dragOffset=run.wedgeX-pointerX(e);try{canvas.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();}
+  function onMove(e){if(e.pointerId!==activePointer||run.status!=='playing'||run.pauseReasons.size)return;run.wedgeX=Math.max(.12,Math.min(.88,pointerX(e)+dragOffset));e.preventDefault();}
+  function endPointer(e){if(e.pointerId!==activePointer)return;try{canvas.releasePointerCapture(e.pointerId);}catch(_){}activePointer=null;e.preventDefault();}
+  function hint(text,ms){$('arenaHint').textContent=text;$('arenaHint').classList.add('show');const rid=run.id;setTimeout(()=>{if(run.id===rid)$('arenaHint').classList.remove('show');},ms);}
+  function toast(text){clearTimeout(toastTimer);$('toast').textContent=text;$('toast').classList.add('on');toastTimer=setTimeout(()=>$('toast').classList.remove('on'),1400);}
+
+  $('playBtn').addEventListener('click',openSelect);$('backHomeBtn').addEventListener('click',()=>showScreen('home'));
+  $('homeHelpBtn').addEventListener('click',openHelp);$('selectHelpBtn').addEventListener('click',openHelp);$('gameHelpBtn').addEventListener('click',openHelp);$('closeHelpBtn').addEventListener('click',closeHelp);
+  $('stageGrid').addEventListener('click',e=>{const b=e.target.closest('[data-stage]');if(b)selectStage(b.dataset.stage);});
+  $('pauseBtn').addEventListener('click',()=>setPause('manual',!run.pauseReasons.has('manual')));
+  $('nextBtn').addEventListener('click',nextStage);$('retryBtn').addEventListener('click',()=>startStage(run.stage.id==='daily'?dailyStage():rawStages[run.stage.id-1]));$('resultSelectBtn').addEventListener('click',()=>{$('resultModal').classList.remove('on');openSelect();});$('rewardBtn').addEventListener('click',beginReward);
+  $('resetBtn').addEventListener('click',()=>{if(confirm('모든 별과 최고점을 초기화할까요?')){save={stars:{},best:{},unlocked:1};persist();toast('주조 기록을 초기화했습니다');}});
+  canvas.addEventListener('pointerdown',onDown);canvas.addEventListener('pointermove',onMove);canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',e=>{if(e.pointerId===activePointer)activePointer=null;});
+  addEventListener('resize',resize);addEventListener('blur',()=>{activePointer=null;setPause('blur',true);});addEventListener('focus',()=>setPause('blur',false));document.addEventListener('visibilitychange',()=>{activePointer=null;setPause('visibility',document.hidden);});
+  $('helpModal').addEventListener('pointerdown',e=>e.stopPropagation());$('resultModal').addEventListener('pointerdown',e=>e.stopPropagation());
+  window.__prismwedgeTest=Object.freeze({
+    snapshot:()=>({id:run.id,status:run.status,stage:run.stage&&run.stage.id,index:run.index,total:run.stage&&run.stage.ores.length,score:run.score,lives:run.lives,time:run.time,rewardUsed:run.rewardUsed,preview:run.preview,paused:[...run.pauseReasons],stars:JSON.parse(JSON.stringify(save.stars)),unlocked:save.unlocked,active:run.active&&{route:[...run.active.route],step:run.active.step,target:resolvedTarget(run.active)}}),
+    unlockAll:()=>{save.unlocked=5;save.stars={1:3,2:3,3:3};persist();renderStages();return true;},
+    startStage:id=>{const s=id==='daily'?dailyStage():rawStages[Number(id)-1];if(!s)return false;startStage(s);return true;},
+    forceSuccess:()=>{if(run.status!=='playing')return false;run.index=run.stage.ores.length;run.active=null;finish(true,'테스트 주조 완료');return true;},
+    forceFail:()=>{if(run.status!=='playing')return false;run.lives=0;run.active=null;finish(false,'테스트 주조 중단');return true;},
+    setWedge:x=>{run.wedgeX=Math.max(.12,Math.min(.88,Number(x)||.5));return run.wedgeX;}
+  });
+  updateRecord();resize();
+})();
+</script>
+</body>
+</html>
