@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#081923">
+  <title>겹도면 구조대 · Flipframe Rescue</title>
+  <style>
+    :root{color-scheme:dark;--ink:#eefcff;--muted:#9eb8c3;--cyan:#4de5d5;--amber:#ffbe55;--red:#ff627c;--panel:#0d2530;--line:#27505b}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061219;color:var(--ink);font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;touch-action:none}
+    button{font:inherit;color:inherit}
+    button:focus-visible{outline:3px solid #fff;outline-offset:2px}button:disabled{opacity:.48;cursor:not-allowed}
+    #app{position:relative;width:min(100%,440px);height:100dvh;min-height:440px;margin:auto;overflow:hidden;background:radial-gradient(circle at 80% 0,#16404a 0,transparent 34%),linear-gradient(160deg,#0b202a,#061219 72%)}
+    .screen{position:absolute;inset:0;display:none;flex-direction:column}.screen.active{display:flex}
+    .topbar{height:52px;flex:0 0 52px;display:flex;align-items:center;gap:8px;padding:6px 12px;background:#07161ed9;border-bottom:1px solid #24434d;z-index:3}
+    .topbar strong{font-size:14px;line-height:1.15;flex:1;text-align:center}.topbar strong small{display:block;color:var(--muted);font-weight:600;font-size:10px;margin-top:2px}
+    .icon-btn{border:1px solid #31545e;background:#102b35;border-radius:12px;min-width:44px;height:40px;padding:0 11px;font-weight:900}
+    .primary{border:0;border-radius:16px;min-height:52px;padding:0 18px;background:linear-gradient(135deg,#4de5d5,#1fa6c7);color:#041418;font-weight:1000;box-shadow:0 8px 25px #00c9c633}
+    .secondary{border:1px solid #3f6670;border-radius:14px;min-height:48px;padding:0 16px;background:#102b35;font-weight:900}
+    .danger{background:linear-gradient(135deg,#ff9b55,#ff627c);color:#20050a}
+    .start{padding:max(20px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));justify-content:space-between;text-align:center}
+    .brand{margin-top:min(8vh,50px)}.eyebrow{color:var(--cyan);font-size:12px;font-weight:1000;letter-spacing:2px}.brand h1{font-size:34px;line-height:1.08;margin:10px 0 8px}.brand p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+    .hero{position:relative;width:min(78vw,310px);height:min(35vh,250px);margin:auto;perspective:600px}
+    .sheet{position:absolute;left:12%;width:76%;height:63%;border:2px solid #55d8db99;border-radius:18px;background:linear-gradient(135deg,#123744dd,#0a252fcc);box-shadow:0 18px 25px #0007;transform:rotateX(55deg);display:grid;place-items:center;color:#b8ffff;font-size:38px}
+    .sheet:nth-child(1){top:2%;transform:rotateX(55deg) translateZ(0)}.sheet:nth-child(2){top:20%;transform:rotateX(55deg) translateZ(8px)}.sheet:nth-child(3){top:38%;transform:rotateX(55deg) translateZ(16px)}
+    .pulse{position:absolute;right:10%;top:18%;width:44px;height:44px;border-radius:50%;background:#ff627c;color:#20050a;display:grid;place-items:center;font-weight:1000;animation:pulse 1.2s infinite}@keyframes pulse{50%{transform:scale(1.12);box-shadow:0 0 0 12px #ff627c18}}
+    .start-actions{display:grid;gap:10px}.start-actions small{color:#78949f;font-size:11px}
+    .map-head{padding:15px 16px 10px}.map-head h2{margin:0 0 5px;font-size:21px}.map-head p{margin:0;color:var(--muted);font-size:12px}
+    .stage-list{overflow:auto;overscroll-behavior:contain;padding:4px 14px calc(16px + env(safe-area-inset-bottom));display:grid;gap:9px}
+    .stage-card{position:relative;display:grid;grid-template-columns:46px 1fr auto;gap:11px;align-items:center;min-height:72px;padding:10px 12px;border:1px solid #315661;border-radius:16px;background:linear-gradient(120deg,#102d38,#0b2029);text-align:left}
+    .stage-card:disabled{opacity:.52}.stage-no{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#173e49;color:var(--cyan);font-weight:1000;font-size:18px}.stage-card b{display:block;font-size:14px}.stage-card small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.stars{color:var(--amber);white-space:nowrap;font-size:14px}.night{border-color:#765cc2;background:linear-gradient(120deg,#241c48,#102838)}
+    .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:7px 10px;background:#091b23}.meter{border:1px solid #284b55;border-radius:11px;background:#102933;padding:5px 7px;text-align:center}.meter span{display:block;color:var(--muted);font-size:9px;font-weight:800}.meter b{font-size:15px}.heat b{color:var(--amber)}
+    .mission{height:57px;flex:0 0 57px;padding:7px 12px;border-block:1px solid #21444e;background:#0c252f;display:flex;align-items:center;gap:9px}.step-icon{width:42px;height:42px;border-radius:13px;background:#173f49;display:grid;place-items:center;font-size:23px}.mission-copy{min-width:0;flex:1}.mission-copy small{display:block;color:var(--cyan);font-size:9px;font-weight:1000}.mission-copy b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.progress{width:58px;text-align:right;color:var(--muted);font-size:11px;font-weight:900}
+    .building-wrap{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:52px 1fr;background:radial-gradient(circle at 50% 42%,#183a44,#07171e 72%)}
+    .layer-rail{display:grid;grid-template-rows:repeat(3,1fr);gap:6px;padding:8px 5px;border-right:1px solid #244650;background:#081a22}.layer-btn{border:1px solid #2c515c;border-radius:11px;background:#102a34;color:#7897a2;font-size:10px;font-weight:900;min-width:42px}.layer-btn span{display:block;font-size:20px;margin-bottom:2px}.layer-btn.active{border-color:var(--cyan);background:#174853;color:#fff;box-shadow:0 0 16px #4de5d533}
+    #blueprint{position:relative;overflow:hidden;touch-action:none;user-select:none;background-image:linear-gradient(#49bdc80d 1px,transparent 1px),linear-gradient(90deg,#49bdc80d 1px,transparent 1px);background-size:24px 24px}
+    #blueprint::after{content:"SWIPE ↑ ↓";position:absolute;right:8px;bottom:7px;color:#5b7a84;font-size:9px;font-weight:900;pointer-events:none}
+    .floor-name{position:absolute;left:12px;top:10px;color:#85e6e2;font-size:12px;font-weight:1000;letter-spacing:1px}.floor-outline{position:absolute;left:8%;right:8%;top:20%;bottom:12%;border:2px solid #4de5d555;border-radius:18px}.floor-outline::before,.floor-outline::after{content:"";position:absolute;background:#4de5d533}.floor-outline::before{left:38%;top:0;width:2px;height:100%}.floor-outline::after{left:0;top:48%;width:100%;height:2px}
+    .device{position:absolute;width:58px;height:58px;margin:-29px 0 0 -29px;border:2px solid #5a8790;border-radius:18px;background:#102f39;display:grid;place-items:center;box-shadow:0 6px 12px #0006;transition:left .35s,top .35s,transform .15s,opacity .2s;z-index:2}.device .glyph{font-size:24px;line-height:1}.device .label{font-size:8px;color:#b6d0d7;font-weight:900;max-width:50px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.device.done{border-color:#50e59b;background:#124535}.device.target{border-color:var(--amber);box-shadow:0 0 0 5px #ffbe5526,0 0 22px #ffbe5544}.device.wrong{animation:wrong .28s}.device:active{transform:scale(.92)}@keyframes wrong{33%{transform:translateX(-7px)}66%{transform:translateX(7px)}}
+    .smoke .device .label{filter:blur(5px);opacity:.28}.blackout{filter:brightness(.38)}.blackout .device:not(.target){opacity:.58}.guide .device.target{animation:guide .75s infinite alternate}@keyframes guide{to{box-shadow:0 0 0 10px #ffbe5530,0 0 30px #ffbe5599}}
+    .toast{position:absolute;left:50%;top:12px;transform:translateX(-50%) translateY(-15px);max-width:80%;padding:8px 12px;border-radius:12px;background:#031015e8;border:1px solid #496b74;font-size:11px;font-weight:900;opacity:0;pointer-events:none;transition:.2s;z-index:5;text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .controls{flex:0 0 66px;display:grid;grid-template-columns:1fr 1.35fr;gap:8px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:#07171f;border-top:1px solid #244650}.controls button{min-height:50px}.reward-run{border-color:#8a6a2f;color:#ffd88a}
+    .modal{position:absolute;inset:0;z-index:20;display:none;place-items:center;padding:18px;background:#02080cc7;backdrop-filter:blur(5px)}.modal.open{display:grid}.card{width:min(100%,360px);max-height:94%;overflow:auto;background:linear-gradient(150deg,#15333d,#091b23);border:1px solid #42636b;border-radius:22px;padding:20px;box-shadow:0 25px 70px #000b}.card h2{margin:0 0 8px;font-size:23px}.card p{color:var(--muted);font-size:13px;line-height:1.5}.card-actions{display:grid;gap:9px;margin-top:16px}.result-grade{width:82px;height:82px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#193e48;border:4px solid var(--amber);font-size:34px;font-weight:1000}.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0}.result-stats div{border:1px solid #31515b;border-radius:12px;padding:8px;text-align:center}.result-stats span{display:block;color:var(--muted);font-size:9px}.result-stats b{font-size:15px}.help-list{display:grid;gap:10px;margin:12px 0}.help-row{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:center}.help-row span{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#193b45;font-size:22px}.help-row b{font-size:12px}.help-row small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.ad-ring{width:108px;height:108px;margin:8px auto 18px;border-radius:50%;display:grid;place-items:center;border:8px solid #244650;border-top-color:var(--cyan);font-size:38px;font-weight:1000;animation:spin 1s linear infinite}.ad-ring span{animation:spin 1s linear infinite reverse}@keyframes spin{to{transform:rotate(360deg)}}
+    .flash{animation:flash .45s}@keyframes flash{50%{background:#7b2030}}
+    @media(max-height:590px){.start{padding:12px 18px}.brand{margin-top:0}.brand h1{font-size:28px;margin:5px 0}.hero{height:165px}.sheet{height:58%}.map-head{padding:8px 14px 5px}.stage-card{min-height:64px}.hud{padding:4px 8px}.mission{height:51px;flex-basis:51px}.controls{flex-basis:62px;padding-top:5px}.device{width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:16px}.device .glyph{font-size:21px}.device .label{font-size:7px}.topbar{height:48px;flex-basis:48px}.icon-btn{height:38px}}
+  </style>
+</head>
+<body>
+<main id="app">
+  <section id="startScreen" class="screen start active" aria-label="시작 화면">
+    <div class="brand"><div class="eyebrow">FLIPFRAME RESCUE</div><h1>겹도면 구조대</h1><p>도면층을 넘기고, 사고의 연결고리를 끊으세요.</p></div>
+    <div class="hero" aria-hidden="true"><div class="sheet">♨</div><div class="sheet">⚡</div><div class="sheet">🚰</div><div class="pulse">!</div></div>
+    <div class="start-actions"><button id="startBtn" class="primary">구조 출동</button><button id="startHelpBtn" class="secondary">조작 안내</button><small>한 손 세로 화면 · 소리 없이 플레이 가능</small></div>
+  </section>
+
+  <section id="mapScreen" class="screen" aria-label="현장 선택">
+    <header class="topbar"><button id="mapBackBtn" class="icon-btn" aria-label="시작 화면">‹</button><strong>현장 배치도<small id="starTotal">획득 별 0 / 15</small></strong><button id="mapHelpBtn" class="icon-btn" aria-label="도움말">?</button></header>
+    <div class="map-head"><h2>사고 현장을 선택하세요</h2><p>층을 스와이프해 넘기고, 표시된 장치를 순서대로 조치합니다.</p></div>
+    <div id="stageList" class="stage-list"></div>
+  </section>
+
+  <section id="gameScreen" class="screen" aria-label="게임 화면">
+    <header class="topbar"><button id="gameBackBtn" class="icon-btn" aria-label="현장 목록">‹</button><strong id="gameTitle">현장명<small id="ruleText">규칙</small></strong><button id="gameHelpBtn" class="icon-btn" aria-label="도움말">?</button></header>
+    <div class="hud"><div class="meter"><span>남은 시간</span><b id="timeText">45.0</b></div><div class="meter heat"><span>열기</span><b id="heatText">20%</b></div><div class="meter"><span>오조작</span><b id="mistakeText">0 / 3</b></div></div>
+    <div class="mission"><div id="stepIcon" class="step-icon">🚰</div><div class="mission-copy"><small id="layerHint">지하 설비층</small><b id="stepText">주 급수 밸브를 잠그세요</b></div><div id="progressText" class="progress">1 / 6</div></div>
+    <div class="building-wrap">
+      <nav id="layerRail" class="layer-rail" aria-label="도면층 선택"></nav>
+      <div id="blueprint" aria-label="현재 도면층. 위아래로 스와이프해 층을 전환합니다."><div id="floorName" class="floor-name"></div><div class="floor-outline"></div><div id="devices"></div><div id="toast" class="toast"></div></div>
+    </div>
+    <div class="controls"><button id="thermalBtn" class="secondary reward-run">열화상 지원</button><button id="focusBtn" class="primary">다음 장치 강조</button></div>
+  </section>
+
+  <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="card"><h2 id="helpTitle">구조 도면 사용법</h2><div class="help-list"><div class="help-row"><span>↕</span><div><b>도면 위·아래 스와이프</b><small>옥상, 생활층, 설비층을 빠르게 넘깁니다.</small></div></div><div class="help-row"><span>☝</span><div><b>장치 직접 탭</b><small>지시된 층의 장치를 올바른 순서로 조치합니다.</small></div></div><div class="help-row"><span>♨</span><div><b>열기와 오조작 관리</b><small>열기 100% 또는 오조작 3회면 구조에 실패합니다.</small></div></div><div class="help-row"><span>▣</span><div><b>열화상 지원</b><small>3초 확인 후 안전 체크포인트 복원과 5초 강조가 적용됩니다.</small></div></div></div><div class="card-actions"><button id="helpCloseBtn" class="primary">확인</button></div></div></div>
+
+  <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="card"><div id="resultGrade" class="result-grade">A</div><h2 id="resultTitle">구조 완료</h2><p id="resultCopy"></p><div class="result-stats"><div><span>점수</span><b id="resultScore">0</b></div><div><span>시간</span><b id="resultTime">0초</b></div><div><span>최고 별</span><b id="resultStars">★★★</b></div></div><div id="resultActions" class="card-actions"></div></div></div>
+
+  <div id="rewardModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="rewardTitle"><div class="card"><h2 id="rewardTitle">열화상 지원을 받을까요?</h2><p>3초짜리 보상형 광고 데모가 끝나면 마지막 안전 조치로 돌아가고, 열기 25% 감소·시간 8초·전층 5초 강조를 받습니다.</p><div class="card-actions"><button id="rewardConfirmBtn" class="primary">3초 확인하고 지원받기</button><button id="rewardCancelBtn" class="secondary">취소</button></div></div></div>
+
+  <div id="adModal" class="modal" role="dialog" aria-modal="true" aria-label="보상형 광고 데모"><div class="card" style="text-align:center"><div class="eyebrow">REWARDED DEMO</div><div class="ad-ring"><span id="adCount">3</span></div><p>끝까지 확인하면 구조 지원이 적용됩니다.</p><button id="adCancelBtn" class="secondary" style="width:100%">광고 닫기 · 보상 없음</button></div></div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const layers = [
+    {name:'옥상 대응층', short:'옥상', icon:'🏗', devices:[['vent','🌬','배연기',24,28],['pump','🚿','소방펌프',72,30],['hatch','🚪','점검문',28,73],['antenna','📡','통신기',73,72]]},
+    {name:'생활 안전층', short:'생활', icon:'🏢', devices:[['breaker','⚡','차단기',26,29],['sprinkler','💧','살수밸브',72,28],['door','🚪','방화문',27,72],['alarm','🔔','경보반',73,72]]},
+    {name:'지하 설비층', short:'설비', icon:'🔧', devices:[['mainValve','🚰','주 급수',25,29],['brace','⚓','내진고정',73,29],['drain','🕳','배수구',27,72],['generator','🔋','비상전원',72,72]]}
+  ];
+  const deviceText = {};
+  layers.forEach((layer,li) => layer.devices.forEach(d => deviceText[d[0]]={icon:d[1],label:d[2],layer:li}));
+  const S = (layer,id,text) => ({layer,id,text});
+  const stages = [
+    {name:'급수관 파열',desc:'기본 층 전환',time:46,heat:18,rate:.10,rule:'기본 · 도면층 전환',tasks:[S(2,'mainValve','주 급수 밸브를 잠그세요'),S(1,'breaker','누전 차단기를 내리세요'),S(0,'pump','소방펌프를 켜세요'),S(1,'sprinkler','생활층 살수를 여세요'),S(2,'drain','고인 물을 배수하세요'),S(1,'alarm','안전 복귀를 알리세요')]},
+    {name:'교차 배선',desc:'전원 연쇄 의존',time:48,heat:24,rate:.16,rule:'연쇄 · 차단 후 급수',tasks:[S(1,'breaker','주 전원을 차단하세요'),S(2,'generator','비상전원을 연결하세요'),S(0,'antenna','관제 통신을 복구하세요'),S(2,'mainValve','급수관을 격리하세요'),S(0,'pump','소방펌프를 기동하세요'),S(1,'sprinkler','살수밸브를 여세요'),S(1,'alarm','대피 완료를 알리세요')]},
+    {name:'연기 계단',desc:'주기적 연기 은폐',time:52,heat:30,rate:.18,smoke:true,rule:'연기 · 장치명이 가려집니다',tasks:[S(1,'alarm','대피 경보를 먼저 울리세요'),S(1,'door','방화문을 닫으세요'),S(0,'hatch','옥상 점검문을 여세요'),S(0,'vent','배연기를 가동하세요'),S(2,'generator','비상전원을 확보하세요'),S(1,'sprinkler','살수밸브를 여세요'),S(0,'antenna','구조 신호를 보내세요'),S(2,'drain','소화수를 배수하세요')]},
+    {name:'여진 창고',desc:'조치 중 장치 이동',time:56,heat:34,rate:.19,quakeAt:4,rule:'여진 · 장치 위치가 바뀝니다',tasks:[S(2,'brace','내진 고정을 잠그세요'),S(1,'door','방화문을 닫으세요'),S(2,'mainValve','연료 냉각수를 잠그세요'),S(1,'breaker','손상 전원을 차단하세요'),S(0,'antenna','여진 경보를 수신하세요'),S(2,'brace','이동한 고정을 다시 잡으세요'),S(0,'pump','보조펌프를 기동하세요'),S(1,'sprinkler','분진을 가라앉히세요'),S(1,'alarm','현장 안정화를 알리세요')]},
+    {name:'복합 고층 사고',desc:'연기·암전·여진',time:62,heat:38,rate:.22,smoke:true,blackout:true,quakeAt:5,rule:'복합 · 연기와 암전, 여진',tasks:[S(1,'alarm','전층 대피를 알리세요'),S(1,'breaker','손상 전원을 차단하세요'),S(2,'generator','비상전원을 연결하세요'),S(1,'door','방화문을 닫으세요'),S(0,'hatch','옥상 배연로를 여세요'),S(2,'brace','여진 고정을 잠그세요'),S(0,'vent','배연기를 가동하세요'),S(2,'mainValve','급수 압력을 확보하세요'),S(0,'pump','소방펌프를 기동하세요'),S(1,'sprinkler','전층 살수를 여세요')]},
+    {name:'심야 합동훈련',desc:'날짜 고정 12단계',time:70,heat:40,rate:.22,smoke:true,blackout:true,quakeAt:6,night:true,rule:'심야 · 모든 규칙 혼합',tasks:[]}
+  ];
+  const allIds=['alarm','breaker','generator','door','antenna','mainValve','hatch','brace','vent','pump','sprinkler','drain'];
+  function seededTasks(){let seed=20260817, pool=allIds.slice(); for(let i=pool.length-1;i>0;i--){seed=(seed*1664525+1013904223)>>>0;const j=seed%(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}return pool.map(id=>{const d=deviceText[id];return S(d.layer,id,`${d.label} 장치를 확인하세요`);});}
+  stages[5].tasks=seededTasks();
+
+  const storeKey='flipframe-rescue-v1';
+  let save={stars:[0,0,0,0,0,0],best:[0,0,0,0,0,0]};
+  try{const parsed=JSON.parse(localStorage.getItem(storeKey)||'null');if(parsed&&Array.isArray(parsed.stars))save=Object.assign(save,parsed);}catch(_e){}
+  let screen='start', stageIndex=0, stage=null, currentLayer=1, taskIndex=0, heat=0, mistakes=0, timeLeft=0, elapsed=0, running=false, paused=false, focusPaused=false, rewardUsed=false, guideUntil=0, quake=false, smokeOn=false, blackoutOn=false, runId=0, tickId=0, checkpoint=null, toastTimer=0, pointer=null, rewardFromFail=false, adElapsed=0, adTimer=0, adToken=0;
+  const screens=['startScreen','mapScreen','gameScreen'];
+  function showScreen(name){screen=name;screens.forEach(id=>$(id).classList.toggle('active',id===name+'Screen'));}
+  function persist(){localStorage.setItem(storeKey,JSON.stringify(save));}
+  function totalStars(){return save.stars.slice(0,5).reduce((a,b)=>a+b,0);}
+  function renderMap(){
+    $('starTotal').textContent=`획득 별 ${totalStars()} / 15`;
+    $('stageList').innerHTML='';
+    stages.forEach((s,i)=>{
+      const locked=i===5&&totalStars()<9;
+      const btn=document.createElement('button');btn.className='stage-card'+(s.night?' night':'');btn.disabled=locked;
+      btn.innerHTML=`<span class="stage-no">${s.night?'☾':i+1}</span><span><b>${s.name}</b><small>${locked?'별 9개로 개방':s.desc}</small></span><span class="stars">${save.stars[i]?'★'.repeat(save.stars[i])+'☆'.repeat(3-save.stars[i]):'☆☆☆'}</span>`;
+      btn.addEventListener('click',()=>startStage(i));$('stageList').appendChild(btn);
+    });
+  }
+  function renderLayerRail(){
+    $('layerRail').innerHTML=''; layers.forEach((l,i)=>{const b=document.createElement('button');b.className='layer-btn'+(i===currentLayer?' active':'');b.innerHTML=`<span>${l.icon}</span>${l.short}`;b.setAttribute('aria-label',l.name);b.addEventListener('click',()=>switchLayer(i));$('layerRail').appendChild(b);});
+  }
+  function renderDevices(){
+    const host=$('devices');host.innerHTML='';const layer=layers[currentLayer];$('floorName').textContent=`${currentLayer+1}F · ${layer.name}`;
+    layer.devices.forEach((d,idx)=>{const b=document.createElement('button');b.className='device';b.dataset.id=d[0];let x=d[3],y=d[4];if(quake){x+=idx%2? -9:8;y+=idx<2?7:-7;}b.style.left=x+'%';b.style.top=y+'%';b.innerHTML=`<span class="glyph">${d[1]}</span><span class="label">${d[2]}</span>`;b.setAttribute('aria-label',d[2]);const target=stage&&stage.tasks[taskIndex],isCurrent=target&&target.layer===currentLayer&&target.id===d[0];if(stage&&stage.tasks.slice(0,taskIndex).some(t=>t.id===d[0])&&!isCurrent)b.classList.add('done');if(isCurrent&&Date.now()<guideUntil)b.classList.add('target');b.addEventListener('click',()=>tapDevice(d[0],b));host.appendChild(b);});
+    const bp=$('blueprint');bp.classList.toggle('smoke',smokeOn);bp.classList.toggle('blackout',blackoutOn);bp.classList.toggle('guide',Date.now()<guideUntil);
+  }
+  function updateMission(){
+    const t=stage.tasks[taskIndex];if(!t)return;const d=deviceText[t.id];$('stepIcon').textContent=d.icon;$('layerHint').textContent=layers[t.layer].name;$('stepText').textContent=t.text;$('progressText').textContent=`${taskIndex+1} / ${stage.tasks.length}`;renderDevices();
+  }
+  function updateHud(){$('timeText').textContent=Math.max(0,timeLeft).toFixed(1);$('heatText').textContent=Math.round(heat)+'%';$('mistakeText').textContent=`${mistakes} / 3`;}
+  function startStage(i){
+    stageIndex=i;stage=stages[i];runId++;currentLayer=1;taskIndex=0;heat=stage.heat;mistakes=0;timeLeft=stage.time;elapsed=0;running=true;paused=false;rewardUsed=false;guideUntil=Date.now()+3500;quake=false;smokeOn=false;blackoutOn=false;checkpoint={taskIndex:0,heat,timeLeft,mistakes};rewardFromFail=false;
+    $('gameTitle').firstChild.textContent=stage.name;$('ruleText').textContent=stage.rule;$('thermalBtn').disabled=false;showScreen('game');renderLayerRail();updateMission();updateHud();closeAllModals();startTicker();showToast('첫 장치를 3초간 강조합니다');
+  }
+  function startTicker(){clearInterval(tickId);let last=performance.now();const localRun=runId;tickId=setInterval(()=>{if(localRun!==runId)return clearInterval(tickId);const now=performance.now(),dt=Math.min(.2,(now-last)/1000);last=now;if(!running||paused||focusPaused||document.hidden)return;elapsed+=dt;timeLeft-=dt;heat+=stage.rate*dt;
+    smokeOn=!!stage.smoke&&Math.floor(elapsed/3)%3===1;blackoutOn=!!stage.blackout&&Math.floor(elapsed/2.5)%4===2;
+    updateHud();renderDevices();if(timeLeft<=0||heat>=100)finish(false,timeLeft<=0?'구조 시간이 끝났습니다.':'열기가 한계에 도달했습니다.');},100);
+  }
+  function switchLayer(i){if(!running||paused||i===currentLayer)return;currentLayer=Math.max(0,Math.min(2,i));renderLayerRail();renderDevices();showToast(layers[currentLayer].name);}
+  function tapDevice(id,el){
+    if(!running||paused)return;const target=stage.tasks[taskIndex];if(target.layer===currentLayer&&target.id===id){
+      taskIndex++;heat=Math.max(0,heat-3);el.classList.add('done');showToast('안전 조치 완료');
+      if(taskIndex%2===0)checkpoint={taskIndex,heat,timeLeft,mistakes};
+      if(stage.quakeAt&&taskIndex===stage.quakeAt&&!quake){quake=true;heat=Math.min(95,heat+6);showToast('여진! 장치 위치가 바뀌었습니다');$('blueprint').classList.add('flash');setTimeout(()=>$('blueprint').classList.remove('flash'),450);}
+      if(taskIndex>=stage.tasks.length)return finish(true,'모든 연쇄 위험을 차단했습니다.');updateMission();
+    }else{
+      mistakes++;heat=Math.min(100,heat+22);el.classList.add('wrong');setTimeout(()=>el.classList.remove('wrong'),300);showToast(target.layer!==currentLayer?'다른 층의 조치입니다':'조치 순서를 다시 확인하세요');updateHud();if(mistakes>=3||heat>=100)finish(false,'오조작으로 위험이 커졌습니다.');
+    }
+  }
+  function showToast(text){clearTimeout(toastTimer);$('toast').textContent=text;$('toast').classList.add('show');toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1450);}
+  function scoreAndStars(){const score=Math.max(100,Math.round(1400-elapsed*11-mistakes*180-heat*2));const stars=score>=1030?3:score>=760?2:1;return {score,stars};}
+  function finish(success,reason){
+    if(!running)return;running=false;paused=true;clearInterval(tickId);const rs=scoreAndStars();
+    $('resultGrade').textContent=success?(rs.stars===3?'S':rs.stars===2?'A':'B'):'!';$('resultGrade').style.borderColor=success?'var(--amber)':'var(--red)';$('resultTitle').textContent=success?'구조 완료':'구조 실패';$('resultCopy').textContent=reason;$('resultScore').textContent=success?rs.score:Math.max(0,taskIndex*90);$('resultTime').textContent=Math.round(elapsed)+'초';$('resultStars').textContent=success?'★'.repeat(rs.stars)+'☆'.repeat(3-rs.stars):'---';
+    const actions=$('resultActions');actions.innerHTML='';
+    if(success){save.stars[stageIndex]=Math.max(save.stars[stageIndex]||0,rs.stars);save.best[stageIndex]=Math.max(save.best[stageIndex]||0,rs.score);persist();const next=document.createElement('button');next.className='primary';next.textContent=stageIndex<4?'다음 현장':'현장 목록';next.addEventListener('click',()=>{closeModal('resultModal');renderMap();if(stageIndex<4)startStage(stageIndex+1);else showScreen('map');});actions.appendChild(next);}
+    else if(!rewardUsed){const reward=document.createElement('button');reward.className='primary danger';reward.textContent='3초 열화상 지원으로 복귀';reward.addEventListener('click',()=>{rewardFromFail=true;closeModal('resultModal');openModal('rewardModal');});actions.appendChild(reward);}
+    const retry=document.createElement('button');retry.className='secondary';retry.textContent='처음부터 다시';retry.addEventListener('click',()=>{closeModal('resultModal');startStage(stageIndex);});actions.appendChild(retry);
+    const map=document.createElement('button');map.className='secondary';map.textContent='현장 목록';map.addEventListener('click',()=>{closeModal('resultModal');renderMap();showScreen('map');});actions.appendChild(map);openModal('resultModal');
+  }
+  function openModal(id){paused=true;$(id).classList.add('open');}
+  function closeModal(id){$(id).classList.remove('open');if(id==='helpModal'&&running)paused=false;}
+  function closeAllModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));}
+  function requestReward(){if(!running||rewardUsed||paused)return;rewardFromFail=false;openModal('rewardModal');}
+  function beginAd(){closeModal('rewardModal');adToken++;const token=adToken;adElapsed=0;$('adCount').textContent='3';$('adModal').classList.add('open');paused=true;clearInterval(adTimer);adTimer=setInterval(()=>{if(token!==adToken)return clearInterval(adTimer);if(focusPaused||document.hidden)return;adElapsed+=.1;const left=Math.max(0,Math.ceil(3-adElapsed));$('adCount').textContent=left;if(adElapsed>=3){clearInterval(adTimer);grantReward(token);}},100);}
+  function grantReward(token){if(token!==adToken||rewardUsed)return;rewardUsed=true;$('thermalBtn').disabled=true;$('adModal').classList.remove('open');taskIndex=checkpoint.taskIndex;heat=Math.max(0,checkpoint.heat-25);mistakes=Math.max(0,checkpoint.mistakes-1);timeLeft=Math.max(checkpoint.timeLeft,8)+8;elapsed=Math.max(0,stage.time-timeLeft);guideUntil=Date.now()+5000;running=true;paused=false;renderLayerRail();updateMission();updateHud();startTicker();showToast('안전 체크포인트 복원 · 5초 열화상');}
+  function cancelAd(){adToken++;clearInterval(adTimer);$('adModal').classList.remove('open');if(rewardFromFail){running=false;paused=true;openModal('resultModal');}else paused=false;}
+  function focusNext(){if(!running||paused)return;guideUntil=Date.now()+1100;const target=stage.tasks[taskIndex];if(target.layer!==currentLayer)switchLayer(target.layer);renderDevices();}
+  function goMap(){runId++;running=false;clearInterval(tickId);closeAllModals();renderMap();showScreen('map');}
+  function openHelp(){openModal('helpModal');}
+  $('startBtn').addEventListener('click',()=>{renderMap();showScreen('map');});$('startHelpBtn').addEventListener('click',openHelp);$('mapHelpBtn').addEventListener('click',openHelp);$('gameHelpBtn').addEventListener('click',openHelp);$('helpCloseBtn').addEventListener('click',()=>closeModal('helpModal'));$('mapBackBtn').addEventListener('click',()=>showScreen('start'));$('gameBackBtn').addEventListener('click',goMap);$('thermalBtn').addEventListener('click',requestReward);$('focusBtn').addEventListener('click',focusNext);$('rewardConfirmBtn').addEventListener('click',beginAd);$('rewardCancelBtn').addEventListener('click',()=>{closeModal('rewardModal');if(rewardFromFail)openModal('resultModal');else paused=false;});$('adCancelBtn').addEventListener('click',cancelAd);
+  $('blueprint').addEventListener('pointerdown',e=>{if(!running||paused||e.button>0)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};$('blueprint').setPointerCapture(e.pointerId);});
+  $('blueprint').addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(Math.abs(e.clientY-pointer.y)>12)pointer.moved=true;});
+  function endSwipe(e){if(!pointer||pointer.id!==e.pointerId)return;const dy=e.clientY-pointer.y;if(Math.abs(dy)>42){e.preventDefault();switchLayer(currentLayer+(dy<0?1:-1));}pointer=null;}
+  $('blueprint').addEventListener('pointerup',endSwipe);$('blueprint').addEventListener('pointercancel',()=>{pointer=null;});$('blueprint').addEventListener('lostpointercapture',()=>{pointer=null;});
+  window.addEventListener('blur',()=>{pointer=null;focusPaused=true;});window.addEventListener('focus',()=>{focusPaused=false;});document.addEventListener('visibilitychange',()=>{pointer=null;focusPaused=document.hidden||!document.hasFocus();});window.addEventListener('pagehide',()=>{runId++;clearInterval(tickId);clearInterval(adTimer);});
+  renderMap();
+  window.__flipframeTest={stages,save,startStage,tap:(id)=>{const el=document.querySelector(`.device[data-id="${id}"]`);if(el)el.click();},switchLayer,grantStars:()=>{save.stars=[3,3,3,0,0,0];persist();renderMap();},state:()=>({stageIndex,currentLayer,taskIndex,heat,mistakes,timeLeft,running,rewardUsed,paused})};
+})();
+</script>
+</body>
+</html>
