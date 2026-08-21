@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#081b2c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23081b2c'/%3E%3Cpath d='M16 10v44M48 10v44' stroke='%234de1d2' stroke-width='8' stroke-dasharray='8 5'/%3E%3Crect x='22' y='23' width='20' height='18' rx='6' fill='%23ffc857'/%3E%3C/svg%3E">
+  <title>지퍼선 환승소 · Zipstream Junction</title>
+  <style>
+    :root{color-scheme:dark;--navy:#081b2c;--panel:#102a3c;--line:#28506a;--cream:#fff4cf;--cyan:#4de1d2;--coral:#ff7c70;--gold:#ffc857;--muted:#9db5c4}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04111d;color:#f7fbff;font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
+    button{font:inherit;color:inherit}
+    button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+    .app{position:relative;width:min(100%,460px);height:100dvh;min-height:480px;margin:auto;overflow:hidden;background:linear-gradient(180deg,#0d2d43 0%,#061724 100%);box-shadow:0 0 60px #0009}
+    .screen{position:absolute;inset:0;display:none}
+    .screen.active{display:flex}
+    .start{flex-direction:column;justify-content:space-between;padding:max(22px,env(safe-area-inset-top)) 22px max(22px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 24%,#1b5870 0 12%,transparent 42%),linear-gradient(160deg,#0a2235,#071521 72%)}
+    .brand{display:flex;align-items:center;justify-content:space-between;color:var(--cyan);font-weight:900;letter-spacing:.12em;font-size:12px}
+    .icon-btn{width:44px;height:44px;border:1px solid #6c91a6;border-radius:50%;background:#0a2238;font-weight:900;cursor:pointer}
+    .hero{display:grid;justify-items:center;text-align:center;gap:15px;transform:translateY(-2vh)}
+    .zip-logo{position:relative;width:128px;height:178px;border-radius:64px;background:linear-gradient(90deg,#0c283a 0 46%,#ffe0a7 46% 54%,#0c283a 54%);box-shadow:inset 0 0 0 2px #5ea5b7,0 22px 45px #0006;overflow:hidden}
+    .zip-logo:before,.zip-logo:after{content:"";position:absolute;top:18px;bottom:18px;width:35px;background:repeating-linear-gradient(180deg,transparent 0 10px,#73dccc 10px 17px)}
+    .zip-logo:before{left:15px}.zip-logo:after{right:15px}
+    .zip-logo span{position:absolute;left:50%;top:52%;width:52px;height:42px;transform:translate(-50%,-50%);display:grid;place-items:center;border-radius:16px;background:var(--gold);color:#182536;font-weight:1000;box-shadow:0 8px 18px #0007;z-index:2}
+    h1{margin:0;font-size:clamp(30px,8vw,40px);line-height:1.05;letter-spacing:-.06em}.en{color:var(--gold);font-weight:900;letter-spacing:.08em;font-size:12px}
+    .tagline{margin:0;max-width:310px;color:#d4e3eb;line-height:1.55;font-weight:700}
+    .start-actions{display:grid;gap:10px}.primary,.secondary{min-height:56px;border-radius:18px;border:0;font-weight:1000;cursor:pointer}.primary{background:linear-gradient(135deg,var(--gold),#ff9f43);color:#182536;box-shadow:0 9px 0 #9b5929}.primary:active{transform:translateY(4px);box-shadow:0 5px 0 #9b5929}.secondary{background:#123349;border:1px solid #47728b;color:#dff9ff}
+    .tiny{color:var(--muted);text-align:center;font-size:11px;margin:2px 0 0}
+    .map{flex-direction:column;background:#071824;padding-top:env(safe-area-inset-top)}
+    .map-head,.game-head{display:flex;align-items:center;gap:10px;min-height:58px;padding:8px 12px;border-bottom:1px solid #24475e;background:#0b2334}
+    .map-head h2{margin:0;flex:1;font-size:19px}.star-bank{padding:8px 11px;border-radius:99px;background:#152f3e;color:var(--gold);font-weight:1000}
+    .route-list{display:grid;gap:10px;overflow:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+    .route{position:relative;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;min-height:78px;padding:11px;border:1px solid #2c5167;border-radius:18px;background:linear-gradient(145deg,#123047,#0a2132);text-align:left;cursor:pointer}
+    .route[disabled]{opacity:.45;cursor:not-allowed}.route-num{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:#1f5366;color:var(--cyan);font-size:20px;font-weight:1000}.route h3{margin:0 0 4px;font-size:15px}.route p{margin:0;color:var(--muted);font-size:11px;line-height:1.35}.route-stars{min-width:54px;color:#435d6b;text-align:right;letter-spacing:1px}.route-stars .on{color:var(--gold)}
+    .route.daily{border-color:#886b2d;background:linear-gradient(145deg,#3a2d1f,#101f2a)}.route.daily .route-num{background:#694b25;color:#ffe39b}
+    .game{flex-direction:column;background:#071722;touch-action:none}
+    .game-head{min-height:56px;padding-top:max(7px,env(safe-area-inset-top));font-size:12px;z-index:2}.hud-block{display:grid;gap:1px}.hud-block b{font-size:15px}.hud-block span{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:.08em}.game-head .stage-name{flex:1;min-width:0}.stage-name b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hearts{color:var(--coral);letter-spacing:1px;font-size:14px;font-weight:1000}
+    .board{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 44%,#143c50,#061521 72%)}
+    canvas{display:block;width:min(100%,calc((100dvh - 128px)*.8076923),420px);height:auto;max-height:100%;aspect-ratio:420/520;touch-action:none}
+    .toast{position:absolute;left:50%;top:12px;transform:translateX(-50%) translateY(-16px);max-width:85%;padding:9px 13px;border-radius:99px;background:#061521e8;border:1px solid #4b7d91;font-size:12px;font-weight:900;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .guide{min-height:76px;padding:8px 14px calc(9px + env(safe-area-inset-bottom));border-top:1px solid #28506a;background:#0b2435;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}.guide b{display:block;color:var(--gold);font-size:14px}.guide span{display:block;color:#c9dce5;font-size:11px;line-height:1.35}.drag-pill{width:66px;height:50px;border:1px solid #4f8299;border-radius:16px;background:linear-gradient(180deg,#1a4d62,#0b3044);display:grid;place-items:center;color:var(--cyan);font-size:21px;box-shadow:inset 0 1px #76d9df66}
+    .modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:#020b12d9;z-index:10}.modal.open{display:flex}.dialog{width:min(100%,360px);max-height:92%;overflow:auto;border:1px solid #4c7187;border-radius:24px;padding:20px;background:linear-gradient(155deg,#13384c,#091d2c);box-shadow:0 28px 70px #000b}.dialog h2{margin:0 0 8px;font-size:24px}.dialog p{margin:0 0 14px;color:#c5d8e2;line-height:1.55;font-size:13px}.rule-list{display:grid;gap:9px;margin:14px 0}.rule-row{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:center;padding:9px;border-radius:12px;background:#0a2233}.rule-row i{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#19465a;color:var(--gold);font-style:normal;font-weight:1000}.dialog-actions{display:grid;gap:9px;margin-top:15px}.dialog .primary{min-height:50px;box-shadow:none}.dialog .secondary{min-height:46px}.result-badge{width:86px;height:86px;margin:0 auto 12px;display:grid;place-items:center;border-radius:50%;background:#183f53;border:3px solid var(--gold);color:var(--gold);font-size:35px;font-weight:1000}.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0}.result-stats div{padding:10px 5px;border-radius:13px;background:#0a2233;text-align:center}.result-stats b{display:block;font-size:18px;color:#fff}.result-stats span{font-size:9px;color:var(--muted)}
+    .reward-clock{position:relative;width:108px;height:108px;margin:5px auto 16px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--cyan) var(--progress,0%),#17394b 0);font-size:34px;font-weight:1000}.reward-clock:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#0b2637}.reward-clock b{position:relative;z-index:1}.ad-label{text-align:center;color:var(--cyan)!important;font-size:11px!important;font-weight:900;letter-spacing:.12em}
+    @media (max-height:570px){.start{padding-top:12px;padding-bottom:12px}.zip-logo{width:86px;height:108px}.zip-logo:before,.zip-logo:after{top:10px;bottom:10px}.zip-logo span{width:42px;height:34px}.hero{gap:8px;transform:none}h1{font-size:27px}.tagline{font-size:12px}.primary,.secondary{min-height:48px}.game-head{min-height:50px}.guide{min-height:68px;padding-top:5px}.route-list{padding-top:9px}.route{min-height:68px}.dialog{padding:16px}.dialog h2{font-size:21px}}
+  </style>
+</head>
+<body>
+<main class="app" id="app">
+  <section class="screen start active" id="startScreen" aria-label="시작 화면">
+    <div class="brand"><span>ZIPSTREAM CONTROL</span><button class="icon-btn" data-help="start" aria-label="도움말">?</button></div>
+    <div class="hero">
+      <div class="zip-logo" aria-hidden="true"><span>↕</span></div>
+      <div><div class="en">ZIPSTREAM JUNCTION</div><h1>지퍼선<br>환승소</h1></div>
+      <p class="tagline">지퍼 헤드 하나로 두 노선을 잇고,<br>캡슐을 정답 승강장에 보내세요.</p>
+    </div>
+    <div class="start-actions"><button class="primary" id="openRoutes">노선 운행 시작</button><button class="secondary" id="resetSave">기록 초기화</button><p class="tiny">한 손 세로 드래그 · 1회 35초 내외</p></div>
+  </section>
+
+  <section class="screen map" id="mapScreen" aria-label="노선 선택">
+    <header class="map-head"><button class="icon-btn" id="backStart" aria-label="시작 화면">‹</button><h2>오늘의 환승 노선</h2><div class="star-bank">★ <span id="totalStars">0</span></div></header>
+    <div class="route-list" id="routeList"></div>
+  </section>
+
+  <section class="screen game" id="gameScreen" aria-label="게임 화면">
+    <header class="game-head">
+      <button class="icon-btn" id="quitGame" aria-label="노선 선택">‹</button>
+      <div class="stage-name hud-block"><span>ROUTE</span><b id="hudName">초행 노선</b></div>
+      <div class="hud-block"><span>TIME</span><b id="hudTime">35.0</b></div>
+      <div class="hud-block"><span>SCORE</span><b id="hudScore">0</b></div>
+      <div class="hearts" id="hudHearts" aria-label="남은 기회">♥♥♥</div>
+      <button class="icon-btn" data-help="game" aria-label="도움말">?</button>
+    </header>
+    <div class="board" id="board"><canvas id="gameCanvas" width="420" height="520" aria-label="두 환승 노선 게임판"></canvas><output id="qaState" hidden></output><div class="toast" id="toast" role="status"></div></div>
+    <div class="guide"><div><b id="guideTitle">지퍼 헤드를 끌어주세요</b><span id="guideText">옮길 캡슐과 같은 높이에 맞추면 반대편으로 환승합니다.</span></div><div class="drag-pill" aria-hidden="true">↕</div></div>
+  </section>
+
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="dialog"><h2 id="helpTitle">환승 안내</h2><p>캡슐의 위쪽 화살표가 도착해야 할 노선입니다. 손가락으로 지퍼 헤드를 캡슐과 같은 높이에 맞추는 순간 반대편으로 한 번 이동합니다.</p><div class="rule-list"><div class="rule-row"><i>↕</i><span>화면 어디서든 누르고 위아래로 끌어 헤드를 접합</span></div><div class="rule-row"><i>⇆</i><span>옮기지 않을 캡슐에는 손을 대지 않고 통과</span></div><div class="rule-row"><i>★</i><span>정확도와 남은 시간으로 최대 별 3개</span></div></div><div class="dialog-actions"><button class="primary" id="closeHelp">운행 계속</button></div></div>
+  </div>
+
+  <div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="dialog"><div class="result-badge" id="resultBadge">A</div><h2 id="resultTitle">노선 완료</h2><p id="resultCopy">모든 캡슐이 도착했습니다.</p><div class="result-stats"><div><b id="resultCorrect">0/0</b><span>정확 환승</span></div><div><b id="resultScore">0</b><span>점수</span></div><div><b id="resultStars">★★★</b><span>획득 별</span></div></div><div class="dialog-actions"><button class="primary" id="nextRoute">다음 노선</button><button class="secondary" id="retryRoute">다시 운행</button><button class="secondary" id="rewardButton">3초 지원 후 이어하기</button><button class="secondary" id="resultMap">노선표로</button></div></div>
+  </div>
+
+  <div class="modal" id="rewardModal" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+    <div class="dialog"><p class="ad-label">REWARDED SUPPORT DEMO</p><div class="reward-clock" id="rewardClock"><b id="rewardCount">3</b></div><h2 id="rewardTitle">긴급 환승 지원</h2><p>끝까지 확인하면 마지막 안전 기록으로 돌아가고, 운행 시간 8초와 6초 정답 예고를 받습니다.</p><div class="dialog-actions"><button class="secondary" id="cancelReward">지원 취소</button></div></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const W=420,H=520,LX=112,RX=308,CX=210,SAVE='zipstream-junction-v1';
+  const stages=[
+    {name:'첫 지퍼선',desc:'기본 환승 · 느린 캡슐',time:34,goal:6,rule:'basic',caps:[['L','L',0,62],['R','L',2.2,62],['L','R',4.4,64],['R','R',6.6,64],['L','R',8.8,66],['R','L',11,66]]},
+    {name:'급행 교차로',desc:'속도가 다른 급행 캡슐',time:36,goal:8,rule:'express',caps:[['L','R',0,72],['R','R',1.8,56],['L','L',3.5,84],['R','L',5.4,72],['L','R',7.1,58],['R','L',9,86],['L','L',10.8,76],['R','R',12.6,88]]},
+    {name:'잠긴 이빨길',desc:'붉은 잠금 구간에서는 환승 불가',time:39,goal:9,rule:'locks',caps:[['L','R',0,66],['R','L',1.8,68],['L','L',3.6,68],['R','R',5.4,70],['L','R',7.2,72],['R','L',9,72],['L','R',10.8,74],['R','R',12.6,76],['L','L',14.4,76]]},
+    {name:'쌍둥이 합류선',desc:'같은 높이의 두 캡슐을 함께 환승',time:40,goal:10,rule:'twins',caps:[['L','R',0,65,'A'],['R','L',0,65,'A'],['L','L',3,69],['R','R',4.8,69],['L','R',7,72,'B'],['R','L',7,72,'B'],['L','R',10,75],['R','R',11.8,75],['L','L',13.6,77],['R','L',15.4,77]]},
+    {name:'반전 신호국',desc:'신호가 허용한 방향만 환승',time:44,goal:10,rule:'reverse',caps:[['L','R',0,68],['R','L',2,68],['L','L',4,70],['R','R',5.8,70],['R','L',7.6,72],['L','R',9.4,72],['R','R',11.2,74],['L','L',13,74],['L','R',14.8,76],['R','L',16.6,76]]}
+  ];
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const screens={start:$('#startScreen'),map:$('#mapScreen'),game:$('#gameScreen')};
+  const canvas=$('#gameCanvas'),ctx=canvas.getContext('2d');
+  const state={screen:'start',stage:0,runId:0,running:false,paused:false,focusPaused:false,rewardUsed:false,rewardToken:0,rewardClockReset:false,elapsed:0,timeLeft:0,headY:390,score:0,combo:0,lives:3,processed:0,correct:0,nextIndex:0,capsules:[],checkpoint:null,guideUntil:0,last:0,pointer:null,signalDir:1,signalClock:0,toastTimer:0};
+  let save=loadSave();
+
+  function loadSave(){try{const v=JSON.parse(localStorage.getItem(SAVE)||'{}');return {stars:Array.isArray(v.stars)?v.stars.slice(0,5):[0,0,0,0,0],bests:Array.isArray(v.bests)?v.bests.slice(0,5):[0,0,0,0,0]}}catch{return {stars:[0,0,0,0,0],bests:[0,0,0,0,0]}}}
+  while(save.stars.length<5)save.stars.push(0);while(save.bests.length<5)save.bests.push(0);
+  function persist(){try{localStorage.setItem(SAVE,JSON.stringify(save));return true}catch{return false}}
+  function totalStars(){return save.stars.reduce((a,b)=>a+b,0)}
+  function showScreen(name){Object.values(screens).forEach(el=>el.classList.remove('active'));screens[name].classList.add('active');state.screen=name;if(name==='map')renderMap()}
+  function renderMap(){const total=totalStars();$('#totalStars').textContent=total;const list=$('#routeList');list.innerHTML='';stages.forEach((s,i)=>{const unlocked=i===0||save.stars[i-1]>0||new URLSearchParams(location.search).has('qa');const b=document.createElement('button');b.className='route';b.disabled=!unlocked;b.innerHTML=`<span class="route-num">${i+1}</span><span><h3>${s.name}</h3><p>${unlocked?s.desc:'이전 노선을 완료하면 열립니다.'}</p></span><span class="route-stars">${[0,1,2].map(n=>`<span class="${n<save.stars[i]?'on':''}">★</span>`).join('')}</span>`;b.addEventListener('click',()=>startStage(i));list.appendChild(b)});const daily=document.createElement('button');daily.className='route daily';const open=total>=9||new URLSearchParams(location.search).has('qa');daily.disabled=!open;daily.innerHTML=`<span class="route-num">☾</span><span><h3>심야 합류표</h3><p>${open?'날짜마다 바뀌는 12캡슐 혼합 노선':'별 9개를 모으면 열립니다.'}</p></span><span class="route-stars">확장</span>`;daily.addEventListener('click',()=>startStage(5));list.appendChild(daily)}
+  function seededDaily(){const d=new Date();let seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};const caps=[];for(let i=0;i<12;i++){const lane=rnd()<.5?'L':'R',target=rnd()<.53?(lane==='L'?'R':'L'):lane;caps.push([lane,target,i*1.65,66+Math.floor(rnd()*20),i===4||i===5?'N':null])}return {name:'심야 합류표',desc:'잠금·급행·반전 혼합',time:48,goal:12,rule:'daily',caps}}
+  function stageData(){return state.stage===5?seededDaily():stages[state.stage]}
+  function startStage(index){state.runId++;state.stage=index;state.running=true;state.paused=false;state.focusPaused=document.hidden;state.rewardUsed=false;state.rewardToken++;state.elapsed=0;state.timeLeft=stageData().time;state.headY=390;state.score=0;state.combo=0;state.lives=3;state.processed=0;state.correct=0;state.nextIndex=0;state.capsules=[];state.checkpoint=null;state.guideUntil=0;state.signalDir=1;state.signalClock=0;state.last=performance.now();$('#hudName').textContent=stageData().name;showScreen('game');closeModal($('#resultModal'));closeModal($('#rewardModal'));updateHUD();saveCheckpoint();if(index===0&&!sessionStorage.getItem('zipstream-tutorial')){sessionStorage.setItem('zipstream-tutorial','1');openHelp()}requestAnimationFrame(loop)}
+  function makeCap(def,id){return {id,lane:def[0]==='L'?0:1,target:def[1]==='L'?0:1,spawnAt:def[2],speed:def[3],twin:def[4]||'',y:-42,fromX:def[0]==='L'?LX:RX,toX:def[0]==='L'?LX:RX,transferT:0,transferred:false,judged:false,flash:0}}
+  function saveCheckpoint(){state.checkpoint={elapsed:state.elapsed,timeLeft:state.timeLeft,headY:state.headY,score:state.score,combo:state.combo,lives:state.lives,processed:state.processed,correct:state.correct,nextIndex:state.nextIndex,signalDir:state.signalDir,signalClock:state.signalClock,capsules:state.capsules.map(c=>({...c}))}}
+  function restoreCheckpoint(){const s=state.checkpoint;if(!s)return;Object.assign(state,{elapsed:s.elapsed,timeLeft:s.timeLeft+8,headY:s.headY,score:s.score,combo:s.combo,lives:Math.max(1,s.lives),processed:s.processed,correct:s.correct,nextIndex:s.nextIndex,signalDir:s.signalDir,signalClock:s.signalClock,capsules:s.capsules.map(c=>({...c})),running:true,paused:false,guideUntil:s.elapsed+6,last:performance.now()});closeModal($('#resultModal'));closeModal($('#rewardModal'));toast('안전 기록 복원 · 정답 예고 6초');updateHUD();requestAnimationFrame(loop)}
+  function rules(){const r=stageData().rule;return {locks:r==='locks'||r==='daily',reverse:r==='reverse'||r==='daily',twins:r==='twins'||r==='daily'}}
+  function lockedAt(y){if(!rules().locks)return false;return (y>185&&y<238)||(state.stage===5&&y>345&&y<382)}
+  function permitted(lane){if(!rules().reverse)return true;return lane===0?state.signalDir===1:state.signalDir===-1}
+  function transferCap(c){if(c.transferred||c.judged||Math.abs(c.y-state.headY)>=25||lockedAt(state.headY))return false;if(permitted(c.lane)){c.fromX=c.lane===0?LX:RX;c.lane=1-c.lane;c.toX=c.lane===0?LX:RX;c.transferred=true;c.transferT=.3;c.flash=.35;state.score+=20;return true}c.flash=.12;return false}
+  function attemptTransfers(){for(const c of state.capsules)transferCap(c)}
+  function update(dt){state.elapsed+=dt;state.timeLeft=Math.max(0,state.timeLeft-dt);state.signalClock+=dt;if(rules().reverse&&state.signalClock>=3.5){state.signalClock-=3.5;state.signalDir*=-1;toast(state.signalDir===1?'신호: 왼쪽 → 오른쪽':'신호: 오른쪽 → 왼쪽')}
+    const data=stageData();while(state.nextIndex<data.caps.length&&data.caps[state.nextIndex][2]<=state.elapsed){state.capsules.push(makeCap(data.caps[state.nextIndex],state.nextIndex));state.nextIndex++}
+    for(const c of state.capsules){if(c.judged)continue;c.y+=c.speed*dt;c.flash=Math.max(0,c.flash-dt);if(c.transferT>0){c.transferT=Math.max(0,c.transferT-dt)}else if(state.pointer!==null)transferCap(c)
+      if(c.y>H-36){c.judged=true;state.processed++;if(c.lane===c.target){state.correct++;state.combo++;state.score+=100+Math.min(100,state.combo*10);toast(state.combo>2?`${state.combo} 연속 정확!`:'정확 환승')}else{state.combo=0;state.lives--;toast('오도착 · 기회 -1')}
+        if(state.lives>0&&state.processed%3===0&&state.processed<data.goal)saveCheckpoint();if(state.lives<=0){finish(false);return}}
+    }
+    state.capsules=state.capsules.filter(c=>!c.judged||c.y<H+80);
+    if(state.processed>=data.goal){finish(true);return}if(state.timeLeft<=0){finish(false);return}updateHUD()}
+  function finish(completed){if(!state.running)return;state.running=false;state.paused=true;state.runId++;const data=stageData();const ratio=state.correct/data.goal;const stars=completed?(ratio===1&&state.timeLeft>8?3:ratio>=.85?2:1):0;const grade=stars===3?'S':stars===2?'A':stars===1?'B':'C';if(completed&&state.stage<5){save.stars[state.stage]=Math.max(save.stars[state.stage],stars);save.bests[state.stage]=Math.max(save.bests[state.stage],state.score);persist()}
+    $('#resultBadge').textContent=grade;$('#resultTitle').textContent=completed?'노선 완료':'운행 중단';$('#resultCopy').textContent=completed?`${data.name}의 캡슐이 모두 도착했습니다.`:'긴급 지원을 받거나 이 노선을 다시 운행하세요.';$('#resultCorrect').textContent=`${state.correct}/${data.goal}`;$('#resultScore').textContent=state.score;$('#resultStars').textContent=completed?'★'.repeat(stars)+'☆'.repeat(3-stars):'☆☆☆';$('#nextRoute').style.display=completed&&state.stage<4?'block':'none';$('#rewardButton').style.display=!completed&&!state.rewardUsed&&state.checkpoint?'block':'none';updateHUD();openModal($('#resultModal'))}
+  function updateHUD(){$('#hudTime').textContent=state.timeLeft.toFixed(1);$('#hudScore').textContent=state.score;$('#hudHearts').textContent='♥'.repeat(Math.max(0,state.lives))+'♡'.repeat(Math.max(0,3-state.lives));if(new URLSearchParams(location.search).has('qa'))$('#qaState').textContent=JSON.stringify({stage:state.stage,running:state.running,paused:state.paused,elapsed:state.elapsed,timeLeft:state.timeLeft,headY:state.headY,lives:state.lives,processed:state.processed,correct:state.correct,signalDir:state.signalDir,rewardUsed:state.rewardUsed,capsules:state.capsules.map(c=>({id:c.id,lane:c.lane,target:c.target,y:c.y,transferred:c.transferred,judged:c.judged}))});const r=rules();if(r.reverse){$('#guideTitle').textContent=state.signalDir===1?'신호 허용: 왼쪽 → 오른쪽':'신호 허용: 오른쪽 → 왼쪽';$('#guideText').textContent='신호 반대 방향 캡슐은 헤드와 만나도 대기합니다.'}else if(r.locks){$('#guideTitle').textContent='붉은 이빨은 잠김';$('#guideText').textContent='잠금 구간 밖에서 캡슐과 높이를 맞추세요.'}else{$('#guideTitle').textContent='지퍼 헤드를 움직여 접합';$('#guideText').textContent='도착 화살표와 현재 노선이 다를 때만 손가락으로 맞추세요.'}}
+  function loop(now){if(state.screen!=='game'||!state.running)return;const dt=Math.min(.033,(now-state.last)/1000||0);state.last=now;if(!state.paused&&!state.focusPaused)update(dt);draw();if(state.running)requestAnimationFrame(loop)}
+  function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
+  function draw(){ctx.clearRect(0,0,W,H);const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#12394c');sky.addColorStop(1,'#071621');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.globalAlpha=.18;for(let y=20;y<H;y+=34){ctx.fillStyle=y%68?'#5fbfc5':'#ffc857';ctx.fillRect(32,y,W-64,1)}ctx.globalAlpha=1;
+    drawTrack(LX,0,'왼쪽');drawTrack(RX,1,'오른쪽');drawZipper();if(rules().locks){drawLock(185,53);if(state.stage===5)drawLock(345,37)}if(rules().reverse)drawSignal();for(const c of state.capsules)drawCapsule(c);drawHead();if(state.guideUntil>state.elapsed){ctx.strokeStyle='#fff4a8';ctx.lineWidth=3;ctx.setLineDash([8,7]);for(const c of state.capsules.filter(c=>!c.judged&&c.target!==c.lane).slice(0,3)){ctx.beginPath();ctx.arc(c.target===0?LX:RX,c.y,31,0,Math.PI*2);ctx.stroke()}ctx.setLineDash([])}
+  }
+  function drawTrack(x,lane,label){rounded(x-58,8,116,H-18,24,lane===0?'#17394a':'#25324b','#5d8296');ctx.fillStyle='#d6e7ee';ctx.font='900 13px system-ui';ctx.textAlign='center';ctx.fillText(label+' 노선',x,30);ctx.strokeStyle=lane===0?'#43dacb':'#ff8d83';ctx.lineWidth=4;ctx.setLineDash([14,12]);ctx.beginPath();ctx.moveTo(x,46);ctx.lineTo(x,H-22);ctx.stroke();ctx.setLineDash([])}
+  function drawZipper(){ctx.fillStyle='#ffe2a3';for(let y=48;y<H-20;y+=17){ctx.fillRect(CX-18,y,14,9);ctx.fillRect(CX+4,y,14,9)}ctx.fillStyle='#744f2c';ctx.fillRect(CX-3,42,6,H-62)}
+  function drawLock(y,h){ctx.fillStyle='#ff6f6755';ctx.fillRect(CX-38,y,76,h);ctx.strokeStyle='#ff8c81';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.strokeRect(CX-38,y,76,h);ctx.setLineDash([]);ctx.fillStyle='#ffe4df';ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillText('잠금',CX,y+h/2+4)}
+  function drawSignal(){const left=state.signalDir===1;rounded(CX-73,10,146,32,14,'#071a27','#5f8194');ctx.fillStyle=left?'#4de1d2':'#6a7d87';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText('L → R',CX-35,31);ctx.fillStyle=!left?'#ff9187':'#6a7d87';ctx.fillText('R → L',CX+36,31)}
+  function capX(c){if(c.transferT<=0)return c.toX;const t=1-c.transferT/.3;const e=t*t*(3-2*t);return c.fromX+(c.toX-c.fromX)*e}
+  function drawCapsule(c){const x=capX(c),need=c.target!==c.lane;ctx.save();ctx.translate(x,c.y);if(c.flash>0){ctx.shadowColor='#fff4a8';ctx.shadowBlur=22}rounded(-28,-30,56,60,23,c.lane===0?'#1f8e91':'#c95762','#f8f0d2');ctx.fillStyle='#071621';ctx.font='1000 18px system-ui';ctx.textAlign='center';ctx.fillText(c.target===0?'←':'→',0,-6);ctx.font='900 10px system-ui';ctx.fillText(c.twin?'쌍둥이':'캡슐',0,13);if(state.guideUntil>state.elapsed&&need){ctx.fillStyle='#fff4a8';ctx.fillText('환승',0,25)}ctx.restore()}
+  function drawHead(){const locked=lockedAt(state.headY);ctx.save();ctx.strokeStyle=locked?'#ff776f99':'#fff4a877';ctx.lineWidth=2;ctx.setLineDash([7,7]);ctx.beginPath();ctx.moveTo(42,state.headY);ctx.lineTo(W-42,state.headY);ctx.stroke();ctx.setLineDash([]);ctx.translate(CX,state.headY);ctx.shadowColor=locked?'#ff5f59':'#4de1d2';ctx.shadowBlur=18;rounded(-35,-25,70,50,16,locked?'#9a3e40':'#ffc857','#fff4cf');ctx.shadowBlur=0;ctx.fillStyle='#172536';ctx.font='1000 22px system-ui';ctx.textAlign='center';ctx.fillText('↕',0,8);ctx.restore()}
+  function setHead(clientY){const r=canvas.getBoundingClientRect();state.headY=Math.max(70,Math.min(H-55,(clientY-r.top)*H/r.height))}
+  function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.remove('show'),750)}
+  function openModal(el){el.classList.add('open');el.setAttribute('aria-hidden','false');screens.game.inert=true;requestAnimationFrame(()=>el.querySelector('button')?.focus())}
+  function closeModal(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');screens.game.inert=false}
+  function openHelp(){state.pointer=null;if(state.screen==='game'&&state.running)state.paused=true;openModal($('#helpModal'))}
+  function closeHelp(){closeModal($('#helpModal'));if(state.screen==='game'&&state.running){state.paused=false;state.last=performance.now();canvas.focus()}}
+  function beginReward(){if(state.rewardUsed||!state.checkpoint)return;closeModal($('#resultModal'));openModal($('#rewardModal'));state.paused=true;state.rewardClockReset=false;const token=++state.rewardToken;let watched=0,last=performance.now();const clock=$('#rewardClock'),count=$('#rewardCount');function frame(now){if(token!==state.rewardToken)return;if(state.rewardClockReset){last=now;state.rewardClockReset=false}const dt=(document.hidden||state.focusPaused)?0:Math.min(.1,(now-last)/1000);last=now;watched+=dt;const left=Math.max(0,3-watched);count.textContent=Math.ceil(left);clock.style.setProperty('--progress',`${Math.min(100,watched/3*100)}%`);if(watched>=3){state.rewardUsed=true;restoreCheckpoint()}else requestAnimationFrame(frame)}requestAnimationFrame(frame)}
+  function cancelReward(){state.rewardToken++;closeModal($('#rewardModal'));openModal($('#resultModal'));state.paused=true}
+
+  canvas.tabIndex=0;canvas.addEventListener('pointerdown',e=>{if(!state.running||state.paused)return;state.pointer=e.pointerId;canvas.setPointerCapture(e.pointerId);setHead(e.clientY);attemptTransfers();e.preventDefault()});canvas.addEventListener('pointermove',e=>{if(e.pointerId!==state.pointer||state.paused)return;setHead(e.clientY);attemptTransfers();e.preventDefault()});function release(e){if(e.pointerId===state.pointer)state.pointer=null}canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',()=>state.pointer=null);
+  addEventListener('keydown',e=>{if(state.screen!=='game'||state.paused)return;if(e.key==='ArrowUp'||e.key==='ArrowDown'){state.headY=Math.max(70,Math.min(H-55,state.headY+(e.key==='ArrowUp'?-28:28)));attemptTransfers();e.preventDefault()}});
+  document.addEventListener('visibilitychange',()=>{state.focusPaused=document.hidden;state.pointer=null;state.last=performance.now();state.rewardClockReset=true});addEventListener('blur',()=>{state.focusPaused=true;state.pointer=null;state.rewardClockReset=true});addEventListener('focus',()=>{state.focusPaused=document.hidden;state.last=performance.now();state.rewardClockReset=true});addEventListener('pagehide',()=>{state.running=false;state.rewardToken++});
+  $('#openRoutes').addEventListener('click',()=>showScreen('map'));$('#backStart').addEventListener('click',()=>showScreen('start'));$('#quitGame').addEventListener('click',()=>{state.running=false;state.runId++;state.rewardToken++;closeModal($('#helpModal'));showScreen('map')});$$('[data-help]').forEach(b=>b.addEventListener('click',openHelp));$('#closeHelp').addEventListener('click',closeHelp);$('#retryRoute').addEventListener('click',()=>startStage(state.stage));$('#resultMap').addEventListener('click',()=>{closeModal($('#resultModal'));showScreen('map')});$('#nextRoute').addEventListener('click',()=>startStage(Math.min(4,state.stage+1)));$('#rewardButton').addEventListener('click',beginReward);$('#cancelReward').addEventListener('click',cancelReward);$('#resetSave').addEventListener('click',()=>{if(confirm('별과 최고 기록을 모두 지울까요?')){save={stars:[0,0,0,0,0],bests:[0,0,0,0,0]};persist();toast('기록을 초기화했습니다.')}});
+  if(new URLSearchParams(location.search).has('qa'))window.__zipQA={start:i=>startStage(i),finish,grantStars:()=>{save.stars=[3,3,3,3,3];persist();renderMap()},state,stageData,restore:restoreCheckpoint};
+  draw();
+})();
+</script>
+</body>
+</html>
